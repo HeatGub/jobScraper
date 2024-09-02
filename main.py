@@ -23,31 +23,12 @@ driver = webdriver.Chrome(service=service, options=chrome_options)
 driver.get("https://theprotocol.it/filtry/python;t/trainee,assistant,junior;p/zdalna;rw/praca/data-scientist-deep-learning-warszawa,oferta,8e0c0000-a5a4-c69a-3164-08dcbb7766ef?s=-1499548823&searchId=20a1f390-66d0-11ef-8a60-57a9d1202edd")
 setCookiesFromJson()
 
-time.sleep(2)
+time.sleep(60)
 
-
-# def waitAndClickClass(string, timeout, searchBy):
+# def waitAndClickClass(string, timeout):
 #     element = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.CLASS_NAME, string)))
 #     element.click()
-# waitAndClickClass("o1kmxetl", 10 ) #chcę dostosować
-
-# data-test="button-cancel"
-
-
-# elements = WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.CSS_SELECTOR, ".content")))
-
-# elements = WebDriverWait(driver, 20).until(EC.visibility_of_all_elements_located((By.CLASS_NAME, "content")))
-
-# elements = driver.find_elements("content")
-
-# buttons = driver.find_elements(By.TAG_NAME, "button")
-# for button in buttons:
-#     if button.text == 'Chcę dostosować':
-#         print(button.text)
-        # button.click() # nie działa
-
-
-# print(cookies_element)
-# cookies_element.click()
+# waitAndClickClass("l86y70m", 10)
+# time.sleep(2)
 
 driver.quit()
