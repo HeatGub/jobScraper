@@ -16,9 +16,21 @@
 
 -- SELECT techstackExpected FROM test3 WHERE datetime > '2024-09-20 09:05:00';
 
-SELECT * FROM test3 WHERE datetimeLast >= '2024-09-22 03:50:46'; --similar url
-SELECT (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 * 60 AS difference_in_minutes FROM test3 WHERE difference_in_minutes > 30;
-SELECT * FROM test3 WHERE (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 > 0;
+-- SELECT * FROM test3 WHERE datetimeLast >= '2024-09-22 03:50:46'; --similar url
+-- SELECT (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 * 60 AS difference_in_minutes FROM test3 WHERE difference_in_minutes > 30;
+-- SELECT * FROM test3 WHERE (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 > 0;
+
+-- SELECT datetimeFirst, datetimeLast, SUBSTRING(url, 0, LENGTH(url)-45) AS base FROM test3
+
+SELECT SUBSTRING(url, 0, LENGTH(url)-59) FROM test3;
+
+-- SELECT SUBSTRING(url, 0, LENGTH(url)-59) AS baseUrl, substring(url, -59) AS gibberish FROM test3; -- last 59 characters seem to be session related
+-- GROUP BY gibberish;
+-- SELECT SUBSTRING(url, LENGTH(url)-45, -56) FROM test3;
+
+-- SELECT SUBSTRING(url, -59) AS gibberish FROM test3;
+-- SELECT url from test3;
+
 
 
 
