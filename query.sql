@@ -8,9 +8,18 @@
 -- SELECT salary FROM test WHERE salary REGEXP '^[0-9]+';
 
 
-SELECT salaryMin, salaryMax, techstackExpected, techstackOptional FROM test2 WHERE techstackExpected LIKE ('');
-SELECT techstackExpected, techstackOptional FROM test2 WHERE techstackExpected IS NULL;
-SELECT salaryMin, salaryMax, techstackExpected, techstackOptional FROM test2;
+-- SELECT salaryMin, salaryMax, techstackExpected, techstackOptional FROM test2 WHERE techstackExpected LIKE ('');
+-- SELECT techstackExpected, techstackOptional FROM test2 WHERE techstackExpected IS NULL;
+-- SELECT salaryMin, salaryMax, techstackExpected, techstackOptional FROM test2;
+
+-- SELECT * FROM test2 WHERE datetime > '2024-09-20 09:05:00';
+
+-- SELECT techstackExpected FROM test3 WHERE datetime > '2024-09-20 09:05:00';
+
+SELECT * FROM test3 WHERE datetimeLast >= '2024-09-22 03:50:46'; --similar url
+SELECT (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 * 60 AS difference_in_minutes FROM test3 WHERE difference_in_minutes > 30;
+SELECT * FROM test3 WHERE (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 > 0;
+
 
 
 -- AND salary NOT LIKE ('%godz%') AND salary NOT LIKE ('%hr.%');
