@@ -14,15 +14,25 @@
 
 -- SELECT * FROM test2 WHERE datetime > '2024-09-20 09:05:00';
 
--- SELECT techstackExpected FROM test3 WHERE datetime > '2024-09-20 09:05:00';
 
--- SELECT * FROM test3 WHERE datetimeLast >= '2024-09-22 03:50:46'; --similar url
+-- SELECT COUNT (*) FROM test3;
+
+SELECT datetimeFirst, datetimeLast FROM test4 WHERE datetimeLast > '2024-09-24 21:09:00' ORDER BY datetimeFirst;
+
+-- SELECT * FROM test3 WHERE url LIKE ('%https://theprotocol.it/szczegoly/praca/programista-javascript---sapui5---sap-fiori-wroclaw-soltysowicka-13,oferta,aa3c0000-a366-0204-3551%');
+
+-- SELECT * FROM test3 WHERE url LIKE ('%https://theprotocol.it/szczegoly/praca/programista-web-sql-warszawa,oferta,eecf0000-387c-b216-12ef-08dcdbaac54c?s=8321028996&searchId=44e94190-7aa%');
+
+-- SELECT * FROM test3 WHERE (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 > 10 ORDER BY datetimeLast DESC;
+
+
+-- SELECT * FROM test3 WHERE datetimeFirst >= '2024-09-23 03:50:46'; --similar url
 -- SELECT (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 * 60 AS difference_in_minutes FROM test3 WHERE difference_in_minutes > 30;
 -- SELECT * FROM test3 WHERE (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 > 0;
 
 -- SELECT datetimeFirst, datetimeLast, SUBSTRING(url, 0, LENGTH(url)-45) AS base FROM test3
 
-SELECT SUBSTRING(url, 0, LENGTH(url)-59) FROM test3;
+-- SELECT SUBSTRING(url, 0, LENGTH(url)-59) FROM test3;
 
 -- SELECT SUBSTRING(url, 0, LENGTH(url)-59) AS baseUrl, substring(url, -59) AS gibberish FROM test3; -- last 59 characters seem to be session related
 -- GROUP BY gibberish;
