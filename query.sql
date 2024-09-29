@@ -14,16 +14,36 @@
 
 -- SELECT * FROM test2 WHERE datetime > '2024-09-20 09:05:00';
 
+---- LAST SEEN AGO WORKING BLOCK:
+-- SELECT DATETIME('now', 'localtime'), datetimeLast, (JULIANDAY(strftime('%Y-%m-%d %H:%M:%S', DATETIME('now', 'localtime'))) - JULIANDAY(datetimeLast)) * 24 AS lastSeenHoursAgo FROM test4 
+-- WHERE lastSeenHoursAgo < 24 ORDER BY lastSeenHoursAgo ASC;
 
--- SELECT COUNT (*) FROM test3;
+-- -- SELECT * FROM test4;
+-- SELECT techstackExpected, techstackOptional, requirements FROM test3 
+-- WHERE 1=1 --just to leave WHERE here 
+-- -- exclude keywords block, append AND NOT LIKE (...) 2x for a single keyword
+-- AND techstackExpected NOT LIKE ('%javascript%')
+-- AND requirements NOT LIKE ('%javascript%')
+-- -- include keywords block (only records where keyword appears)
+-- AND techstackExpected LIKE ('%SQL%')
+-- AND requirements LIKE ('%SQL%')
+-- ORDER BY datetimeLast DESC;
 
-SELECT datetimeFirst, datetimeLast FROM test4 WHERE datetimeLast > '2024-09-24 21:09:00' ORDER BY datetimeFirst;
+SELECT datetimeLast, techstackExpected FROM test4 WHERE 1=1
+AND (JULIANDAY(strftime('%Y-%m-%d %H:%M:%S', DATETIME('now', 'localtime'))) - JULIANDAY(datetimeLast)) * 24 < 24
+AND (techstackExpected LIKE ('%SQL%') OR requirements LIKE ('%SQL%'))
+AND techstackExpected NOT LIKE ('%javascript%') AND requirements NOT LIKE ('%javascript%')
+AND techstackExpected NOT LIKE ('%c++%') AND requirements NOT LIKE ('%c++%');
+
+
+
+-- SELECT datetimeFirst, datetimeLast FROM test4 WHERE datetimeLast > '2024-09-24 21:09:00' ORDER BY datetimeFirst;
 
 -- SELECT * FROM test3 WHERE url LIKE ('%https://theprotocol.it/szczegoly/praca/programista-javascript---sapui5---sap-fiori-wroclaw-soltysowicka-13,oferta,aa3c0000-a366-0204-3551%');
 
 -- SELECT * FROM test3 WHERE url LIKE ('%https://theprotocol.it/szczegoly/praca/programista-web-sql-warszawa,oferta,eecf0000-387c-b216-12ef-08dcdbaac54c?s=8321028996&searchId=44e94190-7aa%');
 
--- SELECT * FROM test3 WHERE (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 > 10 ORDER BY datetimeLast DESC;
+-- SELECT * FROM test3 WHERE (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 > 1 ORDER BY datetimeLast DESC;
 
 
 -- SELECT * FROM test3 WHERE datetimeFirst >= '2024-09-23 03:50:46'; --similar url
