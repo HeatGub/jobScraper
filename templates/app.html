@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bokeh Plot and Table</title>
+    <!-- Include Bokeh CSS files -->
+    {% for css in cdn_css %}
+    <link rel="stylesheet" href="{{ css }}">
+    {% endfor %}
+    <style>
+        html, body, div {
+          box-sizing: border-box;
+          /* display: flow-root; */
+          width: 100%;
+          margin: 0;
+          padding: 0;
+        }
+      </style>
+</head>
+<body>
+
+    <h1>Bokeh Plot and Table in Flask</h1>
+
+    <div></div>
+    <!-- The div where Bokeh plot and table will be rendered -->
+    {{ div|safe }}
+    
+
+    <!-- The Bokeh JS scripts -->
+    {{ script|safe }}
+    <!-- Include Bokeh JS files -->
+    {% for js in cdn_js %}
+    <script src="{{ js }}"></script>
+    {% endfor %}
+
+</body>
+</html>
