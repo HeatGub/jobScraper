@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- <style>
+    <style>
         html, body, div {
           box-sizing: border-box;
           /* display: flow-root; */
@@ -11,40 +11,43 @@
           margin: 0;
           padding: 0;
         }
-      </style> -->
+        th, tr {
+            padding: 5px 5px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+        input[type="text"] {
+            width: 100px;
+        }
+      </style>
 </head>
 <body>
 
-    <!-- 'datetimeFirst', 'datetimeLast', 'url', 'title', 'salaryAndContract', 'salaryMin', 'salaryMax', 'employer', 'workModes', 'positionLevels', 'offerValidTo', 'location', 'techstackExpected', 'techstackOptional', 'responsibilities', 'requirements', 'optionalRequirements'] -->
-
-    <h1>Form</h1>
-    
-    <!-- <form method="POST">
-    <form method="POST" action="{{ url_for('results') }}">
-        <input type="text" name="datetimeFirst" placeholder="datetimeFirst"><br>
-        <input type="text" name="datetimeLast" placeholder="datetimeLast"><br>
-        <a>checkbox1</a><input type="checkbox" name="checkbox1" checked="checked"><br>
-        <a>checkbox2</a><input type="checkbox" name="checkbox2" checked="checked"><br>
-        <input type="submit" value="submit"><br>
-    </form> -->
-
+    <h1>Generate dynamic table</h1>
     <form method="POST">
         <table>
-            <th>Generate these columns</th>
-            <tr>
-                <input type="text" name="textfield" placeholder="textfield">
-            </tr>
+            <thead>
+                <tr>
+                    <th scope="col">parameter</th>
+                    <th scope="col">generate?</th>
+                    <th scope="col">necessary</th>
+                    <th scope="col">unacceptable</th>
+                    <th scope="col">more than</th>
+                    <th scope="col">less than</th>
+                </tr>
+            </thead>
             {% for column in columnsAll %}
             <tr>
                 <td>{{column}}</td>
-                <td><input type="checkbox" checked="checked" name={{column}}></td>
+                <td><input type="checkbox" checked="checked" name={{column}}Generate></td>
+                <td><input type="text" placeholder="necessary keyword" name={{column}}Necessary></td>
+                <td><input type="text" placeholder="unacceptable keyword" name={{column}}Unacceptable></td>
+                <td><input type="text" placeholder="more than" name={{column}}More></td>
+                <td><input type="text" placeholder="less than" name={{column}}Less></td>
             </tr>
             {% endfor %}
-            <tr>
-                <td><input type="submit" value="submit"></td>
-            </tr>
-            
         </table>
+        <input type="submit" value="submit">
     </form>
 </body>
 </html>
