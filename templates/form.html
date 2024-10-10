@@ -31,7 +31,7 @@
                     <th scope="col">parameter</th>
                     <th scope="col">show in table</th>
                     <th scope="col">necessary</th>
-                    <th scope="col">unacceptable</th>
+                    <th scope="col">forbidden</th>
                     <th scope="col">above</th>
                     <th scope="col">below</th>
                 </tr>
@@ -40,8 +40,8 @@
             <tr>
                 <td>{{column}}</td>
                 <td><input type="checkbox" checked="checked" name={{column}}Show></td>
-                <td><input type="text" placeholder="necessary keyword" name={{column}}Necessary></td>
-                <td><input type="text" placeholder="unacceptable keyword" name={{column}}Unacceptable></td>
+                <td><input type="text" placeholder="necessary phrase" name={{column}}Necessary></td>
+                <td><input type="text" placeholder="forbidden phrase" name={{column}}Forbidden></td>
                 {% if column == "datetimeFirst" or column == "datetimeLast" or column == "salaryMin" or column == "salaryMax" %}
                 <td><input type="text" placeholder="more than" name={{column}}Above></td>
                 <td><input type="text" placeholder="less than" name={{column}}Below></td>
