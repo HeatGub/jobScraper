@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bokeh Plot and Table</title>
+    <title>Plot and Table</title>
     <!-- Include Bokeh CSS files -->
     {% for css in cdn_css %}
     <link rel="stylesheet" href="{{ css }}">
     {% endfor %}
     <style>
-        html, body, div {
-          box-sizing: border-box;
-          /* display: flow-root; */
+        #plotAndTableDiv > * > * { 
           width: 100%;
           margin: 0;
           padding: 0;
@@ -20,12 +18,9 @@
 </head>
 <body>
 
-    <h1>Bokeh Plot and Table in Flask</h1>
+    <h1>Results</h1>
 
-    <div></div>
-    <!-- The div where Bokeh plot and table will be rendered -->
-    {{ div|safe }}
-    
+    <div id="plotAndTableDiv">{{ div|safe }}</div>
 
     <!-- The Bokeh JS scripts -->
     {{ script|safe }}
