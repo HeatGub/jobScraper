@@ -58,7 +58,7 @@
             </tr>
             {% endfor %}
         </table>
-        <input type="submit" value="submit">
+        <input type="submit" value="submit" onclick=submitForm()>
     </form>
     <script>
         //CHANGING CHECKBOXES STATE - CHECK/UNCHECK
@@ -72,18 +72,7 @@
                 document.querySelector('.checkUncheckAll').textContent = 'UNCHECK ALL'
             }
         })
-        //GENERATE DATETIME
-        function generateDatetime(){
-            let now = new Date();
-            let year = now.getFullYear();     // e.g., 2024
-            let month = now.getMonth() + 1;   // Month is 0-indexed, so +1 (e.g., 10 for October)
-            let day = now.getDate();          // Day of the month (e.g., 12)
-            console.log(`${year}-${month}-${day}`)
-        }
-        // generateDatetime()
-
+        // function submitForm(){}
     </script>
 </body>
 </html>
-
-
