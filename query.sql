@@ -29,12 +29,26 @@
 -- AND requirements LIKE ('%SQL%')
 -- ORDER BY datetimeLast DESC;
 
-SELECT datetimeLast, techstackExpected FROM test4 WHERE 1=1
-AND (JULIANDAY(strftime('%Y-%m-%d %H:%M:%S', DATETIME('now', 'localtime'))) - JULIANDAY(datetimeLast)) * 24 < 24
-AND (techstackExpected LIKE ('%SQL%') OR requirements LIKE ('%SQL%'))
-AND techstackExpected NOT LIKE ('%javascript%') AND requirements NOT LIKE ('%javascript%')
-AND techstackExpected NOT LIKE ('%c++%') AND requirements NOT LIKE ('%c++%');
+-- SELECT datetimeLast, datetimeFirst, techstackExpected FROM test4 WHERE 1=1
+-- AND datetimeLast > '2024-10-01';
+-- ORDER BY datetimeLast, techstackExpected;
+-- AND (JULIANDAY(strftime('%Y-%m-%d %H:%M:%S', DATETIME('now', 'localtime'))) - JULIANDAY(datetimeLast)) * 24 < 24
+-- AND (techstackExpected LIKE ('%SQL%') OR requirements LIKE ('%SQL%'))
+-- AND techstackExpected NOT LIKE ('%javascript%') AND requirements NOT LIKE ('%javascript%')
+-- AND techstackExpected NOT LIKE ('%c++%') AND requirements NOT LIKE ('%c++%');
 
+
+-- SELECT datetimeFirst, datetimeLast, (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 * 60 AS difference_in_minutes, url, title, salaryMin, salaryMax FROM test4 WHERE 1=1
+-- AND datetimeFirst > '2024-04-20'
+-- AND datetimeLast > '2024-04-20'ORDER BY (salaryMin+SalaryMax)/2 ASC, difference_in_minutes DESC;
+
+SELECT datetimeLast FROM test4
+WHERE ((datetimeLast LIKE ('%2024%') OR (datetimeLast LIKE ('%2024%') AND datetimeLast LIKE ('%2024-01-01%'))) AND (datetimeLast LIKE ('%2024-01%') OR datetimeLast LIKE ('%2024%')));
+-- WHERE (datetimeLast LIKE ('%2024%') OR (datetimeLast LIKE ('%2024-%') AND datetimeLast LIKE ('%2024-01-01%'))) AND (datetimeLast LIKE ('%2024-01%') OR datetimeLast LIKE ('%2024%'));
+
+
+
+-- (datetimeFirst LIKE ('%2024-09-27%') OR datetimeFirst LIKE ('%2024-10-15%')) OR (datetimeFirst NOT LIKE ('%2024%') OR datetimeFirst NOT LIKE ('%2024%'));
 
 
 -- SELECT datetimeFirst, datetimeLast FROM test4 WHERE datetimeLast > '2024-09-24 21:09:00' ORDER BY datetimeFirst;
