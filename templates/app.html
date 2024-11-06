@@ -6,10 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Plot and Table</title>
 
-  <!-- Include Bokeh CSS files -->
-  <!-- {% for css in cdn_css %}
-  <link rel="stylesheet" href="{{ css }}">
-  {% endfor %} -->
   {{ resources|safe }}
 
   <style>
@@ -19,8 +15,6 @@
       padding: 0;
     }
   </style>
-
-
 </head>
 
 <body>
@@ -59,18 +53,9 @@
 
   <h1>Results</h1>
 
-  <div id="plotDiv"></div><br>
-  <div></div>
+  <div id="plotDiv"></div>
+  <br>
   <div id="tableDiv"></div>
-
-  <div id="plotAndTableDiv">{{ div|safe }}</div>
-
-  <!-- The Bokeh JS scripts -->
-  <!-- {{ script|safe }} -->
-  <!-- Include Bokeh JS files -->
-  <!-- {% for js in cdn_js %}
-  <script src="{{ js }}"></script>
-  {% endfor %} -->
 
   <script>
     document.getElementById("sendFormAndFetchBokehBtn").addEventListener("click", sendFormAndFetchBokeh)
@@ -101,19 +86,27 @@
           }
         })
         .then(function (items) {
-          //if all went good replace the divs
-          if (items[0]) {
+          //IF NO DATA:
+          if (items[0] == 'nodata') {
+            document.getElementById('plotDiv').innerHTML = 'no data'
+          }
+          if (items[1] == 'nodata') {
+            document.getElementById('tableDiv').innerHTML = 'no data'
+          }
+          //if all went good and results are not empty replace the divs with bokeh stuff
+          if (items[0] && items[0] != 'nodata') {
             document.getElementById('plotDiv').innerHTML = ''
             Bokeh.embed.embed_item(items[0], 'plotDiv')
           }
-          if (items[1]) {
+          if (items[1] && items[1] != 'nodata') {
             document.getElementById('tableDiv').innerHTML = ''
             Bokeh.embed.embed_item(items[1], 'tableDiv')
           }
+
         })
     }
   </script>
-  
+
   <script>
     //CHANGING CHECKBOXES STATE - CHECK/UNCHECK
     document.querySelector('.checkUncheckAll').addEventListener('click', (event) => {
