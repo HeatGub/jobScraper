@@ -1,33 +1,134 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Plot and Table</title>
-    <!-- Include Bokeh CSS files -->
-    {% for css in cdn_css %}
-    <link rel="stylesheet" href="{{ css }}">
-    {% endfor %}
-    <style>
-        #plotAndTableDiv > * > * { 
-          width: 100%;
-          margin: 0;
-          padding: 0;
-        }
-      </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plot and Table</title>
+
+  <!-- Include Bokeh CSS files -->
+  <!-- {% for css in cdn_css %}
+  <link rel="stylesheet" href="{{ css }}">
+  {% endfor %} -->
+  {{ resources|safe }}
+
+  <style>
+    #plotAndTableDiv>*>* {
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+
+
 </head>
+
 <body>
 
-    <h1>Results</h1>
+  <form id="mainForm">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">parameter</th>
+          <th scope="col">show in table <p class="checkUncheckAll">UNCHECK ALL</p>
+          </th>
+          <th scope="col">necessary</th>
+          <th scope="col">forbidden</th>
+          <th scope="col">above</th>
+          <th scope="col">below</th>
+        </tr>
+      </thead>
+      {% for column in columnsAll %}
+      <tr>
+        <td>{{column}}</td>
+        <td><input type="checkbox" class="ckeckBox" checked="checked" name={{column}}Show></td>
+        <td><input type="text" placeholder="necessary phrase" name={{column}}Necessary></td>
+        <td><input type="text" placeholder="forbidden phrase" name={{column}}Forbidden></td>
+        {% if column == "datetimeFirst" or column == "datetimeLast" %}
+        <td><input type="text" placeholder="above" name={{column}}Above value="2024-04-20"></td>
+        <td><input type="text" placeholder="below" name={{column}}Below></td>
+        {% elif column == "salaryMin" or column == "salaryMax" %}
+        <td><input type="text" placeholder="4000" name={{column}}Above></td>
+        <td><input type="text" placeholder="10000" name={{column}}Below></td>
+        {% endif %}
+      </tr>
+      {% endfor %}
+    </table>
+    <input type="submit" value="submit" id="sendFormAndFetchBokehBtn">
+  </form>
 
-    <div id="plotAndTableDiv">{{ div|safe }}</div>
+  <h1>Results</h1>
 
-    <!-- The Bokeh JS scripts -->
-    {{ script|safe }}
-    <!-- Include Bokeh JS files -->
-    {% for js in cdn_js %}
-    <script src="{{ js }}"></script>
-    {% endfor %}
+  <div id="plotDiv"></div><br>
+  <div></div>
+  <div id="tableDiv"></div>
+
+  <div id="plotAndTableDiv">{{ div|safe }}</div>
+
+  <!-- The Bokeh JS scripts -->
+  <!-- {{ script|safe }} -->
+  <!-- Include Bokeh JS files -->
+  <!-- {% for js in cdn_js %}
+  <script src="{{ js }}"></script>
+  {% endfor %} -->
+
+  <script>
+    document.getElementById("sendFormAndFetchBokehBtn").addEventListener("click", sendFormAndFetchBokeh)
+
+    function sendFormAndFetchBokeh(e) {
+      e.preventDefault() //prevent sending form default request
+      const form = document.getElementById('mainForm')
+      var formData = new FormData(form)
+      formDataJson = JSON.stringify(Object.fromEntries(formData))
+      // console.log(formDataJson)
+
+      fetch(window.origin + '/', {
+        method: "POST",
+        credentials: "include", //cookies etc
+        body: formDataJson,
+        cache: "no-cache",
+        headers: new Headers({
+          "content-type": "application/json"
+        })
+      }) //fetch returns async promise, then do something
+        .then(function (response) {
+          if (response.status !== 200) {
+            console.log('Error fetching. Response code: ' + response.status)
+            return
+          }
+          else if (response.status == 200) {
+            return response.json()
+          }
+        })
+        .then(function (items) {
+          //if all went good replace the divs
+          if (items[0]) {
+            document.getElementById('plotDiv').innerHTML = ''
+            Bokeh.embed.embed_item(items[0], 'plotDiv')
+          }
+          if (items[1]) {
+            document.getElementById('tableDiv').innerHTML = ''
+            Bokeh.embed.embed_item(items[1], 'tableDiv')
+          }
+        })
+    }
+  </script>
+  
+  <script>
+    //CHANGING CHECKBOXES STATE - CHECK/UNCHECK
+    document.querySelector('.checkUncheckAll').addEventListener('click', (event) => {
+      if (document.querySelector('.checkUncheckAll').textContent == 'UNCHECK ALL') {
+        document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = false })
+        document.querySelector('.checkUncheckAll').textContent = 'CHECK ALL'
+      }
+      else if (document.querySelector('.checkUncheckAll').textContent == 'CHECK ALL') {
+        document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = true })
+        document.querySelector('.checkUncheckAll').textContent = 'UNCHECK ALL'
+      }
+    })
+    // function submitForm(){}
+  </script>
 
 </body>
+
 </html>
