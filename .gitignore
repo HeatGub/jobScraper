@@ -2,6 +2,7 @@ __pycache__/
 .venv/
 venv/
 chromedriver.exe
+chromedriver128.exe
 cookies.json
 results.csv
 results.db
