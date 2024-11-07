@@ -14,6 +14,11 @@
       margin: 0;
       padding: 0;
     }
+    #downloadCsv {
+      /* just for visibility */
+      /* border: 1px blue solid; */
+      color: blue;
+    }
   </style>
 </head>
 
@@ -52,7 +57,7 @@
   </form>
 
   <h1>Results</h1>
-
+  <a id="downloadCsv" href="{{ url_for('downloadCsv') }}" class="btn"></a>
   <div id="plotDiv"></div>
   <br>
   <div id="tableDiv"></div>
@@ -89,18 +94,22 @@
           //IF NO DATA:
           if (items[0] == 'nodata') {
             document.getElementById('plotDiv').innerHTML = 'no data'
+            document.getElementById('downloadCsv').innerHTML = ''
           }
           if (items[1] == 'nodata') {
             document.getElementById('tableDiv').innerHTML = 'no data'
+            document.getElementById('downloadCsv').innerHTML = ''
           }
           //if all went good and results are not empty replace the divs with bokeh stuff
           if (items[0] && items[0] != 'nodata') {
             document.getElementById('plotDiv').innerHTML = ''
             Bokeh.embed.embed_item(items[0], 'plotDiv')
+            document.getElementById('downloadCsv').innerHTML = 'Download CSV'
           }
           if (items[1] && items[1] != 'nodata') {
             document.getElementById('tableDiv').innerHTML = ''
             Bokeh.embed.embed_item(items[1], 'tableDiv')
+            document.getElementById('downloadCsv').innerHTML = 'Download CSV'
           }
 
         })
