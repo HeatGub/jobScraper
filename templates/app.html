@@ -91,17 +91,16 @@
             return response.json()
           }
         })
-        .then(function (items) {
+        .then(function (items) { //when response 200 and JSON items list received
           //when no results
-          if (items[0] == 'nodata' || items[1] == 'nodata') {
+          if (items[0] === 'noResultsFound') {
             document.getElementById('plotDiv').innerHTML = 'no data'
             document.getElementById('tableDiv').innerHTML = 'no data'
             document.getElementById('downloadCsv').innerHTML = ''
             document.getElementById('resultsAmount').innerHTML = 'no results ¯\\_(ツ)_/¯'
           }
           //if all went good and results are not empty replace the divs with bokeh stuff
-          //if items[0] exists then items[1] should exist too. So no need to check them separately
-          else if ((items[0] && items[1]) && (items[0] != 'nodata' && items[1] != 'nodata')) {
+          else if (items[0] && items[1] && items[2]) { //plot, table, and amount of results
             document.getElementById('plotDiv').innerHTML = '' //make div empty first
             document.getElementById('tableDiv').innerHTML = ''
             Bokeh.embed.embed_item(items[0], 'plotDiv')
