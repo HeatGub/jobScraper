@@ -14,6 +14,7 @@
       margin: 0;
       padding: 0;
     }
+
     #downloadCsv {
       /* just for visibility */
       /* border: 1px blue solid; */
@@ -56,7 +57,7 @@
     <input type="submit" value="submit" id="sendFormAndFetchBokehBtn">
   </form>
 
-  <h1>Results</h1>
+  <h1 id="resultsAmount"></h1>
   <a id="downloadCsv" href="{{ url_for('downloadCsv') }}" class="btn"></a>
   <div id="plotDiv"></div>
   <br>
@@ -91,27 +92,28 @@
           }
         })
         .then(function (items) {
-          //IF NO DATA:
-          if (items[0] == 'nodata') {
+          //when no results
+          if (items[0] == 'nodata' || items[1] == 'nodata') {
             document.getElementById('plotDiv').innerHTML = 'no data'
-            document.getElementById('downloadCsv').innerHTML = ''
-          }
-          if (items[1] == 'nodata') {
             document.getElementById('tableDiv').innerHTML = 'no data'
             document.getElementById('downloadCsv').innerHTML = ''
+            document.getElementById('resultsAmount').innerHTML = 'no results ¯\\_(ツ)_/¯'
           }
           //if all went good and results are not empty replace the divs with bokeh stuff
-          if (items[0] && items[0] != 'nodata') {
-            document.getElementById('plotDiv').innerHTML = ''
-            Bokeh.embed.embed_item(items[0], 'plotDiv')
-            document.getElementById('downloadCsv').innerHTML = 'Download CSV'
-          }
-          if (items[1] && items[1] != 'nodata') {
+          //if items[0] exists then items[1] should exist too. So no need to check them separately
+          else if ((items[0] && items[1]) && (items[0] != 'nodata' && items[1] != 'nodata')) {
+            document.getElementById('plotDiv').innerHTML = '' //make div empty first
             document.getElementById('tableDiv').innerHTML = ''
+            Bokeh.embed.embed_item(items[0], 'plotDiv')
             Bokeh.embed.embed_item(items[1], 'tableDiv')
             document.getElementById('downloadCsv').innerHTML = 'Download CSV'
+            if (items[2] === 1) { //if 1 result
+              document.getElementById('resultsAmount').innerHTML = '1 result'
+            }
+            else if (items[2] > 1) { // if >1 results
+              document.getElementById('resultsAmount').innerHTML = items[2] + ' results'
+            }
           }
-
         })
     }
   </script>
