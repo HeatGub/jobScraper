@@ -42,14 +42,19 @@
       <tr>
         <td>{{column}}</td>
         <td><input type="checkbox" class="ckeckBox" checked="checked" name={{column}}Show></td>
+        {% if column != "salaryMin" and column != "salaryMax" %}
         <td><input type="text" placeholder="necessary phrase" name={{column}}Necessary></td>
         <td><input type="text" placeholder="forbidden phrase" name={{column}}Forbidden></td>
-        {% if column == "datetimeFirst" or column == "datetimeLast" %}
-        <td><input type="text" placeholder="above" name={{column}}Above value="2024-04-20"></td>
-        <td><input type="text" placeholder="below" name={{column}}Below></td>
         {% elif column == "salaryMin" or column == "salaryMax" %}
-        <td><input type="text" placeholder="4000" name={{column}}Above></td>
-        <td><input type="text" placeholder="10000" name={{column}}Below></td>
+        <td></td>
+        <td></td>
+        {% endif %}
+        {% if column == "datetimeFirst" or column == "datetimeLast" %}
+        <td><input type="datetime-local" placeholder="above" name={{column}}Above></td>
+        <td><input type="datetime-local" placeholder="below" name={{column}}Below></td>
+        {% elif column == "salaryMin" or column == "salaryMax" %}
+        <td><input type="number" placeholder="4000" name={{column}}Above></td>
+        <td><input type="number" placeholder="10000" name={{column}}Below></td>
         {% endif %}
       </tr>
       {% endfor %}
@@ -70,6 +75,18 @@
       e.preventDefault() //prevent sending form default request
       const form = document.getElementById('mainForm')
       var formData = new FormData(form)
+
+      //remove T from datetimes for further processing
+      listToRegexp = ['datetimeFirstAbove', 'datetimeFirstBelow', 'datetimeLastAbove', 'datetimeLastBelow']
+      listToRegexp.forEach( (param) => {
+        if (formData.get(param)) {
+          oldValue = formData.get(param)
+          newValue = oldValue.replace('T', ' ') //replace T with space to fit SQL
+          formData.set(param, newValue)
+          // console.log(formData.get(param))
+        }
+      })
+
       formDataJson = JSON.stringify(Object.fromEntries(formData))
       // console.log(formDataJson)
 
