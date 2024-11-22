@@ -1,0 +1,36 @@
+button {
+    color: green;
+    background-color: grey;
+}
+
+form,
+table {
+    width: 100%;
+    /* margin: 0;
+    padding: 0; */
+    text-align: center;
+}
+
+th,
+td {
+    border: 1px solid black;
+}
+
+td>input {
+    width: 97%;
+}
+
+/* td:nth-child(1) {
+    max-width: 70px;
+  }
+  td:nth-child(2) { 
+    max-width: 10px;
+  }
+  td:nth-child(5), td:nth-child(6){
+    max-width: 70px;
+  } */
+#downloadCsv {
+    /* just for visibility */
+    /* border: 1px blue solid; */
+    color: blue;
+}

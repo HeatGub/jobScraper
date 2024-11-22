@@ -10,10 +10,10 @@ from bokeh.models.widgets import DataTable, TableColumn
 from bokeh.models import ColumnDataSource, WheelZoomTool, HTMLTemplateFormatter, HoverTool, TapTool, Range1d, LinearAxis
 from bokeh.embed import json_item
 from bokeh.io import curdoc #for dark theme
-import multiprocessing, io
+import multiprocessing, io, time
 import numpy as np
 
-from seleniumFunctions import startBrowser, setCookiesFromJson, fetchUrlsFromAllThePages, scrapToDatabase, queueManager
+from seleniumFunctions import openBrowser, setCookiesFromJson, fetchUrlsFromAllThePages, scrapToDatabase, queueManager
 from databaseFunctions import database, columnsAll, tableName
 
 ########################################################################## FLASK SERVER FUNCITONS ###########################################################################
@@ -226,51 +226,49 @@ def form():
 
         return json.dumps(['noResultsFound']) #when no results return a str
     
-@app.route('/worker', methods=['GET'])
-def worker():
-    # TASK_QUEUE.put((scrapToDatabase, (), {}))
-    TASK_QUEUE.put((fetchUrlsFromAllThePages, (), {}))
-    # Get and print results
-    # process.join()
-    return RESULT_QUEUE.get()
+# @app.route('/worker', methods=['GET'])
+# def worker():
+#     # TASK_QUEUE.put((scrapToDatabase, (), {}))
+#     TASK_QUEUE.put((openBrowser, (), {}))
+#     print(RESULT_QUEUE.get())
+#     # TASK_QUEUE.put((setCookiesFromJson, (), {}))
+#     # print(RESULT_QUEUE.get())
+#     # TASK_QUEUE.put((fetchUrlsFromAllThePages, (), {}))
+#     # print(RESULT_QUEUE.get())
+#     # Get and print results
+#     # process.join()
+#     return json.dumps([RESULT_QUEUE.get()])
 
-# import signal
-# import sys
-# def cleanup(signal_number, frame):
-#     print("Cleanup: Detected termination signal.")
-#     # Add your cleanup logic here
-#     if driver:
-#         driver.close()
-#     sys.exit(0)  # Exit the program gracefully
+@app.route('/openBrowser', methods=['GET'])
+def openBrowserEndpoint():
+    TASK_QUEUE.put((openBrowser, (), {}))
+    # time.sleep(300) #still shows in JS
+    res = RESULT_QUEUE.get()
+    return json.dumps(res)
 
-# # Register signal handlers
-# signal.signal(signal.SIGINT, cleanup)  # Handle CTRL+C
-# signal.signal(signal.SIGTERM, cleanup)  # Handle termination
+@app.route('/saveCookiesToJson', methods=['GET'])
+def saveCookiesToJson():
+    TASK_QUEUE.put((saveCookiesToJson, (), {}))
+    # time.sleep(300) #still shows in JS
+    res = RESULT_QUEUE.get()
+    return json.dumps(res)
 
 if __name__ == "__main__":
     # database.createTableIfNotExists()
-
     TASK_QUEUE = multiprocessing.Queue()  # Queue for sending tasks to the worker
     RESULT_QUEUE = multiprocessing.Queue()  # Queue for receiving results from the worker
 
     # Start the worker process
     process = multiprocessing.Process(target=queueManager, args=(TASK_QUEUE, RESULT_QUEUE))
     process.start()
-    TASK_QUEUE.put((startBrowser, (), {}))
-    TASK_QUEUE.put((setCookiesFromJson, (), {}))
-
     app.run(debug=False) #runs (3?) additional python processes. IF TRUE RUNS TWO SELENIUM BROWSERS ¯\_(ツ)_/¯
 
     # TASK_QUEUE.put((fetchUrlsFromAllThePages, (), {}))
     # # TASK_QUEUE.put((scrapToDatabase, (), {}))
-
     # print(RESULT_QUEUE.get())
-    # print(RESULT_QUEUE.get())
-    # print(RESULT_QUEUE.get())
-    # print(RESULT_QUEUE.get())
-
     # TASK_QUEUE.put("exit")
-
-    
     # process.join() #could wait forever if process not terminated
-    # print('DAS ENDE')
+    print('DAS ENDE')
+
+##TODO
+# przycisk do otwierania przegladarki, wtedy czeka na pozytywny response od saveCookies i wyswietla wynik

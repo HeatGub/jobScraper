@@ -17,26 +17,49 @@ offers_urls = [] #GLOBAL, appended in fetchUrlsFromAllThePages()
 
 # ########################################################################### SELENIUM STUFF ###########################################################################
 
-def startBrowser():
-    # SELENIUM CHROME DRIVER SETTINGS
-    service = Service(executable_path="chromedriver.exe")
-    chrome_options = Options()
-    chrome_options.add_argument("--disable-search-engine-choice-screen")
-    chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) #disable error logging
-    # chrome_options.add_experimental_option("detach", True) #to keep browser open after python script execution ended
-    global DRIVER
-    DRIVER = webdriver.Chrome(service=service, options=chrome_options) #Selenium opens a new browser window whenever it initializes a WebDriver instance
-    # return driver
-    print('browser started')
+def openBrowser():
+    try:
+        # SELENIUM CHROME DRIVER SETTINGS
+        service = Service(executable_path="chromedriver.exe")
+        chrome_options = Options()
+        chrome_options.add_argument("--disable-search-engine-choice-screen")
+        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) #disable error logging
+        # chrome_options.add_experimental_option("detach", True) #to keep browser open after python script execution ended
+        global DRIVER
+        DRIVER = webdriver.Chrome(service=service, options=chrome_options) #Selenium opens a new browser window whenever it initializes a WebDriver instance
+        DRIVER.get("https://google.com")
+        print('browser started')
+        return {'success':True, 'responseCode': 200, 'message':'browser opened'}
+    except Exception as exception:
+        return {'success':False, 'responseCode': 500, 'message':str(exception)}
+    
+def saveCookiesToJson():
+    if not DRIVER:
+        return {'success':False, 'responseCode': 400, 'message':'no selenium browser opened'}
+    else: 
+        try:
+            cookies = DRIVER.get_cookies() # get cookies
+            json_object = json.dumps(cookies, indent=4) # Serializing json
+            with open("cookies.json", "w") as outfile: # OVERWRITES cookies.json
+                outfile.write(json_object)
+            return {'success':True, 'responseCode': 200, 'message':'cookies saved to cookies.json'}
+        except Exception as exception:
+            return {'success':False, 'responseCode': 500, 'message':str(exception)}
+
 
 def setCookiesFromJson():
-    DRIVER.get(base_url) #RUN BROWSER
-    with open('cookies.json', 'r', newline='') as inputdata:
-        cookies = json.load(inputdata)
-    for cookie in cookies: #works only after driver.get
-        DRIVER.add_cookie(cookie)
-    DRIVER.refresh() # to load cookies
-    print('cookies set')
+    try:
+        DRIVER.get(base_url) #RUN BROWSER
+        with open('cookies.json', 'r', newline='') as inputdata:
+            cookies = json.load(inputdata)
+        for cookie in cookies: #works only after driver.get
+            DRIVER.add_cookie(cookie)
+        DRIVER.refresh() # to load cookies
+        print('cookies set')
+        return {'success':True, 'responseCode': 200, 'message':'cookies successfully set'}
+    except:
+        return {'success':False, 'responseCode': 500, 'message':'error setting cookies'}
+
 
 # ########################################################################### Fetch the URLs from all the pages ###########################################################################
 
@@ -245,16 +268,17 @@ def scrapToDatabase():
 
 
 # Process queue management
-def queueManager(task_queue, result_queue):
+def queueManager(taskQueue, resultQueue):
     while True:
         print('\t\t\t\t\t QUEUE MANAGER LOOP')
         # if len(task_queue.get()) == 0:
         #     print('len 0')
         #     break #break
-        task = task_queue.get()  # Get a task from the queue
+        task = taskQueue.get()  # Get a task from the queue
         if task == "exit":  # Exit signal
             print("Worker exiting...")
             break
         func, args, kwargs = task  # Unpack the function, args, and kwargs
         result = func(*args, **kwargs)  # Call the function
-        result_queue.put(result)  # Send the result back
+        # if not resultQueue.empty():
+        resultQueue.put(result)  # Send the result back
