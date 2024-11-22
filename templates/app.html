@@ -9,12 +9,27 @@
   {{ resources|safe }}
 
   <style>
-    #plotAndTableDiv>*>* {
+    form, table {
       width: 100%;
-      margin: 0;
-      padding: 0;
+      /* margin: 0;
+      padding: 0; */
+      text-align: center;
     }
-
+    th, td {
+      border: 1px solid black;
+    }
+    td > input {
+      width: 97%;
+    }
+    /* td:nth-child(1) {
+      max-width: 70px;
+    }
+    td:nth-child(2) { 
+      max-width: 10px;
+    }
+    td:nth-child(5), td:nth-child(6){
+      max-width: 70px;
+    } */
     #downloadCsv {
       /* just for visibility */
       /* border: 1px blue solid; */
@@ -24,14 +39,12 @@
 </head>
 
 <body>
-
   <form id="mainForm">
     <table>
       <thead>
         <tr>
           <th scope="col">parameter</th>
-          <th scope="col">show in table <p class="checkUncheckAll">UNCHECK ALL</p>
-          </th>
+          <th scope="col">show in table <p class="checkUncheckAll">UNCHECK ALL</p></th>
           <th scope="col">necessary</th>
           <th scope="col">forbidden</th>
           <th scope="col">above</th>
@@ -43,6 +56,7 @@
         <td>{{column}}</td>
         <td><input type="checkbox" class="ckeckBox" checked="checked" name={{column}}Show></td>
         {% if column != "salaryMin" and column != "salaryMax" %}
+        <!-- oninput="this.size = this.value.length" makes it resize, but it might be unnecessary -->
         <td><input type="text" placeholder="necessary phrase" name={{column}}Necessary></td>
         <td><input type="text" placeholder="forbidden phrase" name={{column}}Forbidden></td>
         {% elif column == "salaryMin" or column == "salaryMax" %}
