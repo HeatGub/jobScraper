@@ -39,6 +39,12 @@
 </head>
 
 <body>
+
+  <br><br>
+  <button id="fetchWorkerBtn">Fetch Worker</button>
+  <div id="fetchWorkerCounter"></div>
+  <br><br>
+
   <form id="mainForm">
     <table>
       <thead>
@@ -81,6 +87,52 @@
   <div id="plotDiv"></div>
   <br>
   <div id="tableDiv"></div>
+
+  <script>
+    document.getElementById("fetchWorkerBtn").addEventListener("click", startTimer)
+    //  MAKE IT STOP FETCHING WHEN NO CONNECTION 
+    function fetchWorker() {
+        output = document.getElementById('fetchWorkerCounter')
+        try {
+            fetch(window.origin + '/worker', {
+                credentials: "include", //cookies etc
+                cache: "no-cache",
+                headers: new Headers({
+                    "content-type": "application/json"
+                })
+            }) //fetch returns async promise, then do something
+                .then(function (response) {
+                    if (response.status !== 200) {
+                        console.log('response status not 200: ' + response.status)
+                        clearInterval(runningTimer) //TURN OFF THE TIMER IF ERROR
+                        return
+                    }
+                    response.json().then(function (data) {
+                        output.innerText = data
+                        console.log(data)
+                        if (data === 'TASK ENDED') { //TURN OFF THE TIMER IF DONE
+                            clearInterval(runningTimer)
+                            return
+                        }
+                    })
+                })
+        }
+        catch (error) { //DOESNT REACH THIS POINT
+            console.log('ERROR CATCHED' + error)
+            clearInterval(runningTimer) //stops timer - stops sending the requests}
+        }
+    }
+
+    function startTimer() {
+        //STOP IF ALREADY SET
+        if (typeof runningTimer !== 'undefined') {
+            clearInterval(runningTimer) //stops timer - stops sending the requests 
+        }
+        intervalInMiliseconds = 500
+        runningTimer = setInterval(fetchWorker, intervalInMiliseconds); //100ms interval
+    }
+
+</script>
 
   <script>
     document.getElementById("sendFormAndFetchBokehBtn").addEventListener("click", sendFormAndFetchBokeh)
