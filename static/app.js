@@ -1,12 +1,12 @@
 
 document.addEventListener('DOMContentLoaded', () => {
 
-document.getElementById("openBrowserButton").addEventListener("click", openBrowser)
-
-function openBrowser() {
-    output = document.getElementById('openBrowserOutput')
+function tryFetchingEndpoint (endpoint, outputDiv) { //event just for the need of .bind()
+    // console.log('tryFetchingEndpoint')
+    output = document.getElementById(outputDiv)
     try {
-        fetch(window.origin + '/openBrowser', {
+        url = window.origin.toString() + "/" + endpoint.toString()
+        fetch( url, {
             cache: "no-cache",
         }) //fetch returns async promise, then do something with the results
             .then(function (response) {
@@ -20,12 +20,14 @@ function openBrowser() {
             })
     }
     catch (error) { //doesnt really reach this point
-        console.log('ERROR CATCHED' + error)
+        console.log('JS ERROR CATCHED' + error)
         return
     }
 }
 
-// document.getElementById("saveCookiesToJsonButton").addEventListener("click", openBrowser)
+document.getElementById("openBrowserButton").addEventListener("click", () => { tryFetchingEndpoint('openBrowser', 'openBrowserOutput') })
+document.getElementById("saveCookiesToJsonButton").addEventListener("click", () => { tryFetchingEndpoint('saveCookiesToJson', 'saveCookiesToJsonOutput') })
+document.getElementById("scrapOffersButton").addEventListener("click", () => { tryFetchingEndpoint('scrapOffers', 'scrapOffersOutput') })
 
 
 
@@ -33,7 +35,33 @@ function openBrowser() {
 
 
 
-document.getElementById("fetchWorkerButton").addEventListener("click", startTimer)
+
+// document.getElementById("openBrowserButton").addEventListener("click", openBrowser)
+
+// function openBrowser() {
+//     output = document.getElementById('openBrowserOutput')
+//     try {
+//         fetch(window.origin + '/openBrowser', {
+//             cache: "no-cache",
+//         }) //fetch returns async promise, then do something with the results
+//             .then(function (response) {
+//                 if (response.status !== 200) { //response status from flask
+//                     output.innerText = 'response status code: ' + response.status
+//                     return
+//                 }
+//                 response.json().then(function (data) {
+//                     output.innerText = data.message.slice(0,250) //slice if str too long
+//                 })
+//             })
+//     }
+//     catch (error) { //doesnt really reach this point
+//         console.log('ERROR CATCHED' + error)
+//         return
+//     }
+// }
+
+
+// document.getElementById("fetchWorkerButton").addEventListener("click", startTimer)
 //  MAKE IT STOP FETCHING WHEN NO CONNECTION 
 
 function fetchWorker() {
@@ -142,7 +170,6 @@ function sendFormAndFetchBokeh(e) {
             }
         })
 }
-
 
 //CHANGING CHECKBOXES STATE - CHECK/UNCHECK
 document.querySelector('.checkUncheckAll').addEventListener('click', (event) => {

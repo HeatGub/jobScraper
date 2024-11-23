@@ -11,11 +11,10 @@ from databaseFunctions import database, columnsAll
 # # https://googlechromelabs.github.io/chrome-for-testing/
 
 
+OFFERS_URLS = [] #GLOBAL, appended in fetchUrlsFromAllThePages()
 # base_url = "https://theprotocol.it/filtry/ai-ml;sp/bialystok;wp/stacjonarna;rw"
 base_url = "https://theprotocol.it/filtry/ai-ml;sp/bialystok;wp/"
-offers_urls = [] #GLOBAL, appended in fetchUrlsFromAllThePages()
-
-# ########################################################################### SELENIUM STUFF ###########################################################################
+# currentSession = str(DRIVER.session_id)
 
 def openBrowser():
     try:
@@ -28,24 +27,19 @@ def openBrowser():
         global DRIVER
         DRIVER = webdriver.Chrome(service=service, options=chrome_options) #Selenium opens a new browser window whenever it initializes a WebDriver instance
         DRIVER.get("https://google.com")
-        print('browser started')
         return {'success':True, 'responseCode': 200, 'message':'browser opened'}
     except Exception as exception:
         return {'success':False, 'responseCode': 500, 'message':str(exception)}
     
 def saveCookiesToJson():
-    if not DRIVER:
-        return {'success':False, 'responseCode': 400, 'message':'no selenium browser opened'}
-    else: 
-        try:
-            cookies = DRIVER.get_cookies() # get cookies
-            json_object = json.dumps(cookies, indent=4) # Serializing json
-            with open("cookies.json", "w") as outfile: # OVERWRITES cookies.json
-                outfile.write(json_object)
-            return {'success':True, 'responseCode': 200, 'message':'cookies saved to cookies.json'}
-        except Exception as exception:
-            return {'success':False, 'responseCode': 500, 'message':str(exception)}
-
+    try:
+        cookies = DRIVER.get_cookies() # get cookies
+        json_object = json.dumps(cookies, indent=4) # Serializing json
+        with open("cookies.json", "w") as outfile: # OVERWRITES cookies.json
+            outfile.write(json_object)
+        return {'success':True, 'responseCode': 200, 'message':'cookies saved to cookies.json'}
+    except Exception as exception:
+        return {'success':False, 'responseCode': 500, 'message':str(exception)}
 
 def setCookiesFromJson():
     try:
@@ -55,16 +49,16 @@ def setCookiesFromJson():
         for cookie in cookies: #works only after driver.get
             DRIVER.add_cookie(cookie)
         DRIVER.refresh() # to load cookies
-        print('cookies set')
         return {'success':True, 'responseCode': 200, 'message':'cookies successfully set'}
-    except:
-        return {'success':False, 'responseCode': 500, 'message':'error setting cookies'}
+    except Exception as exception:
+        return {'success':False, 'responseCode': 500, 'message':str(exception)}
 
 
 # ########################################################################### Fetch the URLs from all the pages ###########################################################################
 
 def fetchUrlsFromAllThePages():
-    offers_urls = [] #reset on retry
+    global OFFERS_URLS
+    OFFERS_URLS = [] #reset on retry
     def anyOffersOnTheList():
         try:
             DRIVER.find_element(By.CSS_SELECTOR, '#main-offers-listing > div.hfenof > div.t2re51w > div')
@@ -79,7 +73,7 @@ def fetchUrlsFromAllThePages():
             # offers = offersContainer.find_elements(By.CSS_SELECTOR, '#offer-title') #also works
             # print('\t'+ str(len(offers)) + ' offers:')
             for offer in offers:
-                offers_urls.append(offer.get_property("href"))
+                OFFERS_URLS.append(offer.get_property("href"))
         except:
             print ('probably too high request frequency triggered robot check')
 
@@ -87,14 +81,14 @@ def fetchUrlsFromAllThePages():
     while True: # because not sure how many pages are there
         site = DRIVER.get(base_url + "?pageNumber=" + str(page))
         if not anyOffersOnTheList():
-            print('fetched ' + str(len(offers_urls)) + ' offer urls in total')
+            print('fetched ' + str(len(OFFERS_URLS)) + ' offer urls in total')
             break # break if no results
         else:
             time.sleep(random.uniform(0.5, 1)) #humanize
             fetchOffersUrlsFromSinglePage()
             print('page ' + str(page) + ' urls fetched')
             page += 1
-    return str(len(offers_urls)) + ' urls fetched'
+    return str(len(OFFERS_URLS)) + ' urls fetched'
 
 
 # ########################################################################### Analyse offer functions ###########################################################################
@@ -237,13 +231,18 @@ def getOfferDetails():
 ########################################################################### Scrapping to database ###########################################################################
 
 def scrapToDatabase():
+    #PRIMITIVE FLOW FOR TESTS
+    openBrowser()
+    setCookiesFromJson()
+    fetchUrlsFromAllThePages()
+    
     # timeDeltas = []
     inserts = 0
     updates = 0
     print(database.countAllRecords() + ' records before run')
-    for i in range (2):
-    # for i in range (len(offers_urls)):
-        DRIVER.get(offers_urls[i])
+    for i in range (5):
+    # for i in range (len(OFFERS_URLS)):
+        DRIVER.get(OFFERS_URLS[i])
         if not offerNotFound():
             resultsList = getOfferDetails()
             outputDictionary = {}
@@ -258,7 +257,7 @@ def scrapToDatabase():
                 inserts += 1
             # timeDeltas.append(time.time() - before)
             #ending here and starting in an above for/zip loop it takes ~(1/100)s - good enough
-            print (str(i+1) + '/' + str(len(offers_urls)) + ' done')
+            print (str(i+1) + '/' + str(len(OFFERS_URLS)) + ' done')
         else:
             print('OFFER NOT FOUND: ' +  DRIVER.current_url)
         time.sleep(random.uniform(0.35,0.85)) #Humanize requests frequency

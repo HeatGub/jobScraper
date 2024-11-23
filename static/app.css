@@ -20,6 +20,10 @@ td>input {
     width: 97%;
 }
 
+fetchDiv {
+border: 1px solid red;
+}
+
 /* td:nth-child(1) {
     max-width: 70px;
   }

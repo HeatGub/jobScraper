@@ -13,7 +13,7 @@ from bokeh.io import curdoc #for dark theme
 import multiprocessing, io, time
 import numpy as np
 
-from seleniumFunctions import openBrowser, setCookiesFromJson, fetchUrlsFromAllThePages, scrapToDatabase, queueManager
+from seleniumFunctions import openBrowser, saveCookiesToJson, setCookiesFromJson, fetchUrlsFromAllThePages, scrapToDatabase, queueManager
 from databaseFunctions import database, columnsAll, tableName
 
 ########################################################################## FLASK SERVER FUNCITONS ###########################################################################
@@ -225,33 +225,32 @@ def form():
             return json.dumps([json_item(plot), json_item(table), int(len(dataframeTable))])
 
         return json.dumps(['noResultsFound']) #when no results return a str
-    
-# @app.route('/worker', methods=['GET'])
-# def worker():
-#     # TASK_QUEUE.put((scrapToDatabase, (), {}))
-#     TASK_QUEUE.put((openBrowser, (), {}))
-#     print(RESULT_QUEUE.get())
-#     # TASK_QUEUE.put((setCookiesFromJson, (), {}))
-#     # print(RESULT_QUEUE.get())
-#     # TASK_QUEUE.put((fetchUrlsFromAllThePages, (), {}))
-#     # print(RESULT_QUEUE.get())
-#     # Get and print results
-#     # process.join()
-#     return json.dumps([RESULT_QUEUE.get()])
 
 @app.route('/openBrowser', methods=['GET'])
 def openBrowserEndpoint():
+    print('openBrowserEndpoint')
     TASK_QUEUE.put((openBrowser, (), {}))
     # time.sleep(300) #still shows in JS
     res = RESULT_QUEUE.get()
     return json.dumps(res)
 
 @app.route('/saveCookiesToJson', methods=['GET'])
-def saveCookiesToJson():
+def saveCookiesToJsonEndpoint():
+    print('saveCookiesToJsonEndpoint')
     TASK_QUEUE.put((saveCookiesToJson, (), {}))
-    # time.sleep(300) #still shows in JS
     res = RESULT_QUEUE.get()
     return json.dumps(res)
+
+
+
+@app.route('/scrapOffers', methods=['GET'])
+def scrapOffersEndpoint():
+    print('scrapOffersEndpoint')
+    TASK_QUEUE.put((scrapToDatabase, (), {}))
+    res = RESULT_QUEUE.get()
+    return json.dumps(res)
+
+
 
 if __name__ == "__main__":
     # database.createTableIfNotExists()
@@ -271,4 +270,13 @@ if __name__ == "__main__":
     print('DAS ENDE')
 
 ##TODO
-# przycisk do otwierania przegladarki, wtedy czeka na pozytywny response od saveCookies i wyswietla wynik
+# optionalRequirements>fobbidden excludes too much
+# paramsy takie jak %VAT, kolory? do ustawienia
+# >=1 checkbox checked check
+# link table-plot?
+#DRIVER not defined - check if browser open or just open a new one?
+
+#FLOW
+# openBrowser > setCookiesFromJson > fetchUrlsFromAllThePages > scrapToDatabase (korzysta z kilku funkcji)
+# cookies chyba nawet nie są konieczne
+# uruchamiać różne funkcje selenium i ich output umieszczać na bieżąco w jednym divie od scrapowania

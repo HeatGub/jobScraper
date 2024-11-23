@@ -4,5 +4,6 @@ venv/
 chromedriver.exe
 chromedriver128.exe
 cookies.json
+cookiesCopy.json
 results.csv
 results.db
