@@ -27,7 +27,7 @@ function tryFetchingEndpoint (endpoint, outputDiv) { //event just for the need o
 
 document.getElementById("openBrowserButton").addEventListener("click", () => { tryFetchingEndpoint('openBrowser', 'openBrowserOutput') })
 document.getElementById("saveCookiesToJsonButton").addEventListener("click", () => { tryFetchingEndpoint('saveCookiesToJson', 'saveCookiesToJsonOutput') })
-document.getElementById("scrapOffersButton").addEventListener("click", () => { tryFetchingEndpoint('scrapOffers', 'scrapOffersOutput') })
+document.getElementById("fullScrappingButton").addEventListener("click", () => { tryFetchingEndpoint('fullScrapping', 'fullScrappingOutput') })
 
 
 

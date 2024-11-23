@@ -13,7 +13,7 @@ from bokeh.io import curdoc #for dark theme
 import multiprocessing, io, time
 import numpy as np
 
-from seleniumFunctions import openBrowser, saveCookiesToJson, setCookiesFromJson, fetchUrlsFromAllThePages, scrapToDatabase, queueManager
+from seleniumFunctions import queueManager, openBrowserIfNeeded, saveCookiesToJson, fullScrapping
 from databaseFunctions import database, columnsAll, tableName
 
 ########################################################################## FLASK SERVER FUNCITONS ###########################################################################
@@ -228,27 +228,29 @@ def form():
 
 @app.route('/openBrowser', methods=['GET'])
 def openBrowserEndpoint():
-    print('openBrowserEndpoint')
-    TASK_QUEUE.put((openBrowser, (), {}))
+    print('\t\topenBrowserEndpoint')
+    TASK_QUEUE.put((openBrowserIfNeeded, (), {}))
     # time.sleep(300) #still shows in JS
     res = RESULT_QUEUE.get()
     return json.dumps(res)
 
 @app.route('/saveCookiesToJson', methods=['GET'])
 def saveCookiesToJsonEndpoint():
-    print('saveCookiesToJsonEndpoint')
+    print('\t\tsaveCookiesToJsonEndpoint')
     TASK_QUEUE.put((saveCookiesToJson, (), {}))
     res = RESULT_QUEUE.get()
     return json.dumps(res)
 
 
 
-@app.route('/scrapOffers', methods=['GET'])
-def scrapOffersEndpoint():
-    print('scrapOffersEndpoint')
-    TASK_QUEUE.put((scrapToDatabase, (), {}))
+
+@app.route('/fullScrapping', methods=['GET'])
+def fullScrappingEndpoint():
+    print('\t\tscrapOffersEndpoint')
+    TASK_QUEUE.put((fullScrapping, (), {}))
     res = RESULT_QUEUE.get()
     return json.dumps(res)
+
 
 
 
@@ -274,9 +276,10 @@ if __name__ == "__main__":
 # paramsy takie jak %VAT, kolory? do ustawienia
 # >=1 checkbox checked check
 # link table-plot?
-#DRIVER not defined - check if browser open or just open a new one?
+# DRIVER not defined - check if browser open or just open a new one?
 
 #FLOW
 # openBrowser > setCookiesFromJson > fetchUrlsFromAllThePages > scrapToDatabase (korzysta z kilku funkcji)
 # cookies chyba nawet nie są konieczne
 # uruchamiać różne funkcje selenium i ich output umieszczać na bieżąco w jednym divie od scrapowania
+# można do scrapowania od rasu openBrowser() dawać to zamknie starą instancję automatycznie
