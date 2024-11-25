@@ -246,7 +246,7 @@ def saveCookiesToJsonEndpoint():
 
 @app.route('/fullScraping', methods=['GET'])
 def fullScrapingEndpoint():
-    print('\t\\fullScrapingEndpoint')
+    # print('\t\\fullScrapingEndpoint')
     TASK_QUEUE.put((fullScraping, (), {}))
     res = RESULT_QUEUE.get()
     return json.dumps(res)
@@ -272,14 +272,11 @@ if __name__ == "__main__":
     print('DAS ENDE')
 
 ##TODO
-# optionalRequirements>fobbidden excludes too much
+# optionalRequirements>fobbidden excludes too much - Nones and ''s
 # paramsy takie jak %VAT, kolory? do ustawienia
 # >=1 checkbox checked check
 # link table-plot?
-# DRIVER not defined - check if browser open or just open a new one?
 
 #FLOW
-# openBrowser > setCookiesFromJson > fetchUrlsFromAllThePages > scrapToDatabase (korzysta z kilku funkcji)
-# cookies chyba nawet nie są konieczne
-# uruchamiać różne funkcje selenium i ich output umieszczać na bieżąco w jednym divie od scrapowania
+# cookies chyba niekonieczne w JS fetch
 # można do scrapowania od rasu openBrowser() dawać to zamknie starą instancję automatycznie

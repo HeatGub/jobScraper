@@ -1,4 +1,3 @@
-
 document.addEventListener('DOMContentLoaded', () => {
 
 function tryFetchingEndpoint (endpoint, outputDiv) { //event just for the need of .bind()
@@ -27,47 +26,14 @@ function tryFetchingEndpoint (endpoint, outputDiv) { //event just for the need o
 
 document.getElementById("openBrowserButton").addEventListener("click", () => { tryFetchingEndpoint('openBrowser', 'openBrowserOutput') })
 document.getElementById("saveCookiesToJsonButton").addEventListener("click", () => { tryFetchingEndpoint('saveCookiesToJson', 'saveCookiesToJsonOutput') })
-document.getElementById("fullScrapingButton").addEventListener("click", () => { tryFetchingEndpoint('fullScraping', 'fullScrapingOutput') })
+// document.getElementById("fullScrapingButton").addEventListener("click", () => { tryFetchingEndpoint('fullScraping', 'fullScrapingOutput') })
+document.getElementById("fullScrapingButton").addEventListener("click", startTimer)
 
-
-
-
-
-
-
-
-// document.getElementById("openBrowserButton").addEventListener("click", openBrowser)
-
-// function openBrowser() {
-//     output = document.getElementById('openBrowserOutput')
-//     try {
-//         fetch(window.origin + '/openBrowser', {
-//             cache: "no-cache",
-//         }) //fetch returns async promise, then do something with the results
-//             .then(function (response) {
-//                 if (response.status !== 200) { //response status from flask
-//                     output.innerText = 'response status code: ' + response.status
-//                     return
-//                 }
-//                 response.json().then(function (data) {
-//                     output.innerText = data.message.slice(0,250) //slice if str too long
-//                 })
-//             })
-//     }
-//     catch (error) { //doesnt really reach this point
-//         console.log('ERROR CATCHED' + error)
-//         return
-//     }
-// }
-
-
-// document.getElementById("fetchWorkerButton").addEventListener("click", startTimer)
-//  MAKE IT STOP FETCHING WHEN NO CONNECTION 
-
-function fetchWorker() {
-    output = document.getElementById('fetchWorkerOutput')
+// MAKE IT STOP FETCHING WHEN NO CONNECTION? INTERVAL WILL BE LOW ANYWAY
+function callFullScrapingEndpoint() {
+    output = document.getElementById('fullScrapingOutput')
     try {
-        fetch(window.origin + '/worker', {
+        fetch(window.origin + '/fullScraping', {
             credentials: "include", //cookies etc
             cache: "no-cache",
             headers: new Headers({
@@ -81,34 +47,32 @@ function fetchWorker() {
                     return
                 }
                 response.json().then(function (data) {
-                    output.innerText = data
-                    console.log(data)
-                    if (data === 'TASK ENDED') { //TURN OFF THE TIMER IF DONE
+                    output.innerText = data.message.slice(0,250)
+                    console.log(data.message)
+                    if (data.message === 'EXIT SIGNAL') { //TURN OFF THE TIMER IF DONE
                         clearInterval(runningTimer)
                         return
                     }
                 })
             })
     }
-    catch (error) { //DOESNT REACH THIS POINT
+    catch (error) { //doesnt really reach here
         console.log('ERROR CATCHED' + error)
         clearInterval(runningTimer) //stops timer - stops sending the requests}
     }
 }
-
 
 function startTimer() {
     //STOP IF ALREADY SET
     if (typeof runningTimer !== 'undefined') {
         clearInterval(runningTimer) //stops timer - stops sending the requests 
     }
-    intervalInMiliseconds = 500
-    runningTimer = setInterval(fetchWorker, intervalInMiliseconds); //100ms interval
+    intervalInMiliseconds = 1000
+    runningTimer = setInterval(callFullScrapingEndpoint, intervalInMiliseconds); //100ms interval
 }
 
-
-document.getElementById("sendFormAndFetchBokehBtn").addEventListener("click", sendFormAndFetchBokeh)
-
+// SEND FORM AND FETCH BOKEH
+document.getElementById("sendFormAndFetchBokehButton").addEventListener("click", sendFormAndFetchBokeh)
 
 function sendFormAndFetchBokeh(e) {
     e.preventDefault() //prevent sending form default request
@@ -124,7 +88,6 @@ function sendFormAndFetchBokeh(e) {
             // console.log(formData.get(param))
         }
     })
-
     formDataJson = JSON.stringify(Object.fromEntries(formData))
     // console.log(formDataJson)
 
@@ -171,7 +134,7 @@ function sendFormAndFetchBokeh(e) {
         })
 }
 
-//CHANGING CHECKBOXES STATE - CHECK/UNCHECK
+// CHANGING CHECKBOXES STATE - CHECK/UNCHECK
 document.querySelector('.checkUncheckAll').addEventListener('click', (event) => {
     if (document.querySelector('.checkUncheckAll').textContent == 'UNCHECK ALL') {
         document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = false })

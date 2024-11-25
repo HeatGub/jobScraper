@@ -18,16 +18,19 @@ BROWSER_INSTANCE = None
 class SeleniumBrowser():
     def __init__(self):
         self.DRIVER = None
-        # self.currentSession = str(self.DRIVER.session_id)
-        self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/warszawa;wp/"
-        # BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/bialystok;wp/stacjonarna;rw"
-        self.OFFERS_URLS = [] #GLOBAL, appended in scrapUrlsFromAllThePages()
+        # self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/warszawa;wp/"
+        self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/bialystok;wp/stacjonarna;rw"
+
         #all of the below functions must return dictionary like          {'success':True, 'functionDone':False, 'message':'working'}
         self.scrapingFunctionsInOrder = [openBrowserIfNeeded, self.setCookiesFromJson, self.scrapUrlsFromAllThePages, self.scrapToDatabase]
-        # self.scrapingFunctionsProcessedSuccessfully = [False] * len(self.scrapingFunctionsInOrder)
         self.currentFunctionIndex = 0
+
         self.currentlyScrapedPageIndex = 1 #theprotocol starts page enumeration with 1
-        # self.currentWorkerState = 'working' / 'done'
+        self.OFFERS_URLS = [] # appended in scrapUrlsFromAllThePages()
+
+        self.currentlyScrapedOfferIndex = 0
+        self.databaseInserts = 0
+        self.databaseUpdates = 0
     
     def isBrowserOpen(self):
         if self.DRIVER:
@@ -40,10 +43,19 @@ class SeleniumBrowser():
             return False
     
     def getScrapingStatus(self):
-        print()
-        print('currentFunctionIndex: ' + str(self.currentFunctionIndex))
-        print('currentFunctionName: ' + str(self.scrapingFunctionsInOrder[self.currentFunctionIndex]))
-        print()
+        if ((self.currentFunctionIndex +1) <= len(self.scrapingFunctionsInOrder)):
+            print()
+            # print('currentFunctionIndex: ' + str(self.currentFunctionIndex))
+            print('currentFunctionName: ' + str(self.scrapingFunctionsInOrder[self.currentFunctionIndex]))
+            print()
+    
+    def resetScrapingFunctionsProgress(self):
+        self.currentFunctionIndex = 0
+        self.currentlyScrapedPageIndex = 1
+        self.OFFERS_URLS = []
+        self.currentlyScrapedOfferIndex = 0
+        self.databaseInserts = 0
+        self.databaseUpdates = 0
                 
     def saveCookiesToJson(self):
         try:
@@ -256,35 +268,36 @@ class SeleniumBrowser():
     ########################################################################### Scraping to Database ###########################################################################
 
     def scrapToDatabase(self):
-        # if len(OFFERS_URLS) == 0:  
-        # timeDeltas = []
-        inserts = 0
-        updates = 0
-        print(Database.countAllRecords() + ' records before run')
-        for i in range (5):
-        # for i in range (len(OFFERS_URLS)):
-            self.DRIVER.get(self.OFFERS_URLS[i])
-            if not self.offerNotFound():
-                resultsList = self.getOfferDetails()
-                outputDictionary = {}
-                for column, offerDetail in zip(columnsAll, resultsList):
-                    outputDictionary[column] = offerDetail #combine 2 lists into 1 dictionary
-                # before = time.time()
-                if Database.recordFound(self.DRIVER.current_url):
-                    Database.updateDatetimeLast(self.DRIVER.current_url)
-                    updates += 1
-                else:
-                    Database.insertRecord(outputDictionary) # insert into database
-                    inserts += 1
-                # timeDeltas.append(time.time() - before)
-                #ending here and starting in an above for/zip loop it takes ~(1/100)s - good enough
-                print (str(i+1) + '/' + str(len(self.OFFERS_URLS)) + ' done')
+        try:
+            # FINISH CONDITIONS
+            if len(self.OFFERS_URLS) == 0:
+                return {'success':True, 'functionDone':True, 'message':'no offers to analyse'}
+            elif int(self.currentlyScrapedOfferIndex) > int(len(self.OFFERS_URLS)- 1):
+                    # print(str(self.databaseInserts) + ' inserts | ' + str(self.databaseUpdates) + ' updates')
+                    return {'success':True, 'functionDone':True, 'message': 'DONED. ' + str(self.databaseInserts) + ' inserts | ' + str(self.databaseUpdates) + ' updates'}
+            # IF NOT FINISHED
             else:
-                print('OFFER NOT FOUND: ' +  self.DRIVER.current_url)
-            time.sleep(random.uniform(0.35,0.85)) #Humanize requests frequency
-        # print(np.mean(timeDeltas))
-        # print(str(inserts) + ' inserts | ' + str(updates) + ' updates')
-        return (str(inserts) + ' inserts | ' + str(updates) + ' updates')
+                self.DRIVER.get(self.OFFERS_URLS[self.currentlyScrapedOfferIndex])
+                if not self.offerNotFound():
+                    resultsList = self.getOfferDetails()
+                    outputDictionary = {}
+                    for column, offerDetail in zip(columnsAll, resultsList):
+                        outputDictionary[column] = offerDetail #combine 2 lists into 1 dictionary
+                    # before = time.time()
+                    if Database.recordFound(self.DRIVER.current_url):
+                        Database.updateDatetimeLast(self.DRIVER.current_url)
+                        self.databaseUpdates += 1
+                    else:
+                        Database.insertRecord(outputDictionary) # insert into database
+                        self.databaseInserts += 1
+                    #ending here and starting in an above for/zip loop it takes ~(1/100)s - good enough
+                    self.currentlyScrapedOfferIndex += 1 #increment if successfully analysed
+                    return {'success':True, 'functionDone':False, 'message': str(self.currentlyScrapedOfferIndex) + '/' + str(len(self.OFFERS_URLS)) + ' offers analysed'}
+                elif self.offerNotFound():
+                    # print('OFFER NOT FOUND: ' +  self.DRIVER.current_url)
+                    return {'success':False, 'functionDone':False, 'message': 'OFFER NOT FOUND: ' +  self.DRIVER.current_url}
+        except Exception as exception:
+            return {'success':False, 'functionDone':False, 'message':str(exception)}
 
 def getOrCreateBrowserInstance():
     global BROWSER_INSTANCE
@@ -299,11 +312,7 @@ def openBrowserIfNeeded():
     if not BROWSER_INSTANCE.isBrowserOpen():
         return BROWSER_INSTANCE.openBrowser() #opens browser and returns object like {'success':True, 'functionDone':False, 'message':'msg''}
     elif BROWSER_INSTANCE.isBrowserOpen():
-        return {'success':True, 'functionDone':True, 'message':'browser already open'}
-    
-
-# except Exception as exception:
-# return {'success':False, 'functionDone':False, 'message':str(exception)}
+        return {'success':True, 'functionDone':True, 'message':'browser open'}
 
 def saveCookiesToJson():
     global BROWSER_INSTANCE
@@ -318,25 +327,25 @@ def getScrapingStatus():
     BROWSER_INSTANCE = getOrCreateBrowserInstance() #should not be None by now
     return BROWSER_INSTANCE.getScrapingStatus()
 
-
-
-
-#REQUEST CURRENT INSTANCE STATE AND RUN ADEQUATE FUNCTONS. HAS TO RETURN AN OUTPUT FREQUENTLY
+# REQUEST CURRENT INSTANCE STATE AND RUN ADEQUATE FUNCTONS. RETURNS AN OUTPUT FREQUENTLY
 def fullScraping():
-    print('\t\t\tSTARTED fullScraping')
     getScrapingStatus()
-    # SCRAPING FUNCTIONS IN ORDER:
-    # [openBrowserIfNeeded, self.setCookiesFromJson, self.scrapUrlsFromAllThePages, self.scrapToDatabase]
-    functionResultDict = BROWSER_INSTANCE.scrapingFunctionsInOrder[BROWSER_INSTANCE.currentFunctionIndex]() #run current function and get results
-    print('\t\t\t' + str(functionResultDict))
-    if functionResultDict['functionDone'] == True:
+
+    getOrCreateBrowserInstance()
+    if BROWSER_INSTANCE.currentFunctionIndex != 0:
+        openBrowserIfNeeded() # it's for currentFunctionIndex == 0
+
+    # SCRAPING FUNCTIONS IN ORDER: [openBrowserIfNeeded, self.setCookiesFromJson, self.scrapUrlsFromAllThePages, self.scrapToDatabase]
+    functionResultDict = BROWSER_INSTANCE.scrapingFunctionsInOrder[BROWSER_INSTANCE.currentFunctionIndex]() # RUN CURRENT FUNCTION AND GET RESULTS
+    if   (functionResultDict['functionDone'] == True) and ((BROWSER_INSTANCE.currentFunctionIndex +1) <  len(BROWSER_INSTANCE.scrapingFunctionsInOrder)):
         BROWSER_INSTANCE.currentFunctionIndex +=1
+    elif (functionResultDict['functionDone'] == True) and ((BROWSER_INSTANCE.currentFunctionIndex +1) >= len(BROWSER_INSTANCE.scrapingFunctionsInOrder)):
+        BROWSER_INSTANCE.resetScrapingFunctionsProgress()
+        functionResultDict = {'success':True, 'functionDone':True, 'message':'EXIT SIGNAL'} # signal to JS to stop fetching
+
+    print('\t\t\t' + str(functionResultDict))
     getScrapingStatus()
     return functionResultDict
-
-
-
-
 
 
 # PROCESS QUEUE MANAGEMENT
