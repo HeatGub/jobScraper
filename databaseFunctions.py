@@ -4,7 +4,7 @@ import pandas as pd
 tableName = 'test4' #DB TABLE NAME
 columnsAll = ['datetimeFirst', 'datetimeLast', 'url', 'title', 'salaryAndContract', 'salaryMin', 'salaryMax', 'employer', 'workModes', 'positionLevels', 'offerValidTo', 'location', 'techstackExpected', 'techstackOptional', 'responsibilities', 'requirements', 'optionalRequirements'] # move out of global scope later
 
-class database():
+class Database():
     def createTableIfNotExists(): #if not exists
         connection = sqlite3.connect('results.db')
         cursor = connection.cursor()

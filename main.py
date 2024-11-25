@@ -13,8 +13,8 @@ from bokeh.io import curdoc #for dark theme
 import multiprocessing, io, time
 import numpy as np
 
-from seleniumFunctions import queueManager, openBrowserIfNeeded, saveCookiesToJson, fullScrapping
-from databaseFunctions import database, columnsAll, tableName
+from seleniumFunctions import queueManager, openBrowserIfNeeded, saveCookiesToJson, fullScraping
+from databaseFunctions import Database, columnsAll, tableName
 
 ########################################################################## FLASK SERVER FUNCITONS ###########################################################################
 
@@ -216,8 +216,8 @@ def form():
         
         global dataframeTable #to make it accessible to download at all times
         dataframeTable, dataframePlot = queryBuilder(makeFormOutputDictionary())
-        dataframeTable = database.queryToDataframe(dataframeTable)
-        dataframePlot = database.queryToDataframe(dataframePlot)
+        dataframeTable = Database.queryToDataframe(dataframeTable)
+        dataframePlot = Database.queryToDataframe(dataframePlot)
 
         if len(dataframePlot) > 0 and len(dataframeTable) > 0: #tho their lengths should be equal
             plot = makeBokehPlot(dataframePlot)
@@ -244,10 +244,10 @@ def saveCookiesToJsonEndpoint():
 
 
 
-@app.route('/fullScrapping', methods=['GET'])
-def fullScrappingEndpoint():
-    print('\t\tscrapOffersEndpoint')
-    TASK_QUEUE.put((fullScrapping, (), {}))
+@app.route('/fullScraping', methods=['GET'])
+def fullScrapingEndpoint():
+    print('\t\\fullScrapingEndpoint')
+    TASK_QUEUE.put((fullScraping, (), {}))
     res = RESULT_QUEUE.get()
     return json.dumps(res)
 
@@ -255,7 +255,7 @@ def fullScrappingEndpoint():
 
 
 if __name__ == "__main__":
-    # database.createTableIfNotExists()
+    # Database.createTableIfNotExists()
     TASK_QUEUE = multiprocessing.Queue()  # Queue for sending tasks to the worker
     RESULT_QUEUE = multiprocessing.Queue()  # Queue for receiving results from the worker
 

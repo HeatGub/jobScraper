@@ -5,25 +5,28 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import WebDriverException
 import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-import time,json, random, re, datetime
-from databaseFunctions import database, columnsAll
+import time,json, random, re, datetime, inspect
+from databaseFunctions import Database, columnsAll
 
-# # CHROMEDRIVER SHOULD MATCH BROWSER VERSION. IF OUTDATED DOWNLOAD FROM:
-# # https://googlechromelabs.github.io/chrome-for-testing/
+############################################################################
+#   CHROMEDRIVER SHOULD MATCH BROWSER VERSION. IF OUTDATED DOWNLOAD FROM:  #
+#   https://googlechromelabs.github.io/chrome-for-testing/                 #
+############################################################################
 
 BROWSER_INSTANCE = None
 
 class SeleniumBrowser():
     def __init__(self):
         self.DRIVER = None
-        self.OFFERS_URLS = []
         # self.currentSession = str(self.DRIVER.session_id)
-        self.base_url = "https://theprotocol.it/filtry/ai-ml;sp/bialystok;wp/"
-        self.OFFERS_URLS = [] #GLOBAL, appended in fetchUrlsFromAllThePages()
-        # base_url = "https://theprotocol.it/filtry/ai-ml;sp/bialystok;wp/stacjonarna;rw"
-        self.currentWorkerFunction = ''
-        self.currentlyProcessing = False
-
+        self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/warszawa;wp/"
+        # BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/bialystok;wp/stacjonarna;rw"
+        self.OFFERS_URLS = [] #GLOBAL, appended in scrapUrlsFromAllThePages()
+        #all of the below functions must return dictionary like          {'success':True, 'functionDone':False, 'message':'working'}
+        self.scrapingFunctionsInOrder = [openBrowserIfNeeded, self.setCookiesFromJson, self.scrapUrlsFromAllThePages, self.scrapToDatabase]
+        # self.scrapingFunctionsProcessedSuccessfully = [False] * len(self.scrapingFunctionsInOrder)
+        self.currentFunctionIndex = 0
+        self.currentlyScrapedPageIndex = 1 #theprotocol starts page enumeration with 1
         # self.currentWorkerState = 'working' / 'done'
     
     def isBrowserOpen(self):
@@ -35,8 +38,25 @@ class SeleniumBrowser():
                 return False
         else:
             return False
+    
+    def getScrapingStatus(self):
+        print()
+        print('currentFunctionIndex: ' + str(self.currentFunctionIndex))
+        print('currentFunctionName: ' + str(self.scrapingFunctionsInOrder[self.currentFunctionIndex]))
+        print()
+                
+    def saveCookiesToJson(self):
+        try:
+            cookies = self.DRIVER.get_cookies() # get cookies
+            json_object = json.dumps(cookies, indent=4) # Serializing json
+            with open("cookies.json", "w") as outfile: # OVERWRITES cookies.json
+                outfile.write(json_object)
+            return {'success':True, 'functionDone':True, 'message':'cookies saved to cookies.json'}
+        except Exception as exception:
+            return {'success':False, 'functionDone':False, 'message':str(exception)}
 
     def openBrowser(self):
+        self.currentFunctionIndex = 0
         try:
             # SELENIUM CHROME DRIVER SETTINGS
             service = Service(executable_path="chromedriver.exe")
@@ -46,72 +66,57 @@ class SeleniumBrowser():
             # chrome_options.add_experimental_option("detach", True) #to keep browser open after python script execution ended
             self.DRIVER = webdriver.Chrome(service=service, options=chrome_options) #Selenium opens a new browser window whenever it initializes a WebDriver instance
             # self.DRIVER.get("https://google.com")
-            return {'success':True, 'responseCode': 200, 'message':'browser opened'}
+            return {'success':True, 'functionDone':True, 'message':'opened a selenium browser'}
         except Exception as exception:
-            return {'success':False, 'responseCode': 500, 'message':str(exception)}
-        
-    def saveCookiesToJson(self):
-        try:
-            cookies = self.DRIVER.get_cookies() # get cookies
-            json_object = json.dumps(cookies, indent=4) # Serializing json
-            with open("cookies.json", "w") as outfile: # OVERWRITES cookies.json
-                outfile.write(json_object)
-            return {'success':True, 'responseCode': 200, 'message':'cookies saved to cookies.json'}
-        except Exception as exception:
-            return {'success':False, 'responseCode': 500, 'message':str(exception)}
+            return {'success':False, 'functionDone':False, 'message':str(exception)}
 
     def setCookiesFromJson(self):
         try:
-            self.DRIVER.get(self.base_url) #RUN BROWSER
+            self.DRIVER.get(self.BASE_URL) #RUN BROWSER
             with open('cookies.json', 'r', newline='') as inputdata:
                 cookies = json.load(inputdata)
             for cookie in cookies: #works only after driver.get
                 self.DRIVER.add_cookie(cookie)
             self.DRIVER.refresh() # to load cookies
-            return {'success':True, 'responseCode': 200, 'message':'cookies successfully set'}
+            return {'success':True, 'functionDone':True, 'message':'cookies successfully set'}
         except Exception as exception:
-            return {'success':False, 'responseCode': 500, 'message':str(exception)}
+            return {'success':False, 'functionDone':False, 'message':str(exception)}
 
 
-
-    # ########################################################################### Fetch the URLs from all the pages ###########################################################################
-
-    def fetchUrlsFromAllThePages(self):
-        self.OFFERS_URLS = [] #reset on retry
-        def anyOffersOnTheList():
-            try:
-                self.DRIVER.find_element(By.CSS_SELECTOR, '#main-offers-listing > div.hfenof > div.t2re51w > div')
-                return False
-            except:
-                return True
-            
-        def fetchOffersUrlsFromSinglePage():
-            try:
-                offersContainer = self.DRIVER.find_element("xpath", '//*[@id="main-offers-listing"]/div[1]/div')
-                offers = offersContainer.find_elements(By.CLASS_NAME, 'a4pzt2q ')
-                # offers = offersContainer.find_elements(By.CSS_SELECTOR, '#offer-title') #also works
-                # print('\t'+ str(len(offers)) + ' offers:')
-                for offer in offers:
-                    self.OFFERS_URLS.append(offer.get_property("href"))
-            except:
-                print ('probably too high request frequency triggered robot check')
-
-        page = 1 #theprotocol enumerates pages starting from 1
-        while True: # because not sure how many pages are there
-            self.DRIVER.get(self.base_url + "?pageNumber=" + str(page))
-            if not anyOffersOnTheList():
-                print('fetched ' + str(len(self.OFFERS_URLS)) + ' offer urls in total')
-                break # break if no results
-            else:
+    ########################################################################### Scrap offer URLs from all the pages ###########################################################################
+    def foundOfferOnThePage(self):
+        try:
+            self.DRIVER.find_element(By.CSS_SELECTOR, '#main-offers-listing > div.hfenof > div.t2re51w > div')
+            return False #if no offer specific div found
+        except:
+            return True
+    
+    def scrapOffersUrlsFromSinglePage(self):
+        try:
+            offersContainer = self.DRIVER.find_element("xpath", '//*[@id="main-offers-listing"]/div[1]/div')
+            offers = offersContainer.find_elements(By.CLASS_NAME, 'a4pzt2q ')
+            # offers = offersContainer.find_elements(By.CSS_SELECTOR, '#offer-title') #also works
+            # print('\t'+ str(len(offers)) + ' offers:')
+            for offer in offers:
+                self.OFFERS_URLS.append(offer.get_property("href"))
+            return {'success':True, 'functionDone':True, 'message': 'page ' + str(self.currentlyScrapedPageIndex) + ' offers scraped'}
+        except:
+            return {'success':False, 'functionDone':False, 'message': 'probably too high request frequency triggered bot check'}
+   
+    def scrapUrlsFromAllThePages(self):
+        try:
+            self.DRIVER.get(self.BASE_URL + "?pageNumber=" + str(self.currentlyScrapedPageIndex))
+            if not self.foundOfferOnThePage():
+                return {'success':True, 'functionDone':True, 'message': 'URLs scraping done. Scraped ' + str(len(self.OFFERS_URLS))+' offer urls in total'}
+            elif self.foundOfferOnThePage():
                 time.sleep(random.uniform(0.5, 1)) #humanize
-                fetchOffersUrlsFromSinglePage()
-                print('page ' + str(page) + ' urls fetched')
-                page += 1
-
-        return str(len(self.OFFERS_URLS)) + ' urls fetched'
-
-
-    # ########################################################################### Analyse offer functions ###########################################################################
+                if self.scrapOffersUrlsFromSinglePage()['success'] == True:
+                    self.currentlyScrapedPageIndex += 1
+                    return {'success':True, 'functionDone':False, 'message': 'page ' + str(self.currentlyScrapedPageIndex -1) + ' urls fetched'} # -1 because starting from 1 and incremented just above
+        except Exception as exception:
+            return {'success':False, 'functionDone':False, 'message':str(exception)}
+            
+    ########################################################################### Analyse offer functions ###########################################################################
 
 
     def offerNotFound(self):
@@ -248,14 +253,14 @@ class SeleniumBrowser():
         datetimeNow = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         return [datetimeNow, datetimeNow, self.DRIVER.current_url, jobTitle, salaryAndContract, salaryMinAndMax[0], salaryMinAndMax[1], employer, workModes, positionLevels, offerValidTo, location, techstackExpected, techstackOptional, responsibilities, requirements, optionalRequirements]
 
-    ########################################################################### Scrapping to database ###########################################################################
+    ########################################################################### Scraping to Database ###########################################################################
 
     def scrapToDatabase(self):
         # if len(OFFERS_URLS) == 0:  
         # timeDeltas = []
         inserts = 0
         updates = 0
-        print(database.countAllRecords() + ' records before run')
+        print(Database.countAllRecords() + ' records before run')
         for i in range (5):
         # for i in range (len(OFFERS_URLS)):
             self.DRIVER.get(self.OFFERS_URLS[i])
@@ -265,11 +270,11 @@ class SeleniumBrowser():
                 for column, offerDetail in zip(columnsAll, resultsList):
                     outputDictionary[column] = offerDetail #combine 2 lists into 1 dictionary
                 # before = time.time()
-                if database.recordFound(self.DRIVER.current_url):
-                    database.updateDatetimeLast(self.DRIVER.current_url)
+                if Database.recordFound(self.DRIVER.current_url):
+                    Database.updateDatetimeLast(self.DRIVER.current_url)
                     updates += 1
                 else:
-                    database.insertRecord(outputDictionary) # insert into database
+                    Database.insertRecord(outputDictionary) # insert into database
                     inserts += 1
                 # timeDeltas.append(time.time() - before)
                 #ending here and starting in an above for/zip loop it takes ~(1/100)s - good enough
@@ -290,11 +295,15 @@ def getOrCreateBrowserInstance():
 
 def openBrowserIfNeeded():
     global BROWSER_INSTANCE
-    BROWSER_INSTANCE = getOrCreateBrowserInstance() #should not be None by now
+    BROWSER_INSTANCE = getOrCreateBrowserInstance() # it's not None starting here
     if not BROWSER_INSTANCE.isBrowserOpen():
-        return BROWSER_INSTANCE.openBrowser() #opens browser and returns object like {'success':False, 'responseCode': 500, 'message':'msg''}
+        return BROWSER_INSTANCE.openBrowser() #opens browser and returns object like {'success':True, 'functionDone':False, 'message':'msg''}
     elif BROWSER_INSTANCE.isBrowserOpen():
-        return {'success':True, 'responseCode': 200, 'message':'browser already open'}
+        return {'success':True, 'functionDone':True, 'message':'browser already open'}
+    
+
+# except Exception as exception:
+# return {'success':False, 'functionDone':False, 'message':str(exception)}
 
 def saveCookiesToJson():
     global BROWSER_INSTANCE
@@ -302,18 +311,28 @@ def saveCookiesToJson():
     if BROWSER_INSTANCE.isBrowserOpen():
         return BROWSER_INSTANCE.saveCookiesToJson()
     else:
-        return {'success':False, 'responseCode': 400, 'message':'open selenium browser first'}
+        return {'success':False, 'functionDone':True, 'message':'open selenium browser first'}
 
+def getScrapingStatus():
+    global BROWSER_INSTANCE
+    BROWSER_INSTANCE = getOrCreateBrowserInstance() #should not be None by now
+    return BROWSER_INSTANCE.getScrapingStatus()
 
 
 
 
 #REQUEST CURRENT INSTANCE STATE AND RUN ADEQUATE FUNCTONS. HAS TO RETURN AN OUTPUT FREQUENTLY
-def fullScrapping():
-    print('fullScrapping')
-    # global BROWSER_INSTANCE
-    openBrowserIfNeeded()
-    return BROWSER_INSTANCE.setCookiesFromJson()
+def fullScraping():
+    print('\t\t\tSTARTED fullScraping')
+    getScrapingStatus()
+    # SCRAPING FUNCTIONS IN ORDER:
+    # [openBrowserIfNeeded, self.setCookiesFromJson, self.scrapUrlsFromAllThePages, self.scrapToDatabase]
+    functionResultDict = BROWSER_INSTANCE.scrapingFunctionsInOrder[BROWSER_INSTANCE.currentFunctionIndex]() #run current function and get results
+    print('\t\t\t' + str(functionResultDict))
+    if functionResultDict['functionDone'] == True:
+        BROWSER_INSTANCE.currentFunctionIndex +=1
+    getScrapingStatus()
+    return functionResultDict
 
 
 
