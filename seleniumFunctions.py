@@ -272,9 +272,9 @@ class SeleniumBrowser():
             # FINISH CONDITIONS
             if len(self.OFFERS_URLS) == 0:
                 return {'success':True, 'functionDone':True, 'message':'no offers to analyse'}
-            elif int(self.currentlyScrapedOfferIndex) > int(len(self.OFFERS_URLS)- 1):
-                    # print(str(self.databaseInserts) + ' inserts | ' + str(self.databaseUpdates) + ' updates')
-                    return {'success':True, 'functionDone':True, 'message': 'DONED. ' + str(self.databaseInserts) + ' inserts | ' + str(self.databaseUpdates) + ' updates'}
+            elif int(self.currentlyScrapedOfferIndex +1) > int(len(self.OFFERS_URLS)):
+                    print(str(self.databaseInserts) + ' inserts | ' + str(self.databaseUpdates) + ' updates')
+                    return {'success':True, 'functionDone':True, 'message': 'SCRAPING DONE. ' + str(self.databaseInserts) + ' inserts | ' + str(self.databaseUpdates) + ' updates'}
             # IF NOT FINISHED
             else:
                 self.DRIVER.get(self.OFFERS_URLS[self.currentlyScrapedOfferIndex])
@@ -290,11 +290,11 @@ class SeleniumBrowser():
                     else:
                         Database.insertRecord(outputDictionary) # insert into database
                         self.databaseInserts += 1
-                    #ending here and starting in an above for/zip loop it takes ~(1/100)s - good enough
-                    self.currentlyScrapedOfferIndex += 1 #increment if successfully analysed
+                    self.currentlyScrapedOfferIndex += 1 # increment if successfully analysed
                     return {'success':True, 'functionDone':False, 'message': str(self.currentlyScrapedOfferIndex) + '/' + str(len(self.OFFERS_URLS)) + ' offers analysed'}
                 elif self.offerNotFound():
                     # print('OFFER NOT FOUND: ' +  self.DRIVER.current_url)
+                    self.currentlyScrapedOfferIndex += 1 # increment even if offer not found not to get stuck
                     return {'success':False, 'functionDone':False, 'message': 'OFFER NOT FOUND: ' +  self.DRIVER.current_url}
         except Exception as exception:
             return {'success':False, 'functionDone':False, 'message':str(exception)}
@@ -341,8 +341,7 @@ def fullScraping():
         BROWSER_INSTANCE.currentFunctionIndex +=1
     elif (functionResultDict['functionDone'] == True) and ((BROWSER_INSTANCE.currentFunctionIndex +1) >= len(BROWSER_INSTANCE.scrapingFunctionsInOrder)):
         BROWSER_INSTANCE.resetScrapingFunctionsProgress()
-        functionResultDict = {'success':True, 'functionDone':True, 'message':'EXIT SIGNAL'} # signal to JS to stop fetching
-
+        # functionResultDict = {'success':True, 'functionDone':True, 'message':'EXIT SIGNAL'} # signal to JS to stop fetching
     print('\t\t\t' + str(functionResultDict))
     getScrapingStatus()
     return functionResultDict

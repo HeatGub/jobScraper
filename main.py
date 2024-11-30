@@ -241,18 +241,13 @@ def saveCookiesToJsonEndpoint():
     res = RESULT_QUEUE.get()
     return json.dumps(res)
 
-
-
-
 @app.route('/fullScraping', methods=['GET'])
 def fullScrapingEndpoint():
     # print('\t\\fullScrapingEndpoint')
     TASK_QUEUE.put((fullScraping, (), {}))
+    time.sleep(random.uniform(1,2))
     res = RESULT_QUEUE.get()
     return json.dumps(res)
-
-
-
 
 if __name__ == "__main__":
     # Database.createTableIfNotExists()
@@ -265,7 +260,7 @@ if __name__ == "__main__":
     app.run(debug=False) #runs (3?) additional python processes. IF TRUE RUNS TWO SELENIUM BROWSERS ¯\_(ツ)_/¯
 
     # TASK_QUEUE.put((fetchUrlsFromAllThePages, (), {}))
-    # # TASK_QUEUE.put((scrapToDatabase, (), {}))
+    # # TASK_QUEUE.put((scrapToDatabase, (), {})) 
     # print(RESULT_QUEUE.get())
     # TASK_QUEUE.put("exit")
     # process.join() #could wait forever if process not terminated
@@ -276,6 +271,11 @@ if __name__ == "__main__":
 # paramsy takie jak %VAT, kolory? do ustawienia
 # >=1 checkbox checked check
 # link table-plot?
+# pause scraping button
+# połączyć open browser i save cookies w 1 button?
+# pauza tylko w JS? chyba wystarczy bo po prostu skonczy wysylac requesty - if not paused rekurencja
+# fullScraping(): #add error handling?
+
 
 #FLOW
 # cookies chyba niekonieczne w JS fetch

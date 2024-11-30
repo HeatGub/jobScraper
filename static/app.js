@@ -1,13 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-function tryFetchingEndpoint (endpoint, outputDiv) { //event just for the need of .bind()
-    // console.log('tryFetchingEndpoint')
-    output = document.getElementById(outputDiv)
+document.getElementById("openBrowserButton").addEventListener("click", () => { fetchEndpointAndAwaitResponse('openBrowser', 'openBrowserOutput') })
+document.getElementById("saveCookiesToJsonButton").addEventListener("click", () => { fetchEndpointAndAwaitResponse('saveCookiesToJson', 'saveCookiesToJsonOutput') })
+
+function fetchEndpointAndAwaitResponse (endpoint, outputDiv) { //event just for the need of .bind()
+    const output = document.getElementById(outputDiv)
     try {
-        url = window.origin.toString() + "/" + endpoint.toString()
+        let url = window.origin.toString() + "/" + endpoint.toString()
         fetch( url, {
             cache: "no-cache",
-        }) //fetch returns async promise, then do something with the results
+        }) // FETCH RETURNS ASYNC PROMISE AND AWAITS RESPONSE
             .then(function (response) {
                 if (response.status !== 200) { //response status from flask
                     output.innerText = 'response status code: ' + response.status
@@ -18,57 +20,91 @@ function tryFetchingEndpoint (endpoint, outputDiv) { //event just for the need o
                 })
             })
     }
-    catch (error) { //doesnt really reach this point
+    catch (error) {
         console.log('JS ERROR CATCHED' + error)
         return
     }
 }
 
-document.getElementById("openBrowserButton").addEventListener("click", () => { tryFetchingEndpoint('openBrowser', 'openBrowserOutput') })
-document.getElementById("saveCookiesToJsonButton").addEventListener("click", () => { tryFetchingEndpoint('saveCookiesToJson', 'saveCookiesToJsonOutput') })
-// document.getElementById("fullScrapingButton").addEventListener("click", () => { tryFetchingEndpoint('fullScraping', 'fullScrapingOutput') })
-document.getElementById("fullScrapingButton").addEventListener("click", startTimer)
+const fullScrapingButton = document.getElementById("fullScrapingButton")
+fullScrapingButton.addEventListener("click", checkButtonStateAndFetchFullScrapingEndpoint)
 
-// MAKE IT STOP FETCHING WHEN NO CONNECTION? INTERVAL WILL BE LOW ANYWAY
-function callFullScrapingEndpoint() {
-    output = document.getElementById('fullScrapingOutput')
-    try {
-        fetch(window.origin + '/fullScraping', {
-            credentials: "include", //cookies etc
-            cache: "no-cache",
-            headers: new Headers({
-                "content-type": "application/json"
-            })
-        }) //fetch returns async promise, then do something
-            .then(function (response) {
-                if (response.status !== 200) {
-                    console.log('response status not 200: ' + response.status)
-                    clearInterval(runningTimer) //TURN OFF THE TIMER IF ERROR
-                    return
-                }
-                response.json().then(function (data) {
-                    output.innerText = data.message.slice(0,250)
-                    console.log(data.message)
-                    if (data.message === 'EXIT SIGNAL') { //TURN OFF THE TIMER IF DONE
-                        clearInterval(runningTimer)
-                        return
-                    }
-                })
-            })
+function buttonSwapInnerHtmlStartStop() { //because JS requires to return inner func inside outer func to use outer scope
+    // console.log('\tbuttonSwapInnerHtmlStartStop')
+    if (fullScrapingButton.innerHTML === 'START') {
+        fullScrapingButton.innerHTML = 'STOP'
     }
-    catch (error) { //doesnt really reach here
-        console.log('ERROR CATCHED' + error)
-        clearInterval(runningTimer) //stops timer - stops sending the requests}
+    else {
+        fullScrapingButton.innerHTML = 'START'
     }
 }
 
-function startTimer() {
-    //STOP IF ALREADY SET
-    if (typeof runningTimer !== 'undefined') {
-        clearInterval(runningTimer) //stops timer - stops sending the requests 
+function buttonStateReadyToFetch(){
+    // console.log('\t\tbuttonStateReadyToFetch > fullScrapingButton.disabled = ' + fullScrapingButton.disabled)
+    if (fullScrapingButton.innerHTML === 'START') {
+        if      (fullScrapingButton.disabled === true)  {return true}     // START | disabled
+        else if (fullScrapingButton.disabled === false) {return false}    // START | enabled
+    } else if (fullScrapingButton.innerHTML === 'STOP') {
+        if      (fullScrapingButton.disabled === true)  {return false}    // STOP  | disabled
+        else if (fullScrapingButton.disabled === false) {return true}     // STOP  | enabled
     }
-    intervalInMiliseconds = 1000
-    runningTimer = setInterval(callFullScrapingEndpoint, intervalInMiliseconds); //100ms interval
+}
+
+function checkButtonStateAndFetchFullScrapingEndpoint () {
+    console.log('<<< BUTTON CLICKED >>>')
+    fullScrapingButton.disabled = true // DISABLE BUTTON ON CLICK
+
+    fetchFullScrapingEndpoint()
+
+    function fetchFullScrapingEndpoint() {
+        // console.log('\tfetchFullScrapingEndpoint')
+        try {
+            if (buttonStateReadyToFetch()) {
+            const output = document.getElementById('fullScrapingOutput')
+            fetch(window.origin + '/fullScraping', {
+                credentials: "include", //cookies etc
+                cache: "no-cache",
+                headers: new Headers({
+                    "content-type": "application/json"
+                })
+            }) // FETCH RETURNS ASYNC PROMISE AND AWAITS RESPONSE
+                .then(function (response) {
+                    console.log('RESPONSE RECEIVED')
+                    if (response.status !== 200) {
+                        console.log('response status not 200: ' + response.status)
+                        return //EXIT on error
+                    }
+                    response.json().then(function (data) {
+                        console.log(data.message)
+                        if (data.message.includes('SCRAPING DONE. ')) { 
+                            output.innerText = data.message.slice(0,250)
+                            fullScrapingButton.innerHTML = 'START'
+                            fullScrapingButton.disabled = false
+                            return // EXIT FETCHING IF DONE
+                        }
+                        else {
+                            // RECURRENCE PATH
+                            output.innerText = data.message.slice(0,250)
+                            console.log('\tRECURRENCE CHECK > buttonStateReadyToFetch = ' + buttonStateReadyToFetch())
+                            if (buttonStateReadyToFetch()) {
+                                console.log('\t<<< RECURRENCE CALL >>> \n\tbuttonStateReadyToFetch === true')
+                                fetchFullScrapingEndpoint() // RECURRENCE IF NOT PAUSED OR NOT DONE YET
+                                // fullScrapingButton.disabled = false // enable button
+                            }
+                            if (fullScrapingButton.disabled === true) { //CHANGE BUTTON AS IT'S ALREADY AFTER STATE CHECK buttonStateReadyToFetch()
+                                buttonSwapInnerHtmlStartStop()
+                                fullScrapingButton.disabled = false 
+                            }
+                        }
+                    })
+                })
+            }
+        }
+        catch (error) {
+            console.log('JS ERROR CATCHED' + error)
+            return //EXIT on error
+        }
+    }
 }
 
 // SEND FORM AND FETCH BOKEH
@@ -77,9 +113,9 @@ document.getElementById("sendFormAndFetchBokehButton").addEventListener("click",
 function sendFormAndFetchBokeh(e) {
     e.preventDefault() //prevent sending form default request
     const form = document.getElementById('mainForm')
-    var formData = new FormData(form)
+    let formData = new FormData(form)
     //remove T from datetimes for further processing
-    listToRegexp = ['datetimeFirstAbove', 'datetimeFirstBelow', 'datetimeLastAbove', 'datetimeLastBelow']
+    const listToRegexp = ['datetimeFirstAbove', 'datetimeFirstBelow', 'datetimeLastAbove', 'datetimeLastBelow']
     listToRegexp.forEach((param) => {
         if (formData.get(param)) {
             oldValue = formData.get(param)
@@ -88,18 +124,18 @@ function sendFormAndFetchBokeh(e) {
             // console.log(formData.get(param))
         }
     })
-    formDataJson = JSON.stringify(Object.fromEntries(formData))
+    let formDataJson = JSON.stringify(Object.fromEntries(formData))
     // console.log(formDataJson)
 
     fetch(window.origin + '/', {
         method: "POST",
-        credentials: "include", //cookies etc
-        body: formDataJson,
+        credentials: "include", // cookies etc
+        body: formDataJson, // form results
         cache: "no-cache",
         headers: new Headers({
             "content-type": "application/json"
         })
-    }) //fetch returns async promise, then do something
+    }) // FETCH RETURNS ASYNC PROMISE AND AWAITS RESPONSE
         .then(function (response) {
             if (response.status !== 200) {
                 console.log('Error fetching. Response code: ' + response.status)

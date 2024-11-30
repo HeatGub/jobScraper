@@ -1,6 +1,7 @@
 __pycache__/
 .venv/
 venv/
+.vs/
 chromedriver.exe
 chromedriver128.exe
 cookies.json
