@@ -18,8 +18,8 @@ BROWSER_INSTANCE = None
 class SeleniumBrowser():
     def __init__(self):
         self.DRIVER = None
-        # self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/warszawa;wp/"
-        self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/bialystok;wp/stacjonarna;rw"
+        self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/"
+        # self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/bialystok;wp/stacjonarna;rw"
 
         #all of the below functions must return dictionary like          {'success':True, 'functionDone':False, 'message':'working'}
         self.scrapingFunctionsInOrder = [openBrowserIfNeeded, self.setCookiesFromJson, self.scrapUrlsFromAllThePages, self.scrapToDatabase]
@@ -74,6 +74,7 @@ class SeleniumBrowser():
             service = Service(executable_path="chromedriver.exe")
             chrome_options = Options()
             chrome_options.add_argument("--disable-search-engine-choice-screen")
+            chrome_options.add_argument("window-size=800,1000")
             chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) #disable error logging
             # chrome_options.add_experimental_option("detach", True) #to keep browser open after python script execution ended
             self.DRIVER = webdriver.Chrome(service=service, options=chrome_options) #Selenium opens a new browser window whenever it initializes a WebDriver instance

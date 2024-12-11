@@ -42,8 +42,14 @@
 -- AND datetimeFirst > '2024-04-20'
 -- AND datetimeLast > '2024-04-20'ORDER BY (salaryMin+SalaryMax)/2 ASC, difference_in_minutes DESC;
 
-SELECT datetimeLast FROM test4
-WHERE ((datetimeLast LIKE ('%2024%') OR (datetimeLast LIKE ('%2024%') AND datetimeLast LIKE ('%2024-01-01%'))) AND (datetimeLast LIKE ('%2024-01%') OR datetimeLast LIKE ('%2024%')));
+
+-- UPDATE test4 SET optionalRequirements = '' WHERE optionalRequirements IS NULL;
+
+SELECT optionalRequirements FROM test4 WHERE optionalRequirements IS NULL;
+
+
+-- SELECT datetimeLast FROM test4
+-- WHERE ((datetimeLast LIKE ('%2024%') OR (datetimeLast LIKE ('%2024%') AND datetimeLast LIKE ('%2024-01-01%'))) AND (datetimeLast LIKE ('%2024-01%') OR datetimeLast LIKE ('%2024%')));
 -- WHERE (datetimeLast LIKE ('%2024%') OR (datetimeLast LIKE ('%2024-%') AND datetimeLast LIKE ('%2024-01-01%'))) AND (datetimeLast LIKE ('%2024-01%') OR datetimeLast LIKE ('%2024%'));
 
 

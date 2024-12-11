@@ -60,9 +60,14 @@
       </tr>
       {% endfor %}
     </table>
-    <input type="submit" value="submit" id="sendFormAndFetchBokehButton">
+    <div class="fetchDiv">
+      <input type="submit" value="submit" id="sendFormAndFetchBokehButton">
+      <div id="sendFormAndFetchBokehOutput"></div>
+    </div>
   </form>
 
+  <span contenteditable="true" id="queryDiv" spellcheck="false"></span>
+  <br>
   <h1 id="resultsAmount"></h1>
   <a id="downloadCsv" href="{{ url_for('downloadCsv') }}" class="btn"></a>
   <div id="plotDiv"></div>

@@ -218,13 +218,15 @@ def form():
         dataframeTable, dataframePlot = queryBuilder(makeFormOutputDictionary())
         dataframeTable = Database.queryToDataframe(dataframeTable)
         dataframePlot = Database.queryToDataframe(dataframePlot)
+        queryToDisplay = queryBuilder(makeFormOutputDictionary())[0]
 
         if len(dataframePlot) > 0 and len(dataframeTable) > 0: #tho their lengths should be equal
             plot = makeBokehPlot(dataframePlot)
             table = makeBokehTable(dataframeTable)
-            return json.dumps([json_item(plot), json_item(table), int(len(dataframeTable))])
+            # return json.dumps([json_item(plot), json_item(table), int(len(dataframeTable))])
+            return json.dumps({'resultsAmount':int(len(dataframeTable)), 'plot': json_item(plot), 'table':json_item(table), 'query': queryToDisplay}), 200, {'Content-Type': 'application/json'}
 
-        return json.dumps(['noResultsFound']) #when no results return a str
+        return json.dumps({'resultsAmount':0, 'query': queryToDisplay}), 200, {'Content-Type': 'application/json'} #when no results
 
 @app.route('/openBrowser', methods=['GET'])
 def openBrowserEndpoint():
@@ -245,7 +247,7 @@ def saveCookiesToJsonEndpoint():
 def fullScrapingEndpoint():
     # print('\t\\fullScrapingEndpoint')
     TASK_QUEUE.put((fullScraping, (), {}))
-    time.sleep(random.uniform(1,2))
+    # time.sleep(random.uniform(1,2))
     res = RESULT_QUEUE.get()
     return json.dumps(res)
 
@@ -257,7 +259,7 @@ if __name__ == "__main__":
     # Start the worker process
     process = multiprocessing.Process(target=queueManager, args=(TASK_QUEUE, RESULT_QUEUE))
     process.start()
-    app.run(debug=False) #runs (3?) additional python processes. IF TRUE RUNS TWO SELENIUM BROWSERS ¯\_(ツ)_/¯
+    app.run(debug=False) #runs (3?) additional python processes. IF TRUE USED TO RUN TWO SELENIUM BROWSERS ¯\_(ツ)_/¯
 
     # TASK_QUEUE.put((fetchUrlsFromAllThePages, (), {}))
     # # TASK_QUEUE.put((scrapToDatabase, (), {})) 
@@ -267,16 +269,9 @@ if __name__ == "__main__":
     print('DAS ENDE')
 
 ##TODO
-# optionalRequirements>fobbidden excludes too much - Nones and ''s
+# optionalRequirements > fobbidden excludes too much - Nones and ''s
+# LIKE in SQL doesnt return nulls, so change them to ''s
 # paramsy takie jak %VAT, kolory? do ustawienia
 # >=1 checkbox checked check
 # link table-plot?
-# pause scraping button
 # połączyć open browser i save cookies w 1 button?
-# pauza tylko w JS? chyba wystarczy bo po prostu skonczy wysylac requesty - if not paused rekurencja
-# fullScraping(): #add error handling?
-
-
-#FLOW
-# cookies chyba niekonieczne w JS fetch
-# można do scrapowania od rasu openBrowser() dawać to zamknie starą instancję automatycznie

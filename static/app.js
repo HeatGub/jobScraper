@@ -54,12 +54,12 @@ function checkButtonStateAndFetchFullScrapingEndpoint () {
     console.log('<<< BUTTON CLICKED >>>')
     fullScrapingButton.disabled = true // DISABLE BUTTON ON CLICK
 
-    fetchFullScrapingEndpoint()
+    if (buttonStateReadyToFetch()) {  // if not don't bother sending a request
+        fetchFullScrapingEndpoint()
+    }
 
     function fetchFullScrapingEndpoint() {
-        // console.log('\tfetchFullScrapingEndpoint')
         try {
-            if (buttonStateReadyToFetch()) {
             const output = document.getElementById('fullScrapingOutput')
             fetch(window.origin + '/fullScraping', {
                 credentials: "include", //cookies etc
@@ -89,7 +89,6 @@ function checkButtonStateAndFetchFullScrapingEndpoint () {
                             if (buttonStateReadyToFetch()) {
                                 console.log('\t<<< RECURRENCE CALL >>> \n\tbuttonStateReadyToFetch === true')
                                 fetchFullScrapingEndpoint() // RECURRENCE IF NOT PAUSED OR NOT DONE YET
-                                // fullScrapingButton.disabled = false // enable button
                             }
                             if (fullScrapingButton.disabled === true) { //CHANGE BUTTON AS IT'S ALREADY AFTER STATE CHECK buttonStateReadyToFetch()
                                 buttonSwapInnerHtmlStartStop()
@@ -98,7 +97,6 @@ function checkButtonStateAndFetchFullScrapingEndpoint () {
                         }
                     })
                 })
-            }
         }
         catch (error) {
             console.log('JS ERROR CATCHED' + error)
@@ -111,7 +109,14 @@ function checkButtonStateAndFetchFullScrapingEndpoint () {
 document.getElementById("sendFormAndFetchBokehButton").addEventListener("click", sendFormAndFetchBokeh)
 
 function sendFormAndFetchBokeh(e) {
+    document.getElementById('sendFormAndFetchBokehOutput').innerHTML = '' //reset output
     e.preventDefault() //prevent sending form default request
+
+    if (atLeastOneCheckboxChecked() === false) {
+        document.getElementById('sendFormAndFetchBokehOutput').innerHTML = 'select at least one column to display'
+        return //exit
+    }
+
     const form = document.getElementById('mainForm')
     let formData = new FormData(form)
     //remove T from datetimes for further processing
@@ -121,11 +126,9 @@ function sendFormAndFetchBokeh(e) {
             oldValue = formData.get(param)
             newValue = oldValue.replace('T', ' ') //replace T with space to fit SQL
             formData.set(param, newValue)
-            // console.log(formData.get(param))
         }
     })
     let formDataJson = JSON.stringify(Object.fromEntries(formData))
-    // console.log(formDataJson)
 
     fetch(window.origin + '/', {
         method: "POST",
@@ -145,29 +148,42 @@ function sendFormAndFetchBokeh(e) {
                 return response.json()
             }
         })
-        .then(function (items) { //when response 200 and JSON items list received
-            //when no results
-            if (items[0] === 'noResultsFound') {
+        .then(function (items) { // when response 200 and JSON items list received
+            document.getElementById('queryDiv').innerHTML = items.query
+
+            if (items.resultsAmount === 0) {
                 document.getElementById('plotDiv').innerHTML = 'no data'
                 document.getElementById('tableDiv').innerHTML = 'no data'
                 document.getElementById('downloadCsv').innerHTML = ''
                 document.getElementById('resultsAmount').innerHTML = 'no results ¯\\_(ツ)_/¯'
+                return
             }
-            //if all went good and results are not empty replace the divs with bokeh stuff
-            else if (items[0] && items[1] && items[2]) { //plot, table, and amount of results
+            // if all went good and results are not empty replace the divs with bokeh stuff
+            else if (items.resultsAmount >= 1) {
                 document.getElementById('plotDiv').innerHTML = '' //make div empty first
                 document.getElementById('tableDiv').innerHTML = ''
-                Bokeh.embed.embed_item(items[0], 'plotDiv')
-                Bokeh.embed.embed_item(items[1], 'tableDiv')
+                Bokeh.embed.embed_item(items.plot, 'plotDiv')
+                Bokeh.embed.embed_item(items.table, 'tableDiv')
                 document.getElementById('downloadCsv').innerHTML = 'Download CSV'
-                if (items[2] === 1) { //if 1 result
+
+                if (items.resultsAmount === 1) { //if 1 result
                     document.getElementById('resultsAmount').innerHTML = '1 result'
                 }
-                else if (items[2] > 1) { // if >1 results
-                    document.getElementById('resultsAmount').innerHTML = items[2] + ' results'
+                else if (items.resultsAmount > 1) { // if >1 results
+                    document.getElementById('resultsAmount').innerHTML = items.resultsAmount + ' results'
                 }
             }
         })
+}
+
+// AT LEAST 1 CHECKBOX HAS TO BE CHECKED
+function atLeastOneCheckboxChecked () {
+    checkboxesChecked = 0
+    document.querySelectorAll('.ckeckBox').forEach(checkbox => {
+        if (checkbox.checked === true) {checkboxesChecked += 1}
+    })
+    if (checkboxesChecked > 0) {return true}
+    else {return false} //if not checked
 }
 
 // CHANGING CHECKBOXES STATE - CHECK/UNCHECK
