@@ -59,11 +59,36 @@ class SeleniumBrowser():
                 
     def saveCookiesToJson(self):
         try:
-            cookies = self.DRIVER.get_cookies() # get cookies
-            json_object = json.dumps(cookies, indent=4) # Serializing json
-            with open("cookies.json", "w") as outfile: # OVERWRITES cookies.json
-                outfile.write(json_object)
-            return {'success':True, 'functionDone':True, 'message':'cookies saved to cookies.json'}
+            seleniumCookies = self.DRIVER.get_cookies() # get cookies for a currently open domain
+            seleniumCookiesDomain = seleniumCookies[0]['domain'] # single one is enough, domain is the same for all of them
+            seleniumCookiesDomain = re.sub(r'^www\.', '', seleniumCookiesDomain)
+            seleniumCookiesDomain = re.sub(r'^\.', '', seleniumCookiesDomain)
+            # print(seleniumCookiesDomain)
+            updatedCookiesList = []
+
+            with open("cookies.json", "r") as cookiesFile:
+                try:
+                    cookiesFileData = json.load(cookiesFile) # will load if JSON is valid
+                except:
+                    with open("cookies.json", "w") as outputFile: # OVERWRITES cookies.json as it's not valid JSON
+                        outputFile.write(json.dumps(seleniumCookies, indent=4))
+                        return {'success':True, 'functionDone':True, 'message':'cleared file and saved cookies for '+ seleniumCookiesDomain}
+                # if cookiesFileData ok
+                for cookie in cookiesFileData:
+                    domain = cookie['domain']
+                    domain = re.sub(r'^www\.', '', domain)
+                    domain = re.sub(r'^\.', '', domain)
+                    if domain != seleniumCookiesDomain:
+                        updatedCookiesList.append(cookie) # append only onther domains, this one will be appended in the end
+                updatedCookiesList = updatedCookiesList + seleniumCookies # merge lists
+
+            print(len(cookiesFileData))
+            print(len(updatedCookiesList))
+
+            with open("cookies.json", "w") as outputFile: # OVERWRITES cookies.json, but updatedCookiesList contains cookies from the file
+                outputFile.write(json.dumps(updatedCookiesList, indent=4))
+            return {'success':True, 'functionDone':True, 'message':'cookies.json for '+ seleniumCookiesDomain +' updated'}
+        
         except Exception as exception:
             return {'success':False, 'functionDone':False, 'message':str(exception)}
 
@@ -78,22 +103,29 @@ class SeleniumBrowser():
             chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) #disable error logging
             # chrome_options.add_experimental_option("detach", True) #to keep browser open after python script execution ended
             self.DRIVER = webdriver.Chrome(service=service, options=chrome_options) #Selenium opens a new browser window whenever it initializes a WebDriver instance
-            # self.DRIVER.get("https://google.com")
+            self.DRIVER.get("https://google.com")
             return {'success':True, 'functionDone':True, 'message':'opened a selenium browser'}
         except Exception as exception:
             return {'success':False, 'functionDone':False, 'message':str(exception)}
 
-    def setCookiesFromJson(self):
+    def setCookiesFromJson(self):  
         try:
             self.DRIVER.get(self.BASE_URL) #RUN BROWSER
+            currentUrlDomain = self.DRIVER.current_url
+            currentUrlDomain = re.search(r'^https?://([^/]+)', currentUrlDomain)
+            currentUrlDomain = currentUrlDomain.group(1)  
+            currentUrlDomain = re.sub(r'^www\.', '', currentUrlDomain)
+            currentUrlDomain = re.sub(r'^\.', '', currentUrlDomain)
+            # print(currentUrlDomain)
             with open('cookies.json', 'r', newline='') as inputdata:
                 cookies = json.load(inputdata)
             for cookie in cookies: #works only after driver.get
-                self.DRIVER.add_cookie(cookie)
+                if re.match(r".?"+currentUrlDomain, cookie['domain']): # can only add cookies for current domain
+                    self.DRIVER.add_cookie(cookie)
             self.DRIVER.refresh() # to load cookies
-            return {'success':True, 'functionDone':True, 'message':'cookies successfully set'}
+            return {'success':True, 'functionDone':True, 'message':'cookies for ' + currentUrlDomain + ' successfully set'}
         except Exception as exception:
-            return {'success':False, 'functionDone':False, 'message':str(exception)}
+            return {'success':False, 'functionDone':True, 'message':str(exception)} # 'functionDone':True because it's not necessary
 
 
     ########################################################################### Scrap offer URLs from all the pages ###########################################################################
@@ -145,7 +177,7 @@ class SeleniumBrowser():
             jobTitle = self.DRIVER.find_element(By.XPATH, '//*[@data-test="text-offerTitle"]') # this element should always exist
             jobTitle = jobTitle.text
         except:
-            jobTitle = None
+            jobTitle= ''
         
         #SALARY
         try:
@@ -153,9 +185,9 @@ class SeleniumBrowser():
             salaryAndContract = salaryContainer.text
             # print(salaryAndContract  + '\n')
         except:
-            salaryAndContract = None
+            salaryAndContract= ''
         
-        salaryMinAndMax = [None, None] # set as zeros to have some values for plotting
+        salaryMinAndMax = [None, None] # Nones as these are INTs in DB
         if salaryAndContract:
             try: #to recalculate salary to [PLN/month net] #PLN=only unit on protocol?
                 grossToNetMultiplier = 0.7
@@ -183,7 +215,7 @@ class SeleniumBrowser():
             employerElement = self.DRIVER.find_element("xpath", '//*[@data-test="anchor-company-link"]') # this element should always exist
             employer = employerElement.text + ' ' + employerElement.get_property("href")
         except:
-            employer = None
+            employer= ''
         # print(employer  + '\n')
         
         #WORKFROM, EXP, VALIDTO, LOCATION - "PARAMETERS"
@@ -215,8 +247,8 @@ class SeleniumBrowser():
         descriptionsContainer = self.DRIVER.find_element(By.CSS_SELECTOR, '#TECHNOLOGY_AND_POSITION')
 
         techstack = descriptionsContainer.find_elements(By.CLASS_NAME, "c1fj2x2p")
-        techstackExpected = None
-        techstackOptional = None
+        techstackExpected= ''
+        techstackOptional= ''
         for group in techstack:
             if group.text[0:8] == 'EXPECTED' or group.text[0:8] == 'WYMAGANE': # eng/pl same word length
                 techstackExpected = group.text[9:]
@@ -233,7 +265,7 @@ class SeleniumBrowser():
             except:
                 responsibilities = descriptionsContainer.find_element("xpath", '//*[@data-test="section-responsibilities"]').text #/if it's a single entry
         except:
-            responsibilities = None
+            responsibilities= ''
             # print('RESPONSIBILITIES:\n' + str(responsibilities) + '\n' + driver.current_url)
 
         #REQUIREMENTS
@@ -243,7 +275,7 @@ class SeleniumBrowser():
             except:
                 requirements = descriptionsContainer.find_element("xpath", '//*[@data-test="section-requirements"]').text #/if it's a single entry
         except:
-            requirements = None
+            requirements= ''
             # print('REQUIREMENTS:\n' + str(requirements) + '\n' + driver.current_url)
 
 
@@ -258,10 +290,10 @@ class SeleniumBrowser():
                 try:
                     optionalRequirements = descriptionsContainer.find_element("xpath", '//*[@data-test="section-requirements-optional"]').text
                 except:
-                    optionalRequirements = None
+                    optionalRequirements= ''
                     # print('OPTIONAL:\n' + str(optionalRequirements) + '\n' + driver.current_url)        
         except:
-            optionalRequirements = None
+            optionalRequirements= ''
         # print('OPTIONAL:\n' + str(optionalRequirements) + '\n' + driver.current_url)
         datetimeNow = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
         return [datetimeNow, datetimeNow, self.DRIVER.current_url, jobTitle, salaryAndContract, salaryMinAndMax[0], salaryMinAndMax[1], employer, workModes, positionLevels, offerValidTo, location, techstackExpected, techstackOptional, responsibilities, requirements, optionalRequirements]

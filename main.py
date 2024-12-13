@@ -219,6 +219,7 @@ def form():
         dataframeTable = Database.queryToDataframe(dataframeTable)
         dataframePlot = Database.queryToDataframe(dataframePlot)
         queryToDisplay = queryBuilder(makeFormOutputDictionary())[0]
+        # print(queryToDisplay)
 
         if len(dataframePlot) > 0 and len(dataframeTable) > 0: #tho their lengths should be equal
             plot = makeBokehPlot(dataframePlot)
@@ -268,10 +269,8 @@ if __name__ == "__main__":
     # process.join() #could wait forever if process not terminated
     print('DAS ENDE')
 
+
 ##TODO
-# optionalRequirements > fobbidden excludes too much - Nones and ''s
-# LIKE in SQL doesnt return nulls, so change them to ''s
-# paramsy takie jak %VAT, kolory? do ustawienia
-# >=1 checkbox checked check
+# paramsy do ustawienia - #vat, window size?, table name, 
 # link table-plot?
-# połączyć open browser i save cookies w 1 button?
+# execute query?

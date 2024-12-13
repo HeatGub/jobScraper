@@ -18,7 +18,7 @@
 -- SELECT DATETIME('now', 'localtime'), datetimeLast, (JULIANDAY(strftime('%Y-%m-%d %H:%M:%S', DATETIME('now', 'localtime'))) - JULIANDAY(datetimeLast)) * 24 AS lastSeenHoursAgo FROM test4 
 -- WHERE lastSeenHoursAgo < 24 ORDER BY lastSeenHoursAgo ASC;
 
--- -- SELECT * FROM test4;
+-- SELECT datetimeFirst FROM test4 WHERE datetimeFirst > '2024-11-23 10:23';
 -- SELECT techstackExpected, techstackOptional, requirements FROM test3 
 -- WHERE 1=1 --just to leave WHERE here 
 -- -- exclude keywords block, append AND NOT LIKE (...) 2x for a single keyword
@@ -43,9 +43,18 @@
 -- AND datetimeLast > '2024-04-20'ORDER BY (salaryMin+SalaryMax)/2 ASC, difference_in_minutes DESC;
 
 
--- UPDATE test4 SET optionalRequirements = '' WHERE optionalRequirements IS NULL;
+-- SELECT * FROM test4 WHERE
+-- optionalRequirements IS NULL;
 
-SELECT optionalRequirements FROM test4 WHERE optionalRequirements IS NULL;
+-- UPDATE test4 SET 
+-- optionalRequirements
+-- = '' WHERE
+-- optionalRequirements 
+-- IS NULL;
+-- SELECT * FROM test4 WHERE
+-- optionalRequirements IS NULL;
+
+-- SELECT optionalRequirements FROM test4 WHERE optionalRequirements IS NULL;
 
 
 -- SELECT datetimeLast FROM test4

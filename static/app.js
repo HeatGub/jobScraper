@@ -149,7 +149,7 @@ function sendFormAndFetchBokeh(e) {
             }
         })
         .then(function (items) { // when response 200 and JSON items list received
-            document.getElementById('queryDiv').innerHTML = items.query
+            document.getElementById('queryDiv').innerHTML = items.query.replace(/\n/g, "<br>") //replace python newline with html <br>
 
             if (items.resultsAmount === 0) {
                 document.getElementById('plotDiv').innerHTML = 'no data'
