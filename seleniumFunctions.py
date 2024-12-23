@@ -99,7 +99,7 @@ class SeleniumBrowser():
             service = Service(executable_path="chromedriver.exe")
             chrome_options = Options()
             chrome_options.add_argument("--disable-search-engine-choice-screen")
-            chrome_options.add_argument("window-size=800,1000")
+            chrome_options.add_argument("window-size=700,900")
             chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) #disable error logging
             # chrome_options.add_experimental_option("detach", True) #to keep browser open after python script execution ended
             self.DRIVER = webdriver.Chrome(service=service, options=chrome_options) #Selenium opens a new browser window whenever it initializes a WebDriver instance
@@ -119,11 +119,16 @@ class SeleniumBrowser():
             # print(currentUrlDomain)
             with open('cookies.json', 'r', newline='') as inputdata:
                 cookies = json.load(inputdata)
-            for cookie in cookies: #works only after driver.get
-                if re.match(r".?"+currentUrlDomain, cookie['domain']): # can only add cookies for current domain
-                    self.DRIVER.add_cookie(cookie)
-            self.DRIVER.refresh() # to load cookies
-            return {'success':True, 'functionDone':True, 'message':'cookies for ' + currentUrlDomain + ' successfully set'}
+                cookiesAdded = 0
+                for cookie in cookies: #works only after driver.get
+                    if re.match(r".?"+currentUrlDomain, cookie['domain']): # can only add cookies for current domain
+                        self.DRIVER.add_cookie(cookie)
+                        cookiesAdded += 1
+                if cookiesAdded > 0:
+                    self.DRIVER.refresh() # to load cookies
+                    return {'success':True, 'functionDone':True, 'message':'cookies for ' + currentUrlDomain + ' successfully set'}
+                elif (cookiesAdded == 0):
+                    return {'success':False, 'functionDone':True, 'message':'no cookies for ' + currentUrlDomain + ' found in cookies.json'}
         except Exception as exception:
             return {'success':False, 'functionDone':True, 'message':str(exception)} # 'functionDone':True because it's not necessary
 
@@ -188,7 +193,7 @@ class SeleniumBrowser():
             salaryAndContract= ''
         
         salaryMinAndMax = [None, None] # Nones as these are INTs in DB
-        if salaryAndContract:
+        if salaryAndContract != '':
             try: #to recalculate salary to [PLN/month net] #PLN=only unit on protocol?
                 grossToNetMultiplier = 0.7
                 hoursPerMonthInFullTimeJob = 168
@@ -220,43 +225,47 @@ class SeleniumBrowser():
         
         #WORKFROM, EXP, VALIDTO, LOCATION - "PARAMETERS"
         workModes, positionLevels, offerValidTo, location = '', '', '', ''
-        parametersContainer = self.DRIVER.find_element(By.CLASS_NAME, "c21kfgf")
-        parameters = parametersContainer.find_elements(By.CLASS_NAME, "s1bu9jax")
-        for param in parameters:
-            paramType = param.get_attribute("data-test") #element description
-            match paramType:
-                case "section-workModes":
-                    workModes = param.text
-                case "section-positionLevels":
-                    positionLevels = param.text
-                case "section-offerValidTo":
-                    offerValidTo = param.text
-                case "section-workplace":
-                    location = param.text
-                    try: #to find and click 'more locations' button then fetch what's inside
-                        moreLocations = self.DRIVER.find_element("xpath", '//*[@data-test="button-locationPicker"]')
-                        moreLocations.click()
-                        # time.sleep(0.05) #probably necessary
-                        locations = moreLocations.find_element("xpath", '//*[@data-test="modal-locations"]')
-                        location = locations.text
-                    except:
-                        pass #leave location as it was
-        # print(workModes + '\n\n' + positionLevels + '\n\n' +  offerValidTo + '\n\n' +  location + '\n')
+        try:
+            parametersContainer = self.DRIVER.find_element(By.CLASS_NAME, "c21kfgf")
+            parameters = parametersContainer.find_elements(By.CLASS_NAME, "s1bu9jax")
+            for param in parameters:
+                paramType = param.get_attribute("data-test") #element description
+                match paramType:
+                    case "section-workModes":
+                        workModes = param.text
+                    case "section-positionLevels":
+                        positionLevels = param.text
+                    case "section-offerValidTo":
+                        offerValidTo = param.text
+                    case "section-workplace":
+                        location = param.text
+                        try: #to find and click 'more locations' button then fetch what's inside
+                            moreLocations = self.DRIVER.find_element("xpath", '//*[@data-test="button-locationPicker"]')
+                            moreLocations.click()
+                            # time.sleep(0.05) #probably necessary
+                            locations = moreLocations.find_element("xpath", '//*[@data-test="modal-locations"]')
+                            location = locations.text
+                        except:
+                            pass #leave location as it was
+            # print(workModes + '\n\n' + positionLevels + '\n\n' +  offerValidTo + '\n\n' +  location + '\n')
+        except:
+            pass # leave ''s
 
         #TECHSTACK
-        descriptionsContainer = self.DRIVER.find_element(By.CSS_SELECTOR, '#TECHNOLOGY_AND_POSITION')
-
-        techstack = descriptionsContainer.find_elements(By.CLASS_NAME, "c1fj2x2p")
-        techstackExpected= ''
-        techstackOptional= ''
-        for group in techstack:
-            if group.text[0:8] == 'EXPECTED' or group.text[0:8] == 'WYMAGANE': # eng/pl same word length
-                techstackExpected = group.text[9:]
-            elif group.text[0:8] == 'OPTIONAL':
-                techstackOptional = group.text[9:]
-            elif group.text[0:13] == 'MILE WIDZIANE': # polish version
-                techstackOptional = group.text[14:]
-        # print(str(techstackExpected) + '\n\n' + str(techstackOptional) + '\n')
+        techstackExpected, techstackOptional = '', ''
+        try:
+            descriptionsContainer = self.DRIVER.find_element(By.CSS_SELECTOR, '#TECHNOLOGY_AND_POSITION')
+            techstack = descriptionsContainer.find_elements(By.CLASS_NAME, "c1fj2x2p")
+            for group in techstack:
+                if group.text[0:8] == 'EXPECTED' or group.text[0:8] == 'WYMAGANE': # eng/pl same word length
+                    techstackExpected = group.text[9:]
+                elif group.text[0:8] == 'OPTIONAL':
+                    techstackOptional = group.text[9:]
+                elif group.text[0:13] == 'MILE WIDZIANE': # polish version
+                    techstackOptional = group.text[14:]
+            # print(str(techstackExpected) + '\n\n' + str(techstackOptional) + '\n')
+        except:
+            pass # leave ''s
 
         #RESPONSIBILITIES
         try:

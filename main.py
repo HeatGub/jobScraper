@@ -270,7 +270,13 @@ if __name__ == "__main__":
     print('DAS ENDE')
 
 
+
 ##TODO
-# paramsy do ustawienia - #vat, window size?, table name, 
+# paramsy do ustawienia - #vat, window size?, table name, url
 # link table-plot?
 # execute query?
+# bokeh console errors in brave
+# setCookiesFromJson inny msg jak cookies for domain not found
+# na justjoin nie scrapuje dodatkowych location przy zminimalizowanym oknie
+
+# napisać o nested query w readme

@@ -1,6 +1,8 @@
 button {
-    color: green;
+    color: lightgreen;
     background-color: grey;
+    font-size: 15px;
+    font-weight: 600;
 }
 
 form,
