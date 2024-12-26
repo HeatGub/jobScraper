@@ -193,16 +193,16 @@ def form():
                     if key == 'show' and value:
                         querySelectPart += columnName + ', '
                     #ABOVE & BELOW 
-                    if key == 'above' and value:
-                        queryMainPart += "\nAND "+columnName+" > '"+value+"'"
-                    if key == 'below' and value:
-                        queryMainPart += "\nAND "+columnName+" < '"+value+"'"
+                    elif key == 'above' and value:
+                        queryMainPart += "\nAND ("+columnName+" > '"+value+"')"
+                    elif key == 'below' and value:
+                        queryMainPart += "\nAND ("+columnName+" < '"+value+"')"
                     #NECESSARY PHRASE
-                    if key == 'necessary' and value: # if list not empty
-                        queryMainPart += "\nAND "+ handleBracketsAndLogicalOperators(value, columnName, like=True)
+                    elif key == 'necessary' and value: # if list not empty
+                        queryMainPart += "\nAND ("+ handleBracketsAndLogicalOperators(value, columnName, like=True) + ")"
                     #FORBIDDEN PHRASE
-                    if key == "forbidden" and value:
-                        queryMainPart += "\nAND "+ handleBracketsAndLogicalOperators(value, columnName, like=False)
+                    elif key == "forbidden" and value:
+                        queryMainPart += "\nAND ("+ handleBracketsAndLogicalOperators(value, columnName, like=False) + ")"
             queryMainPart += '\nORDER BY (salaryMin+SalaryMax)/2 ASC, (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 * 60 DESC;' #order by
 
             querySelectPart = re.sub(r", $", '', querySelectPart) #remove ", " from the end
@@ -278,5 +278,6 @@ if __name__ == "__main__":
 # bokeh console errors in brave
 # setCookiesFromJson inny msg jak cookies for domain not found
 # na justjoin nie scrapuje dodatkowych location przy zminimalizowanym oknie
+# dodac do DB 'oferujemy/benefity'
 
 # napisać o nested query w readme
