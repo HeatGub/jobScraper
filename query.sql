@@ -30,10 +30,13 @@
 -- ORDER BY datetimeLast DESC;
 -- SELECT * FROM test4;
 
-SELECT employer FROM test4
-WHERE employer LIKE ('%a%')
-AND (employer NOT LIKE ('%asd%'))
-ORDER BY (salaryMin+SalaryMax)/2 ASC, (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 * 60 DESC;
+-- SELECT employer FROM test4
+-- WHERE employer LIKE ('%a%')
+-- AND (employer NOT LIKE ('%asd%'))
+-- ORDER BY (salaryMin+SalaryMax)/2 ASC, (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 * 60 DESC;
+
+-- DELETE FROM test4
+-- WHERE url LIKE ('%justjoin%');
 
 -- SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;
 

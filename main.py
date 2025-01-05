@@ -30,10 +30,12 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
 
     # SPECIFY UNSPECIFIED BARS HEIGHT
     if len(nonNanRowsDf) > 0: #otherwise division by 0 possible
-        lookUpToValues = 2 #how many values to count average
-        avgOfNLowestMinSalaries = nonNanRowsDf['salaryMin'].head(lookUpToValues).tolist() #select up to 2 values
+        lookUpToValues = int(len(nonNanRowsDf)/6) #how many values to count average
+        if lookUpToValues == 0: # avoid /0
+            lookUpToValues = 1
+        avgOfNLowestMinSalaries = nonNanRowsDf['salaryMin'].head(lookUpToValues).tolist() #select up to lookUpToValues
         avgOfNLowestMinSalaries = sum(avgOfNLowestMinSalaries) / len(avgOfNLowestMinSalaries) #avg
-        avgOfNLowestMaxSalaries = nonNanRowsDf['salaryMax'].head(lookUpToValues).tolist() #select up to 2 values
+        avgOfNLowestMaxSalaries = nonNanRowsDf['salaryMax'].head(lookUpToValues).tolist() #select up to lookUpToValues
         avgOfNLowestMaxSalaries = sum(avgOfNLowestMaxSalaries) / len(avgOfNLowestMaxSalaries) #avg
         nanRowsDf['salaryMin'] = nanRowsDf['salaryMin'].fillna(avgOfNLowestMinSalaries) #replace nulls with values
         nanRowsDf['salaryMax'] = nanRowsDf['salaryMax'].fillna(avgOfNLowestMaxSalaries)
@@ -279,5 +281,7 @@ if __name__ == "__main__":
 # setCookiesFromJson inny msg jak cookies for domain not found
 # na justjoin nie scrapuje dodatkowych location przy zminimalizowanym oknie
 # dodac do DB 'oferujemy/benefity'
+
+# NEED TO FIND 'OFFER NOT FOUND MSG AND CHECK WHICH DIVS DOES IT HAVE
 
 # napisać o nested query w readme
