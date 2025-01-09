@@ -26,9 +26,6 @@ function fetchEndpointAndAwaitResponse (endpoint, outputDiv) { //event just for 
     }
 }
 
-const fullScrapingButton = document.getElementById("fullScrapingButton")
-fullScrapingButton.addEventListener("click", checkButtonStateAndFetchFullScrapingEndpoint)
-
 function buttonSwapInnerHtmlStartStop() { //because JS requires to return inner func inside outer func to use outer scope
     // console.log('\tbuttonSwapInnerHtmlStartStop')
     if (fullScrapingButton.innerHTML === 'START') {
@@ -50,8 +47,15 @@ function buttonStateReadyToFetch(){
     }
 }
 
-function checkButtonStateAndFetchFullScrapingEndpoint () {
-    console.log('<<< BUTTON CLICKED >>>')
+const fullScrapingButton = document.getElementById("fullScrapingButton")
+fullScrapingButton.addEventListener("click", () => {checkButtonStateAndFetchFullScrapingEndpoint('fullScrapingOutput')})
+
+function checkButtonStateAndFetchFullScrapingEndpoint (outputDiv) {
+    const fullScrapingInputUrl = document.getElementById("fullScrapingInputUrl")
+    const url =  fullScrapingInputUrl.value
+    console.log('<<< BUTTON CLICKED >>> ')
+    console.log(url)
+    fullScrapingInputUrl.disabled = true
     fullScrapingButton.disabled = true // DISABLE BUTTON ON CLICK
 
     if (buttonStateReadyToFetch()) {  // if not don't bother sending a request
@@ -60,46 +64,47 @@ function checkButtonStateAndFetchFullScrapingEndpoint () {
 
     function fetchFullScrapingEndpoint() {
         try {
-            const output = document.getElementById('fullScrapingOutput')
-            fetch(window.origin + '/fullScraping', {
-                credentials: "include", //cookies etc
+            const output = document.getElementById(outputDiv)
+            fetch(window.origin.toString() + '/fullScraping', {
+                method: "POST",
+                credentials: "include", // cookies etc
+                body: JSON.stringify(url),
                 cache: "no-cache",
-                headers: new Headers({
-                    "content-type": "application/json"
-                })
+                headers: new Headers({"content-type": "application/json"})
             }) // FETCH RETURNS ASYNC PROMISE AND AWAITS RESPONSE
                 .then(function (response) {
-                    console.log('RESPONSE RECEIVED')
+                    // console.log('RESPONSE RECEIVED')
                     if (response.status !== 200) {
                         console.log('response status not 200: ' + response.status)
                         return //EXIT on error
                     }
                     response.json().then(function (data) {
                         console.log(data.message)
-                        if (data.message.includes('SCRAPING DONE. ')) { 
+                        if (data.message.includes('SCRAPING DONE. ')) {
                             output.innerText = data.message.slice(0,250)
                             fullScrapingButton.innerHTML = 'START'
                             fullScrapingButton.disabled = false
+                            fullScrapingInputUrl.disabled = false
                             return // EXIT FETCHING IF DONE
                         }
                         else {
                             // RECURRENCE PATH
                             output.innerText = data.message.slice(0,250)
-                            console.log('\tRECURRENCE CHECK > buttonStateReadyToFetch = ' + buttonStateReadyToFetch())
+                            // console.log('\tRECURRENCE CHECK > buttonStateReadyToFetch = ' + buttonStateReadyToFetch())
                             if (buttonStateReadyToFetch()) {
-                                console.log('\t<<< RECURRENCE CALL >>> \n\tbuttonStateReadyToFetch === true')
+                                // console.log('\t<<< RECURRENCE CALL >>> \n\tbuttonStateReadyToFetch === true')
                                 fetchFullScrapingEndpoint() // RECURRENCE IF NOT PAUSED OR NOT DONE YET
                             }
                             if (fullScrapingButton.disabled === true) { //CHANGE BUTTON AS IT'S ALREADY AFTER STATE CHECK buttonStateReadyToFetch()
                                 buttonSwapInnerHtmlStartStop()
-                                fullScrapingButton.disabled = false 
+                                fullScrapingButton.disabled = false
                             }
                         }
                     })
                 })
         }
         catch (error) {
-            console.log('JS ERROR CATCHED' + error)
+            console.log('JS ERROR CATCHED ' + error)
             return //EXIT on error
         }
     }
@@ -135,9 +140,7 @@ function sendFormAndFetchBokeh(e) {
         credentials: "include", // cookies etc
         body: formDataJson, // form results
         cache: "no-cache",
-        headers: new Headers({
-            "content-type": "application/json"
-        })
+        headers: new Headers({"content-type": "application/json"})
     }) // FETCH RETURNS ASYNC PROMISE AND AWAITS RESPONSE
         .then(function (response) {
             if (response.status !== 200) {

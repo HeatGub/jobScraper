@@ -13,11 +13,10 @@ from bokeh.io import curdoc #for dark theme
 import multiprocessing, io, time
 import numpy as np
 
-from seleniumFunctions import queueManager, openBrowserIfNeeded, saveCookiesToJson, fullScraping
+from seleniumFunctions import SeleniumBrowser
 from databaseFunctions import Database, columnsAll, tableName
 
-########################################################################## FLASK SERVER FUNCITONS ###########################################################################
-
+############################################################################# BOKEH FUNCITONS ###############################################################################
 def makeBokehPlot(dataframe): #Only offers with specified salary?
     # len(dataframe) >=1 at this point 
     # dataframe already ordered by (salaryMin+SalaryMax)/2 ASC
@@ -115,6 +114,9 @@ def makeBokehTable(dataframe):
             columns.append(TableColumn(field=column, title=column))     
     table = DataTable(source=source, columns=columns, height = 800, editable=True, sizing_mode="stretch_width")
     return table
+
+
+########################################################################## FLASK SERVER FUNCITONS ###########################################################################
 
 #DECLARE FLASK APP
 app = Flask(__name__)
@@ -234,54 +236,89 @@ def form():
 @app.route('/openBrowser', methods=['GET'])
 def openBrowserEndpoint():
     print('\t\topenBrowserEndpoint')
-    TASK_QUEUE.put((openBrowserIfNeeded, (), {}))
+    TASK_QUEUE.put((SeleniumBrowser.openBrowserIfNeeded, (), {}))
     # time.sleep(300) #still shows in JS
     res = RESULT_QUEUE.get()
+    print(res)
     return json.dumps(res)
 
 @app.route('/saveCookiesToJson', methods=['GET'])
 def saveCookiesToJsonEndpoint():
     print('\t\tsaveCookiesToJsonEndpoint')
-    TASK_QUEUE.put((saveCookiesToJson, (), {}))
+    TASK_QUEUE.put((SeleniumBrowser.saveCookiesToJson, (), {}))
     res = RESULT_QUEUE.get()
     return json.dumps(res)
 
-@app.route('/fullScraping', methods=['GET'])
+@app.route('/fullScraping', methods=['POST'])
 def fullScrapingEndpoint():
-    # print('\t\\fullScrapingEndpoint')
-    TASK_QUEUE.put((fullScraping, (), {}))
+    print('\t\\fullScrapingEndpoint')
+    # url = request.get_json()
+    TASK_QUEUE.put((SeleniumBrowser.fullScraping, (), {})) # pass tuple to seleniumFunctions
     # time.sleep(random.uniform(1,2))
     res = RESULT_QUEUE.get()
     return json.dumps(res)
 
+## PROCESS QUEUE MANAGEMENT
+def workerBrowser(task_queue, result_queue):
+    browserInstance = SeleniumBrowser() # EACH PROCESS (WORKER) HAS ITS OWN BROWSER INSTANCE
+    while True:
+        task = task_queue.get()
+        if task == "STOP":
+            break
+        func, args, kwargs = task
+        try:
+            result = func(browserInstance, *args, **kwargs) # USE THE BROWSER INSTANCE
+            result_queue.put(result)
+        except Exception as exception:
+            result_queue.put({'success':False, 'message':'workerBrowser exception: ' + str(exception)})
+
+TASK_QUEUE = multiprocessing.Queue()  # Queue for sending tasks to the worker
+RESULT_QUEUE = multiprocessing.Queue()  # Queue for receiving results from the worker
+
 if __name__ == "__main__":
-    # Database.createTableIfNotExists()
-    TASK_QUEUE = multiprocessing.Queue()  # Queue for sending tasks to the worker
-    RESULT_QUEUE = multiprocessing.Queue()  # Queue for receiving results from the worker
-
     # Start the worker process
-    process = multiprocessing.Process(target=queueManager, args=(TASK_QUEUE, RESULT_QUEUE))
+    process = multiprocessing.Process(target=workerBrowser, args=(TASK_QUEUE, RESULT_QUEUE))
+    process.daemon = True
     process.start()
-    app.run(debug=False) #runs (3?) additional python processes. IF TRUE USED TO RUN TWO SELENIUM BROWSERS ¯\_(ツ)_/¯
 
-    # TASK_QUEUE.put((fetchUrlsFromAllThePages, (), {}))
-    # # TASK_QUEUE.put((scrapToDatabase, (), {})) 
-    # print(RESULT_QUEUE.get())
-    # TASK_QUEUE.put("exit")
-    # process.join() #could wait forever if process not terminated
-    print('DAS ENDE')
+    app.run(debug=False)
+    print('if __name__ == "__main__" ends here')
+
+
+
 
 
 
 ##TODO
-# paramsy do ustawienia - #vat, window size?, table name, url
-# link table-plot?
+# paramsy do ustawienia - #vat, window size?, table name, url - część w pliku settings?
+# link table-plot??
 # execute query?
 # bokeh console errors in brave
-# setCookiesFromJson inny msg jak cookies for domain not found
-# na justjoin nie scrapuje dodatkowych location przy zminimalizowanym oknie
-# dodac do DB 'oferujemy/benefity'
+# na justjoin nie scrapuje dodatkowych location przy zminimalizowanym oknie - force active window?
+# dodac do DB 'oferujemy/benefity
+# napisać o nested query w readme
+
 
 # NEED TO FIND 'OFFER NOT FOUND MSG AND CHECK WHICH DIVS DOES IT HAVE
 
-# napisać o nested query w readme
+
+################################################
+# JS przekazuje URL
+# 2 endpointy (theprotocol i justjoin). 
+# Pierwszym etapem fullScrapingu powinno być sprawdzenie czy proces dla URL istnieje i return / utworzenie instancji
+# create list of processess with their own urls and queues. 1 url  = 1 process. here in main.py
+# send exit signal to queue and delete process from the list on ALL DONE type signal
+
+
+
+
+# check typeof(process) and if it shows if it already did start()
+# PROCESSES = [{'url':None, 'browserInstance':None, 'taskQueue':None, 'resultQueue':None}]
+# def getOrCreateProcess(url):
+#     if len(PROCESSES) <= 1:
+#         return 
+#     for PROCESS in PROCESSES:
+#         if PROCESS['url'] == url: # if URL found
+#             if PROCESS['instance'] != None:       # lepiej typeof()
+#                 return PROCESS
+#             else 

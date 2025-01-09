@@ -8,21 +8,23 @@ pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/p
 import time,json, random, re, datetime, inspect
 from databaseFunctions import Database, columnsAll
 
-############################################################################
-#   CHROMEDRIVER SHOULD MATCH BROWSER VERSION. IF OUTDATED DOWNLOAD FROM:  #
-#   https://googlechromelabs.github.io/chrome-for-testing/                 #
-############################################################################
+##############################################################################
+#                                                                            #
+#    CHROMEDRIVER SHOULD MATCH BROWSER VERSION. IF OUTDATED DOWNLOAD FROM:   #
+#    https://googlechromelabs.github.io/chrome-for-testing/                  #
+#                                                                            #
+##############################################################################
 
-BROWSER_INSTANCE = None
-
-class SeleniumBrowser():
+class SeleniumBrowser:
     def __init__(self):
+        print('\tSeleniumBrowser __init__')
         self.DRIVER = None
+        # self.BASE_URL = url
         self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/"
         # self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/bialystok;wp/stacjonarna;rw"
 
         #all of the below functions must return dictionary like          {'success':True, 'functionDone':False, 'message':'working'}
-        self.scrapingFunctionsInOrder = [openBrowserIfNeeded, self.setCookiesFromJson, self.scrapUrlsFromAllThePages, self.scrapToDatabase]
+        self.scrapingFunctionsInOrder = [self.openBrowserIfNeeded, self.setCookiesFromJson, self.scrapUrlsFromAllThePages, self.scrapToDatabase]
         self.currentFunctionIndex = 0
 
         self.currentlyScrapedPageIndex = 1 #theprotocol starts page enumeration with 1
@@ -31,16 +33,31 @@ class SeleniumBrowser():
         self.currentlyScrapedOfferIndex = 0
         self.databaseInserts = 0
         self.databaseUpdates = 0
-    
+
     def isBrowserOpen(self):
+        # print('\tisBrowserOpen')
         if self.DRIVER:
             try:
                 self.DRIVER.current_url
+                # print(self.DRIVER.current_url)
                 return True
-            except WebDriverException:
+            except WebDriverException as e:
+                print(e)
                 return False
         else:
             return False
+        
+    def openBrowserIfNeeded(self):
+        if not self.isBrowserOpen():
+            return self.openBrowser() #opens browser and returns object like {'success':True, 'functionDone':False, 'message':'msg''}
+        elif self.isBrowserOpen():
+            return {'success':True, 'functionDone':True, 'message':'browser is already running'}
+
+    def saveCookiesToJson(self):
+        if self.isBrowserOpen():
+            return self.saveCookiesToJson()
+        else:
+            return {'success':False, 'functionDone':True, 'message':'open selenium browser first'}
     
     def getScrapingStatus(self):
         if ((self.currentFunctionIndex +1) <= len(self.scrapingFunctionsInOrder)):
@@ -101,7 +118,7 @@ class SeleniumBrowser():
             chrome_options.add_argument("--disable-search-engine-choice-screen")
             chrome_options.add_argument("window-size=700,900")
             chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) #disable error logging
-            # chrome_options.add_experimental_option("detach", True) #to keep browser open after python script execution ended
+            # chrome_options.add_experimental_option("detach", True) # to keep browser open after python script execution ended. Not needed anymore?
             self.DRIVER = webdriver.Chrome(service=service, options=chrome_options) #Selenium opens a new browser window whenever it initializes a WebDriver instance
             self.DRIVER.get("https://google.com")
             return {'success':True, 'functionDone':True, 'message':'opened a selenium browser'}
@@ -167,8 +184,6 @@ class SeleniumBrowser():
             return {'success':False, 'functionDone':False, 'message':str(exception)}
             
     ########################################################################### Analyse offer functions ###########################################################################
-
-
     def offerNotFound(self):
         try:
             self.DRIVER.find_element("xpath", '//*[@data-test="text-offerNotFound"]')
@@ -340,64 +355,23 @@ class SeleniumBrowser():
                     return {'success':False, 'functionDone':False, 'message': 'OFFER NOT FOUND: ' +  self.DRIVER.current_url}
         except Exception as exception:
             return {'success':False, 'functionDone':False, 'message':str(exception)}
+    
+    def fullScraping(self):
+        print('FULL SCRAPING SELENIUM')
+        # getScrapingStatus()
 
-def getOrCreateBrowserInstance():
-    global BROWSER_INSTANCE
-    if BROWSER_INSTANCE is None:
-        BROWSER_INSTANCE = SeleniumBrowser()
-    #by now there is an instance, although its browser might be closed
-    return BROWSER_INSTANCE
+        if self.currentFunctionIndex != 0:
+            self.openBrowserIfNeeded() # it's for currentFunctionIndex == 0
 
-def openBrowserIfNeeded():
-    global BROWSER_INSTANCE
-    BROWSER_INSTANCE = getOrCreateBrowserInstance() # it's not None starting here
-    if not BROWSER_INSTANCE.isBrowserOpen():
-        return BROWSER_INSTANCE.openBrowser() #opens browser and returns object like {'success':True, 'functionDone':False, 'message':'msg''}
-    elif BROWSER_INSTANCE.isBrowserOpen():
-        return {'success':True, 'functionDone':True, 'message':'browser open'}
+        # SCRAPING FUNCTIONS IN ORDER: [openBrowserIfNeeded, self.setCookiesFromJson, self.scrapUrlsFromAllThePages, self.scrapToDatabase]
+        functionResultDict = self.scrapingFunctionsInOrder[self.currentFunctionIndex]() # RUN CURRENT FUNCTION AND GET RESULTS
 
-def saveCookiesToJson():
-    global BROWSER_INSTANCE
-    BROWSER_INSTANCE = getOrCreateBrowserInstance() #should not be None by now
-    if BROWSER_INSTANCE.isBrowserOpen():
-        return BROWSER_INSTANCE.saveCookiesToJson()
-    else:
-        return {'success':False, 'functionDone':True, 'message':'open selenium browser first'}
+        if   (functionResultDict['functionDone'] == True) and ((self.currentFunctionIndex +1) <  len(self.scrapingFunctionsInOrder)):
+            self.currentFunctionIndex +=1            # SINGLE FUNCTION DONE
+        elif (functionResultDict['functionDone'] == True) and ((self.currentFunctionIndex +1) >= len(self.scrapingFunctionsInOrder)):
+            self.resetScrapingFunctionsProgress()    # ALL FUNCTIONS DONE
+            # functionResultDict = {'success':True, 'functionDone':True, 'message':'EXIT SIGNAL'} # signal to JS to stop fetching
 
-def getScrapingStatus():
-    global BROWSER_INSTANCE
-    BROWSER_INSTANCE = getOrCreateBrowserInstance() #should not be None by now
-    return BROWSER_INSTANCE.getScrapingStatus()
-
-# REQUEST CURRENT INSTANCE STATE AND RUN ADEQUATE FUNCTONS. RETURNS AN OUTPUT FREQUENTLY
-def fullScraping():
-    getScrapingStatus()
-
-    getOrCreateBrowserInstance()
-    if BROWSER_INSTANCE.currentFunctionIndex != 0:
-        openBrowserIfNeeded() # it's for currentFunctionIndex == 0
-
-    # SCRAPING FUNCTIONS IN ORDER: [openBrowserIfNeeded, self.setCookiesFromJson, self.scrapUrlsFromAllThePages, self.scrapToDatabase]
-    functionResultDict = BROWSER_INSTANCE.scrapingFunctionsInOrder[BROWSER_INSTANCE.currentFunctionIndex]() # RUN CURRENT FUNCTION AND GET RESULTS
-    if   (functionResultDict['functionDone'] == True) and ((BROWSER_INSTANCE.currentFunctionIndex +1) <  len(BROWSER_INSTANCE.scrapingFunctionsInOrder)):
-        BROWSER_INSTANCE.currentFunctionIndex +=1
-    elif (functionResultDict['functionDone'] == True) and ((BROWSER_INSTANCE.currentFunctionIndex +1) >= len(BROWSER_INSTANCE.scrapingFunctionsInOrder)):
-        BROWSER_INSTANCE.resetScrapingFunctionsProgress()
-        # functionResultDict = {'success':True, 'functionDone':True, 'message':'EXIT SIGNAL'} # signal to JS to stop fetching
-    print('\t\t\t' + str(functionResultDict))
-    getScrapingStatus()
-    return functionResultDict
-
-
-# PROCESS QUEUE MANAGEMENT
-def queueManager(taskQueue, resultQueue):
-    while True:
-        print('\t\t\t\t\t QUEUE MANAGER LOOP')
-        task = taskQueue.get()  # Get a task from the queue
-        if task == "exit":  # Exit signal
-            print("Worker exiting...")
-            break
-        func, args, kwargs = task  # Unpack the function, args, and kwargs
-        result = func(*args, **kwargs)  # Call the function
-        # if not resultQueue.empty():
-        resultQueue.put(result)  # Send the result back
+        print('\t\t\t' + str(functionResultDict))
+        # getScrapingStatus()
+        return functionResultDict
