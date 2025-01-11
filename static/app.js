@@ -26,39 +26,84 @@ function fetchEndpointAndAwaitResponse (endpoint, outputDiv) { //event just for 
     }
 }
 
-function buttonSwapInnerHtmlStartStop() { //because JS requires to return inner func inside outer func to use outer scope
+function buttonSwapInnerHtmlStartStop(button) { //because JS requires to return inner func inside outer func to use outer scope
     // console.log('\tbuttonSwapInnerHtmlStartStop')
-    if (fullScrapingButton.innerHTML === 'START') {
-        fullScrapingButton.innerHTML = 'STOP'
+    if (button.innerHTML === 'START') {
+        button.innerHTML = 'STOP'
     }
     else {
-        fullScrapingButton.innerHTML = 'START'
+        button.innerHTML = 'START'
     }
 }
 
-function buttonStateReadyToFetch(){
-    // console.log('\t\tbuttonStateReadyToFetch > fullScrapingButton.disabled = ' + fullScrapingButton.disabled)
-    if (fullScrapingButton.innerHTML === 'START') {
-        if      (fullScrapingButton.disabled === true)  {return true}     // START | disabled
-        else if (fullScrapingButton.disabled === false) {return false}    // START | enabled
-    } else if (fullScrapingButton.innerHTML === 'STOP') {
-        if      (fullScrapingButton.disabled === true)  {return false}    // STOP  | disabled
-        else if (fullScrapingButton.disabled === false) {return true}     // STOP  | enabled
+function buttonStateReadyToFetch(button){
+    // console.log('\t\tbuttonStateReadyToFetch > button.disabled = ' + button.disabled)
+    if (button.innerHTML === 'START') {
+        if      (button.disabled === true)  {return true}     // START | disabled
+        else if (button.disabled === false) {return false}    // START | enabled
+    } else if (button.innerHTML === 'STOP') {
+        if      (button.disabled === true)  {return false}    // STOP  | disabled
+        else if (button.disabled === false) {return true}     // STOP  | enabled
     }
 }
 
-const fullScrapingButton = document.getElementById("fullScrapingButton")
-fullScrapingButton.addEventListener("click", () => {checkButtonStateAndFetchFullScrapingEndpoint('fullScrapingOutput')})
+function createNewFullScrapingDiv () {
+    const fullScrapingDivsContainer = document.getElementById('fullScrapingDivsContainer')
+    const existingFullScrapingDivs = document.querySelectorAll('.fullScrapingDiv div')
 
-function checkButtonStateAndFetchFullScrapingEndpoint (outputDiv) {
-    const fullScrapingInputUrl = document.getElementById("fullScrapingInputUrl")
-    const url =  fullScrapingInputUrl.value
+    // SET INDEX
+    let index = 0 // start indexing with 0
+    if (existingFullScrapingDivs.length === 0) {
+        // do nothing as index is already declared
+    }
+    else if (existingFullScrapingDivs.length > 0) {
+        const lastElement = existingFullScrapingDivs[existingFullScrapingDivs.length - 1] // last element
+        index = Number(lastElement.id.match(/\d+$/)) // regex for numbers at the end
+        index += 1
+    }
+    index = index.toString()
+
+    // DECLARE ELEMENTS
+    const fullScrapingDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDiv'+index, className: 'fullScrapingDiv'})
+    const button = Object.assign(document.createElement('button'), {id: 'fullScrapingButton'+index, innerHTML:'START'})
+    const input = Object.assign(document.createElement('input'), {id: 'fullScrapingInputUrl'+index, type:'text', value:'https://theprotocol.it/filtry/ai-ml;sp/', placeholder:'url'})
+    const output = Object.assign(document.createElement('div'), {id: 'fullScrapingOutput'+index, innerHTML:'output text'})
+    const deleteDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDeleteDiv'+index, className: 'fullScrapingDeleteDiv', innerHTML:'DELETE'})
+    const indexDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingIndexDiv'+index, innerHTML: 'index: '+index})
+
+    // APPEND ELEMENTS
+    fullScrapingDiv.appendChild(button)
+    fullScrapingDiv.appendChild(input)
+    fullScrapingDiv.appendChild(output)
+    fullScrapingDiv.appendChild(deleteDiv)
+    fullScrapingDiv.appendChild(indexDiv)
+    fullScrapingDivsContainer.appendChild(fullScrapingDiv)
+
+    function deleteThisFullScrapingDiv() {
+        // console.log('deleteDiv index:' + index)
+        fullScrapingDiv.remove()
+    }
+
+    // ADD EVENT LISTENERS
+    button.addEventListener("click", () => { checkButtonStateAndFetchFullScrapingEndpoint(button, 'fullScrapingOutput'+index, 'fullScrapingInputUrl'+index) })
+    deleteDiv.addEventListener("click", () => { deleteThisFullScrapingDiv() })
+}
+
+createNewFullScrapingDiv()
+
+addNewProcessButton = document.getElementById('addNewProcessButton')
+addNewProcessButton.addEventListener("click", () => { createNewFullScrapingDiv()})
+
+
+function checkButtonStateAndFetchFullScrapingEndpoint (button, outputDiv, inputUrl) {
+    const inputUrlDiv = document.getElementById(inputUrl)
+    const url =  inputUrlDiv.value
     console.log('<<< BUTTON CLICKED >>> ')
     console.log(url)
-    fullScrapingInputUrl.disabled = true
-    fullScrapingButton.disabled = true // DISABLE BUTTON ON CLICK
+    inputUrlDiv.disabled = true
+    button.disabled = true // DISABLE BUTTON ON CLICK
 
-    if (buttonStateReadyToFetch()) {  // if not don't bother sending a request
+    if (buttonStateReadyToFetch(button)) {  // if not don't bother sending a request
         fetchFullScrapingEndpoint()
     }
 
@@ -82,22 +127,22 @@ function checkButtonStateAndFetchFullScrapingEndpoint (outputDiv) {
                         console.log(data.message)
                         if (data.message.includes('SCRAPING DONE. ')) {
                             output.innerText = data.message.slice(0,250)
-                            fullScrapingButton.innerHTML = 'START'
-                            fullScrapingButton.disabled = false
-                            fullScrapingInputUrl.disabled = false
+                            button.innerHTML = 'START'
+                            button.disabled = false
+                            inputUrlDiv.disabled = false
                             return // EXIT FETCHING IF DONE
                         }
                         else {
                             // RECURRENCE PATH
                             output.innerText = data.message.slice(0,250)
                             // console.log('\tRECURRENCE CHECK > buttonStateReadyToFetch = ' + buttonStateReadyToFetch())
-                            if (buttonStateReadyToFetch()) {
+                            if (buttonStateReadyToFetch(button)) {
                                 // console.log('\t<<< RECURRENCE CALL >>> \n\tbuttonStateReadyToFetch === true')
                                 fetchFullScrapingEndpoint() // RECURRENCE IF NOT PAUSED OR NOT DONE YET
                             }
-                            if (fullScrapingButton.disabled === true) { //CHANGE BUTTON AS IT'S ALREADY AFTER STATE CHECK buttonStateReadyToFetch()
-                                buttonSwapInnerHtmlStartStop()
-                                fullScrapingButton.disabled = false
+                            if (button.disabled === true) { //CHANGE BUTTON AS IT'S ALREADY AFTER STATE CHECK buttonStateReadyToFetch()
+                                buttonSwapInnerHtmlStartStop(button)
+                                button.disabled = false
                             }
                         }
                     })

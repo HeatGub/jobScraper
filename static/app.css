@@ -22,8 +22,34 @@ td>input {
     width: 97%;
 }
 
-fetchDiv {
-border: 1px solid red;
+/* .fetchDiv {
+border: 1px solid green;
+} */
+
+.fullScrapingDiv {
+  border: 1px solid greenyellow;
+}
+
+#fullScrapingDivsContainer {
+  border: 2px solid gray;
+  padding: 3px;
+}
+
+#fullScrapingDivsContainer > div {
+  margin-top: 5px;
+  margin-bottom: 5px;
+}
+
+.fullScrapingDiv > input {
+  width: 80%;
+}
+
+.fullScrapingDeleteDiv{
+  padding: 2px;
+  /* height: 10px; */
+  max-width: 20%;
+  border: 2px solid red;
+  cursor: pointer;
 }
 
 /* td:nth-child(1) {

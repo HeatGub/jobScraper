@@ -251,19 +251,25 @@ def saveCookiesToJsonEndpoint():
 
 @app.route('/fullScraping', methods=['POST'])
 def fullScrapingEndpoint():
-    print('\t\\fullScrapingEndpoint')
-    # url = request.get_json()
+    # print('\t\\fullScrapingEndpoint')
+    url = request.get_json()
+    # print(url)
     TASK_QUEUE.put((SeleniumBrowser.fullScraping, (), {})) # pass tuple to seleniumFunctions
     # time.sleep(random.uniform(1,2))
     res = RESULT_QUEUE.get()
+    if 'killProcess' in res: # if killProcess key found in dictionary
+        if res['killProcess'] == True:
+            TASK_QUEUE.put("KILL PROCESS") # STOP THE PROCESS
     return json.dumps(res)
 
 ## PROCESS QUEUE MANAGEMENT
-def workerBrowser(task_queue, result_queue):
-    browserInstance = SeleniumBrowser() # EACH PROCESS (WORKER) HAS ITS OWN BROWSER INSTANCE
+def workerBrowser(url, task_queue, result_queue):
+    browserInstance = SeleniumBrowser(url) # EACH PROCESS (WORKER) HAS ITS OWN BROWSER INSTANCE
+    print('INITIALIZED workerBrowser for url ' + url)
     while True:
         task = task_queue.get()
-        if task == "STOP":
+        if task == "KILL PROCESS":
+            print('KILLED workerBrowser for url ' + url)
             break
         func, args, kwargs = task
         try:
@@ -272,17 +278,32 @@ def workerBrowser(task_queue, result_queue):
         except Exception as exception:
             result_queue.put({'success':False, 'message':'workerBrowser exception: ' + str(exception)})
 
+
+
+# check typeof(process) and if it already did start() - check is_alive() / exitcode 
+# def getOrCreateProcess(url):
+#     if len(PROCESSES_LIST) <= 1:
+#         return 
+#     for PROCESS in PROCESSES_LIST:
+#         if PROCESS['url'] == url: # if URL found
+#             if PROCESS['instance'] != None:       # lepiej typeof()
+#                 return PROCESS
+#             else
+
+
+# PROCESSES_LIST = [{'url':None, 'process':None, 'taskQueue':None, 'resultQueue':None}]
+PROCESSES_LIST = [{'url':None, 'process':None}]
 TASK_QUEUE = multiprocessing.Queue()  # Queue for sending tasks to the worker
 RESULT_QUEUE = multiprocessing.Queue()  # Queue for receiving results from the worker
 
 if __name__ == "__main__":
     # Start the worker process
-    process = multiprocessing.Process(target=workerBrowser, args=(TASK_QUEUE, RESULT_QUEUE))
-    process.daemon = True
+    process = multiprocessing.Process(target=workerBrowser, args=('https://theprotocol.it/filtry/ai-ml;sp', TASK_QUEUE, RESULT_QUEUE))
+    process.daemon = True # exit with main process
     process.start()
 
     app.run(debug=False)
-    print('if __name__ == "__main__" ends here')
+    print("""if __name__ == "__main__": ends here""")
 
 
 
@@ -297,7 +318,7 @@ if __name__ == "__main__":
 # na justjoin nie scrapuje dodatkowych location przy zminimalizowanym oknie - force active window?
 # dodac do DB 'oferujemy/benefity
 # napisać o nested query w readme
-
+# use grossToNetMultiplier just to recalculate before displaying?
 
 # NEED TO FIND 'OFFER NOT FOUND MSG AND CHECK WHICH DIVS DOES IT HAVE
 
@@ -312,13 +333,81 @@ if __name__ == "__main__":
 
 
 
-# check typeof(process) and if it shows if it already did start()
-# PROCESSES = [{'url':None, 'browserInstance':None, 'taskQueue':None, 'resultQueue':None}]
-# def getOrCreateProcess(url):
-#     if len(PROCESSES) <= 1:
-#         return 
-#     for PROCESS in PROCESSES:
-#         if PROCESS['url'] == url: # if URL found
-#             if PROCESS['instance'] != None:       # lepiej typeof()
-#                 return PROCESS
-#             else 
+
+
+
+
+#  KOD PRZED GLOBAL PROCESS LISTA
+
+# ####################################
+
+# @app.route('/openBrowser', methods=['GET'])
+# def openBrowserEndpoint():
+#     print('\t\topenBrowserEndpoint')
+#     TASK_QUEUE.put((SeleniumBrowser.openBrowserIfNeeded, (), {}))
+#     # time.sleep(300) #still shows in JS
+#     res = RESULT_QUEUE.get()
+#     print(res)
+#     return json.dumps(res)
+
+# @app.route('/saveCookiesToJson', methods=['GET'])
+# def saveCookiesToJsonEndpoint():
+#     print('\t\tsaveCookiesToJsonEndpoint')
+#     TASK_QUEUE.put((SeleniumBrowser.saveCookiesToJson, (), {}))
+#     res = RESULT_QUEUE.get()
+#     return json.dumps(res)
+
+# @app.route('/fullScraping', methods=['POST'])
+# def fullScrapingEndpoint():
+#     # print('\t\\fullScrapingEndpoint')
+#     url = request.get_json()
+#     # print(url)
+#     TASK_QUEUE.put((SeleniumBrowser.fullScraping, (), {})) # pass tuple to seleniumFunctions
+#     # time.sleep(random.uniform(1,2))
+#     res = RESULT_QUEUE.get()
+#     if 'killProcess' in res: # if killProcess key found in dictionary
+#         if res['killProcess'] == True:
+#             TASK_QUEUE.put("KILL PROCESS") # STOP THE PROCESS
+#     return json.dumps(res)
+
+# ## PROCESS QUEUE MANAGEMENT
+# def workerBrowser(url, task_queue, result_queue):
+#     browserInstance = SeleniumBrowser(url) # EACH PROCESS (WORKER) HAS ITS OWN BROWSER INSTANCE
+#     print('INITIALIZED workerBrowser for url ' + url)
+#     while True:
+#         task = task_queue.get()
+#         if task == "KILL PROCESS":
+#             print('KILLED workerBrowser for url ' + url)
+#             break
+#         func, args, kwargs = task
+#         try:
+#             result = func(browserInstance, *args, **kwargs) # USE THE BROWSER INSTANCE
+#             result_queue.put(result)
+#         except Exception as exception:
+#             result_queue.put({'success':False, 'message':'workerBrowser exception: ' + str(exception)})
+
+
+
+# # check typeof(process) and if it already did start() - check is_alive() / exitcode 
+# # def getOrCreateProcess(url):
+# #     if len(PROCESSES_LIST) <= 1:
+# #         return 
+# #     for PROCESS in PROCESSES_LIST:
+# #         if PROCESS['url'] == url: # if URL found
+# #             if PROCESS['instance'] != None:       # lepiej typeof()
+# #                 return PROCESS
+# #             else
+
+
+# PROCESSES_LIST = [{'url':None, 'process':None, 'taskQueue':None, 'resultQueue':None}]
+# TASK_QUEUE = multiprocessing.Queue()  # Queue for sending tasks to the worker
+# RESULT_QUEUE = multiprocessing.Queue()  # Queue for receiving results from the worker
+
+# if __name__ == "__main__":
+#     # Start the worker process
+#     process = multiprocessing.Process(target=workerBrowser, args=('https://theprotocol.it/filtry/ai-ml;sp', TASK_QUEUE, RESULT_QUEUE))
+#     process.daemon = True # exit with main process
+#     process.start()
+
+#     app.run(debug=False)
+#     print("""if __name__ == "__main__": ends here""")

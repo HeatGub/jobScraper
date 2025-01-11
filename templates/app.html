@@ -10,22 +10,19 @@
 </head>
 
 <body>
-  <div class="fetchDiv">
+  <!-- <div class="fetchDiv"> -->
     <button id="openBrowserButton">open browser</button>
     <div id="openBrowserOutput">output text</div>
-  </div>
+  <!-- </div> -->
 
-  <div class="fetchDiv">
+  <!-- <div class="fetchDiv"> -->
     <!-- <button id="saveCookiesToJsonButton" disabled="true" >SaveCookiesToJson</button> -->
     <button id="saveCookiesToJsonButton" >update cookies.json</button>
     <div id="saveCookiesToJsonOutput">output text</div>
-  </div>
+  <!-- </div> -->
 
-  <div class="fetchDiv">
-    <button id="fullScrapingButton">START</button>
-    <input id="fullScrapingInputUrl" type="text" placeholder="url" value="https://theprotocol.it/filtry/ai-ml;sp/">
-    <div id="fullScrapingOutput">output text</div>
-  </div>
+  <div id="fullScrapingDivsContainer"></div>
+  <button id="addNewProcessButton">ADD NEW PROCESS</button>
 
   <form id="mainForm">
     <table>
@@ -62,10 +59,10 @@
       </tr>
       {% endfor %}
     </table>
-    <div class="fetchDiv">
+    <!-- <div class="fetchDiv"> -->
       <input type="submit" value="submit" id="sendFormAndFetchBokehButton">
       <div id="sendFormAndFetchBokehOutput"></div>
-    </div>
+    <!-- </div> -->
   </form>
 
   <span contenteditable="true" id="queryDiv" spellcheck="false"></span>

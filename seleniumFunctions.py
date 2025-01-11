@@ -16,11 +16,11 @@ from databaseFunctions import Database, columnsAll
 ##############################################################################
 
 class SeleniumBrowser:
-    def __init__(self):
+    def __init__(self, baseUrl):
         print('\tSeleniumBrowser __init__')
         self.DRIVER = None
-        # self.BASE_URL = url
-        self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/"
+        self.BASE_URL = baseUrl # passed to worker
+        # self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/"
         # self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/bialystok;wp/stacjonarna;rw"
 
         #all of the below functions must return dictionary like          {'success':True, 'functionDone':False, 'message':'working'}
@@ -33,6 +33,7 @@ class SeleniumBrowser:
         self.currentlyScrapedOfferIndex = 0
         self.databaseInserts = 0
         self.databaseUpdates = 0
+        print(self.BASE_URL)
 
     def isBrowserOpen(self):
         # print('\tisBrowserOpen')
@@ -41,8 +42,8 @@ class SeleniumBrowser:
                 self.DRIVER.current_url
                 # print(self.DRIVER.current_url)
                 return True
-            except WebDriverException as e:
-                print(e)
+            except WebDriverException as exception:
+                print(exception)
                 return False
         else:
             return False
@@ -51,7 +52,7 @@ class SeleniumBrowser:
         if not self.isBrowserOpen():
             return self.openBrowser() #opens browser and returns object like {'success':True, 'functionDone':False, 'message':'msg''}
         elif self.isBrowserOpen():
-            return {'success':True, 'functionDone':True, 'message':'browser is already running'}
+            return {'success':True, 'functionDone':True, 'message':'browser open'}
 
     def saveCookiesToJson(self):
         if self.isBrowserOpen():
@@ -151,12 +152,12 @@ class SeleniumBrowser:
 
 
     ########################################################################### Scrap offer URLs from all the pages ###########################################################################
-    def foundOfferOnThePage(self):
+    def foundOffersListOnThePage(self):
         try:
-            self.DRIVER.find_element(By.CSS_SELECTOR, '#main-offers-listing > div.hfenof > div.t2re51w > div')
-            return False #if no offer specific div found
+            self.DRIVER.find_element("xpath", '//*[@id="main-offers-listing"]/div[1]/div')
+            return True #if offer specific div found
         except:
-            return True
+            return False
     
     def scrapOffersUrlsFromSinglePage(self):
         try:
@@ -173,9 +174,11 @@ class SeleniumBrowser:
     def scrapUrlsFromAllThePages(self):
         try:
             self.DRIVER.get(self.BASE_URL + "?pageNumber=" + str(self.currentlyScrapedPageIndex))
-            if not self.foundOfferOnThePage():
+            if not self.foundOffersListOnThePage() and len(self.OFFERS_URLS) == 0:
+                return {'success':False, 'functionDone':True, 'message': 'no offers found on ' + self.BASE_URL, 'killProcess': True} # terminate the process if no offers found
+            elif not self.foundOffersListOnThePage():
                 return {'success':True, 'functionDone':True, 'message': 'URLs scraping done. Scraped ' + str(len(self.OFFERS_URLS))+' offer urls in total'}
-            elif self.foundOfferOnThePage():
+            elif self.foundOffersListOnThePage():
                 time.sleep(random.uniform(0.5, 1)) #humanize
                 if self.scrapOffersUrlsFromSinglePage()['success'] == True:
                     self.currentlyScrapedPageIndex += 1
@@ -357,8 +360,8 @@ class SeleniumBrowser:
             return {'success':False, 'functionDone':False, 'message':str(exception)}
     
     def fullScraping(self):
-        print('FULL SCRAPING SELENIUM')
-        # getScrapingStatus()
+        # print('FULL SCRAPING SELENIUM')
+        # self.getScrapingStatus()
 
         if self.currentFunctionIndex != 0:
             self.openBrowserIfNeeded() # it's for currentFunctionIndex == 0
@@ -367,11 +370,11 @@ class SeleniumBrowser:
         functionResultDict = self.scrapingFunctionsInOrder[self.currentFunctionIndex]() # RUN CURRENT FUNCTION AND GET RESULTS
 
         if   (functionResultDict['functionDone'] == True) and ((self.currentFunctionIndex +1) <  len(self.scrapingFunctionsInOrder)):
-            self.currentFunctionIndex +=1            # SINGLE FUNCTION DONE
+            self.currentFunctionIndex +=1              # SINGLE FUNCTION DONE
         elif (functionResultDict['functionDone'] == True) and ((self.currentFunctionIndex +1) >= len(self.scrapingFunctionsInOrder)):
-            self.resetScrapingFunctionsProgress()    # ALL FUNCTIONS DONE
-            # functionResultDict = {'success':True, 'functionDone':True, 'message':'EXIT SIGNAL'} # signal to JS to stop fetching
+            self.resetScrapingFunctionsProgress()      # ALL FUNCTIONS DONE
+            functionResultDict['killProcess'] = True   # KILL THE PROCESS
 
-        print('\t\t\t' + str(functionResultDict))
-        # getScrapingStatus()
+        # print('\t\t\t' + str(functionResultDict))
+        # self.getScrapingStatus()
         return functionResultDict
