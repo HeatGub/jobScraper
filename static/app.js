@@ -12,7 +12,7 @@ function fetchEndpointAndAwaitResponse (endpoint, outputDiv) { //event just for 
         }) // FETCH RETURNS ASYNC PROMISE AND AWAITS RESPONSE
             .then(function (response) {
                 if (response.status !== 200) { //response status from flask
-                    output.innerText = 'response status code: ' + response.status
+                    output.innerText = 'response status code: ' + response.status + '. Check python console for more info'
                     return
                 }
                 response.json().then(function (data) {
@@ -94,12 +94,26 @@ createNewFullScrapingDiv()
 addNewProcessButton = document.getElementById('addNewProcessButton')
 addNewProcessButton.addEventListener("click", () => { createNewFullScrapingDiv()})
 
+function isUrlValid(url) {
+    try {
+      new URL(url)
+      return true
+    } catch (e) {
+      return false
+    }
+}
 
 function checkButtonStateAndFetchFullScrapingEndpoint (button, outputDiv, inputUrl) {
+    console.log('<<< BUTTON CLICKED >>> ')
+    const output = document.getElementById(outputDiv)
     const inputUrlDiv = document.getElementById(inputUrl)
     const url =  inputUrlDiv.value
-    console.log('<<< BUTTON CLICKED >>> ')
-    console.log(url)
+    // CHECK IF URL VALID FIRST
+    if (isUrlValid(url) === false) {
+        output.innerText = 'invalid URL. Use full address like https://theprotocol.it/filtry/ai-ml;sp/'
+        return // exit
+    }
+
     inputUrlDiv.disabled = true
     button.disabled = true // DISABLE BUTTON ON CLICK
 
@@ -109,7 +123,6 @@ function checkButtonStateAndFetchFullScrapingEndpoint (button, outputDiv, inputU
 
     function fetchFullScrapingEndpoint() {
         try {
-            const output = document.getElementById(outputDiv)
             fetch(window.origin.toString() + '/fullScraping', {
                 method: "POST",
                 credentials: "include", // cookies etc
