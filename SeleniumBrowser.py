@@ -32,7 +32,7 @@ class SeleniumBrowser:
         self.currentlyScrapedOfferIndex = 0
         self.databaseInserts = 0
         self.databaseUpdates = 0
-        print(self.BASE_URL)
+        # print(self.BASE_URL)
 
     def isBrowserOpen(self):
         # print('\tisBrowserOpen')
@@ -85,6 +85,8 @@ class SeleniumBrowser:
         self.databaseUpdates = 0
                 
     def saveCookiesToJson(self):
+        if not self.isBrowserOpen():
+            return {'success':False, 'functionDone':True, 'message':'open selenium browser first'}
         try:
             seleniumCookies = self.DRIVER.get_cookies() # get cookies for a currently open domain
             seleniumCookiesDomain = seleniumCookies[0]['domain'] # single one is enough, domain is the same for all of them
@@ -160,8 +162,8 @@ class SeleniumBrowser:
             self.currentFunctionIndex +=1              # SINGLE FUNCTION DONE
         elif (functionResultDict['functionDone'] == True) and ((self.currentFunctionIndex +1) >= len(self.scrapingFunctionsInOrder)):
             self.resetScrapingFunctionsProgress()      # ALL FUNCTIONS DONE
-            functionResultDict['killProcess'] = True   # KILL THE PROCESS
+            functionResultDict['killProcess'] = True   # KILL THE PROCESS SIGNAL
 
-        print('\t\t\t' + str(functionResultDict))
-        self.getScrapingStatus()
+        # print('\t\t' + str(functionResultDict))
+        # self.getScrapingStatus()
         return functionResultDict

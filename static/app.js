@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
 document.getElementById("openBrowserButton").addEventListener("click", () => { fetchEndpointAndAwaitResponse('openBrowser', 'openBrowserOutput') })
 document.getElementById("saveCookiesToJsonButton").addEventListener("click", () => { fetchEndpointAndAwaitResponse('saveCookiesToJson', 'saveCookiesToJsonOutput') })
 
-function fetchEndpointAndAwaitResponse (endpoint, outputDiv) { //event just for the need of .bind()
+function fetchEndpointAndAwaitResponse (endpoint, outputDiv) {
     const output = document.getElementById(outputDiv)
     try {
         let url = window.origin.toString() + "/" + endpoint.toString()
@@ -26,27 +26,6 @@ function fetchEndpointAndAwaitResponse (endpoint, outputDiv) { //event just for 
     }
 }
 
-function buttonSwapInnerHtmlStartStop(button) { //because JS requires to return inner func inside outer func to use outer scope
-    // console.log('\tbuttonSwapInnerHtmlStartStop')
-    if (button.innerHTML === 'START') {
-        button.innerHTML = 'STOP'
-    }
-    else {
-        button.innerHTML = 'START'
-    }
-}
-
-function buttonStateReadyToFetch(button){
-    // console.log('\t\tbuttonStateReadyToFetch > button.disabled = ' + button.disabled)
-    if (button.innerHTML === 'START') {
-        if      (button.disabled === true)  {return true}     // START | disabled
-        else if (button.disabled === false) {return false}    // START | enabled
-    } else if (button.innerHTML === 'STOP') {
-        if      (button.disabled === true)  {return false}    // STOP  | disabled
-        else if (button.disabled === false) {return true}     // STOP  | enabled
-    }
-}
-
 function createNewFullScrapingDiv () {
     const fullScrapingDivsContainer = document.getElementById('fullScrapingDivsContainer')
     const existingFullScrapingDivs = document.querySelectorAll('.fullScrapingDiv div')
@@ -58,18 +37,18 @@ function createNewFullScrapingDiv () {
     }
     else if (existingFullScrapingDivs.length > 0) {
         const lastElement = existingFullScrapingDivs[existingFullScrapingDivs.length - 1] // last element
-        index = Number(lastElement.id.match(/\d+$/)) // regex for numbers at the end
+        index = Number(lastElement.id.match(/\d+$/)) // regex for numbers at the end of line
         index += 1
     }
     index = index.toString()
 
     // DECLARE ELEMENTS
-    const fullScrapingDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDiv'+index, className: 'fullScrapingDiv'})
-    const button = Object.assign(document.createElement('button'), {id: 'fullScrapingButton'+index, innerHTML:'START'})
-    const input = Object.assign(document.createElement('input'), {id: 'fullScrapingInputUrl'+index, type:'text', value:'https://theprotocol.it/filtry/ai-ml;sp/', placeholder:'url'})
-    const output = Object.assign(document.createElement('div'), {id: 'fullScrapingOutput'+index, innerHTML:'output text'})
-    const deleteDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDeleteDiv'+index, className: 'fullScrapingDeleteDiv', innerHTML:'DELETE'})
-    const indexDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingIndexDiv'+index, innerHTML: 'index: '+index})
+    const fullScrapingDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDiv_'+index, className: 'fullScrapingDiv'})
+    const button = Object.assign(document.createElement('button'), {id: 'fullScrapingButton_'+index, innerHTML:'START'})
+    const input = Object.assign(document.createElement('input'), {id: 'fullScrapingInputUrl_'+index, type:'text', value:'https://theprotocol.it/filtry/ai-ml;sp/', placeholder:'url'})
+    const output = Object.assign(document.createElement('div'), {id: 'fullScrapingOutput_'+index, innerHTML:'output text'})
+    const deleteDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDeleteDiv_'+index, className: 'fullScrapingDeleteDiv', innerHTML:'DELETE'})
+    const indexDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingIndexDiv_'+index, innerHTML: 'index: '+index})
 
     // APPEND ELEMENTS
     fullScrapingDiv.appendChild(button)
@@ -79,14 +58,48 @@ function createNewFullScrapingDiv () {
     fullScrapingDiv.appendChild(indexDiv)
     fullScrapingDivsContainer.appendChild(fullScrapingDiv)
 
-    function deleteThisFullScrapingDiv() {
-        // console.log('deleteDiv index:' + index)
-        fullScrapingDiv.remove()
+    // DECLARE INSIDE TO USE VARIABLES
+    function fetchKillProcessIfExistsEndpoint() {
+        const url = input.value
+        console.log('fetchKillProcessIfExistsEndpoint')
+        console.log(url)
+        try {
+            fetch(window.origin.toString() + '/killProcessIfExists', {
+                method: "POST",
+                credentials: "include", // cookies etc
+                body: JSON.stringify({url:url, divIndex:index}),
+                cache: "no-cache",
+                headers: new Headers({"content-type": "application/json"})
+            }) // FETCH RETURNS ASYNC PROMISE AND AWAITS RESPONSE
+                .then(function (response) {
+                    // console.log('RESPONSE RECEIVED')
+                    if (response.status !== 200) {
+                        console.log('fetchKillProcessIfExistsEndpoint response status not 200: ' + response.status)
+                        return //EXIT on error
+                    }
+                    response.json().then(function (data) {
+                        console.log(data.message)
+                        if (data.success === true) {
+                            fullScrapingDiv.remove()
+                            // PROCESS KILLED
+                            return
+                        }
+                        else if (data.success === false) {
+                            output.innerText = data.message.slice(0,250)
+                            return
+                        }
+                    })
+                })
+        }
+        catch (error) {
+            console.log('JS ERROR CATCHED ' + error)
+            return //EXIT on error
+        }
     }
 
     // ADD EVENT LISTENERS
-    button.addEventListener("click", () => { checkButtonStateAndFetchFullScrapingEndpoint(button, 'fullScrapingOutput'+index, 'fullScrapingInputUrl'+index) })
-    deleteDiv.addEventListener("click", () => { deleteThisFullScrapingDiv() })
+    button.addEventListener("click", () => { checkButtonStateAndFetchFullScrapingEndpointRecursively(button, 'fullScrapingOutput_'+index, 'fullScrapingInputUrl_'+index) })
+    deleteDiv.addEventListener("click", () => { fetchKillProcessIfExistsEndpoint() })
 }
 
 createNewFullScrapingDiv()
@@ -94,20 +107,23 @@ createNewFullScrapingDiv()
 addNewProcessButton = document.getElementById('addNewProcessButton')
 addNewProcessButton.addEventListener("click", () => { createNewFullScrapingDiv()})
 
-function isUrlValid(url) {
-    try {
-      new URL(url)
-      return true
-    } catch (e) {
-      return false
-    }
-}
-
-function checkButtonStateAndFetchFullScrapingEndpoint (button, outputDiv, inputUrl) {
+// CHECK BUTTON STATE AND FETCH FULL SCRAPING ENDPOINT RECURSIVELY
+function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, outputDiv, inputUrl) {
     console.log('<<< BUTTON CLICKED >>> ')
     const output = document.getElementById(outputDiv)
     const inputUrlDiv = document.getElementById(inputUrl)
     const url =  inputUrlDiv.value
+    const divIndex = Number(inputUrlDiv.id.match(/\d+$/)) // regex for numbers at the end of line
+
+    function isUrlValid(url) {
+        try {
+          new URL(url)
+          return true
+        } catch (e) {
+          return false
+        }
+    }
+
     // CHECK IF URL VALID FIRST
     if (isUrlValid(url) === false) {
         output.innerText = 'invalid URL. Use full address like https://theprotocol.it/filtry/ai-ml;sp/'
@@ -126,7 +142,7 @@ function checkButtonStateAndFetchFullScrapingEndpoint (button, outputDiv, inputU
             fetch(window.origin.toString() + '/fullScraping', {
                 method: "POST",
                 credentials: "include", // cookies etc
-                body: JSON.stringify(url),
+                body: JSON.stringify({url:url, divIndex:divIndex}),
                 cache: "no-cache",
                 headers: new Headers({"content-type": "application/json"})
             }) // FETCH RETURNS ASYNC PROMISE AND AWAITS RESPONSE
@@ -138,12 +154,13 @@ function checkButtonStateAndFetchFullScrapingEndpoint (button, outputDiv, inputU
                     }
                     response.json().then(function (data) {
                         console.log(data.message)
-                        if (data.message.includes('SCRAPING DONE. ')) {
+                        if (data.message.includes('SCRAPING DONE. ') | data.message.includes('process for that URL already exists')) {
+                            // EXIT RECURRENCE WHEN THAT PHRASES ARE FOUND
                             output.innerText = data.message.slice(0,250)
                             button.innerHTML = 'START'
                             button.disabled = false
                             inputUrlDiv.disabled = false
-                            return // EXIT FETCHING IF DONE
+                            return // EXIT FETCHING
                         }
                         else {
                             // RECURRENCE PATH
@@ -235,6 +252,29 @@ function sendFormAndFetchBokeh(e) {
                 }
             }
         })
+}
+
+// BUTTON INNER HTML
+function buttonSwapInnerHtmlStartStop(button) { //because JS requires to return inner func inside outer func to use outer scope
+    // console.log('\tbuttonSwapInnerHtmlStartStop')
+    if (button.innerHTML === 'START') {
+        button.innerHTML = 'STOP'
+    }
+    else {
+        button.innerHTML = 'START'
+    }
+}
+
+// CHECK BUTTON STATE
+function buttonStateReadyToFetch(button){
+    // console.log('\t\tbuttonStateReadyToFetch > button.disabled = ' + button.disabled)
+    if (button.innerHTML === 'START') {
+        if      (button.disabled === true)  {return true}     // START | disabled
+        else if (button.disabled === false) {return false}    // START | enabled
+    } else if (button.innerHTML === 'STOP') {
+        if      (button.disabled === true)  {return false}    // STOP  | disabled
+        else if (button.disabled === false) {return true}     // STOP  | enabled
+    }
 }
 
 // AT LEAST 1 CHECKBOX HAS TO BE CHECKED

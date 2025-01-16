@@ -1,7 +1,7 @@
 import json, random, re, datetime
 import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-from flask import Flask, render_template, request, send_file, make_response, jsonify
+from flask import Flask, render_template, request, send_file #, make_response, jsonify
 from bokeh.resources import CDN
 from bokeh.embed import json_item
 import multiprocessing, io, time
@@ -10,23 +10,13 @@ from databaseFunctions import Database, columnsAll, tableName
 from SeleniumBrowser import SeleniumBrowser
 from makeBokehFigures import makeBokehPlot, makeBokehTable
 
-########################################################################## FLASK SERVER FUNCTIONS ###########################################################################
+
+########################################################################## FLASK ENDPOINTS ###########################################################################
 
 app = Flask(__name__)
 
-@app.route('/downloadCsv')
-def downloadCsv():
-    # Save the DataFrame to a CSV file
-    csvName = "jobScrappingResults " + str(datetime.datetime.now().strftime("%Y-%m-%d %H.%M.%S")) + ".csv"
-    # Save the DataFrame to a CSV in memory
-    buffer = io.BytesIO() #buffer for a csv file to avoid saving csv on a disk
-    dataframeTable.to_csv(buffer, sep=',', encoding='utf-8-sig', index=True, header=True)
-    buffer.seek(0)  # Reset buffer position to the beginning
-    # Send the CSV file as a downloadable response
-    return send_file(buffer, as_attachment=True, download_name=csvName, mimetype='text/csv')
-
 @app.route('/', methods=['GET', 'POST'])
-def form():
+def root():
     if request.method == 'GET':
         # return render_template("form.html", columnsAll=columnsAll)
         return render_template("app.html", columnsAll=columnsAll, resources=CDN.render())
@@ -111,7 +101,7 @@ def form():
             # print('\n'+query+'\n'+queryPlot)
             return query, queryPlot
         
-        global dataframeTable #to make it accessible to download at all times
+        global dataframeTable # to make it accessible to download at all times
         dataframeTable, dataframePlot = queryBuilder(makeFormOutputDictionary())
         dataframeTable = Database.queryToDataframe(dataframeTable)
         dataframePlot = Database.queryToDataframe(dataframePlot)
@@ -126,12 +116,23 @@ def form():
 
         return json.dumps({'resultsAmount':0, 'query': queryToDisplay}), 200, {'Content-Type': 'application/json'} #when no results
 
+@app.route('/downloadCsv')
+def downloadCsvEndpoint():
+    # Save the DataFrame to a CSV file
+    csvName = "jobScrappingResults " + str(datetime.datetime.now().strftime("%Y-%m-%d %H.%M.%S")) + ".csv"
+    # Save the DataFrame to a CSV in memory
+    buffer = io.BytesIO() #buffer for a csv file to avoid saving csv on a disk
+    dataframeTable.to_csv(buffer, sep=',', encoding='utf-8-sig', index=True, header=True)
+    buffer.seek(0)  # Reset buffer position to the beginning
+    # Send the CSV file as a downloadable response
+    return send_file(buffer, as_attachment=True, download_name=csvName, mimetype='text/csv')
+
 @app.route('/openBrowser', methods=['GET'])
 def openBrowserEndpoint():
     print('\t\topenBrowserEndpoint')
-    process = getOrCreateProcess('cookiesBrowser') # JUST SOME STRING AS IT'S NOT A SCRAPING BROWSER
+    process = getOrCreateProcess('cookiesBrowser', -1) # JUST SOME STRING AND NEGATIVE INDEX AS IT'S NOT A SCRAPING BROWSER
     process['taskQueue'].put((SeleniumBrowser.openBrowserIfNeeded, (), {})) # pass tuple to seleniumFunctions
-    # time.sleep(300) #still shows in JS
+    # time.sleep(300) # still shows in JS
     res = process['resultQueue'].get()
     print(res)
     return json.dumps(res)
@@ -139,7 +140,7 @@ def openBrowserEndpoint():
 @app.route('/saveCookiesToJson', methods=['GET'])
 def saveCookiesToJsonEndpoint():
     print('\t\tsaveCookiesToJsonEndpoint')
-    process = getOrCreateProcess('cookiesBrowser') # JUST SOME STRING AS IT'S NOT A SCRAPING BROWSER
+    process = getOrCreateProcess('cookiesBrowser', -1) # JUST SOME STRING AND NEGATIVE INDEX AS IT'S NOT A SCRAPING BROWSER
     process['taskQueue'].put((SeleniumBrowser.saveCookiesToJson, (), {})) # pass tuple to seleniumFunctions
     # time.sleep(random.uniform(1,2))
     res = process['resultQueue'].get()
@@ -148,18 +149,46 @@ def saveCookiesToJsonEndpoint():
 @app.route('/fullScraping', methods=['POST'])
 def fullScrapingEndpoint():
     # print('\t\\fullScrapingEndpoint')
-    url = request.get_json()
+    requestData = request.get_json('url')
+    url = requestData.get('url')
+    divIndex = requestData.get('divIndex')
+    # print('\t\t\t\t', url, divIndex)
     listProcesses()
-    process = getOrCreateProcess(url)
-    process['taskQueue'].put((SeleniumBrowser.fullScraping, (), {})) # pass tuple to seleniumFunctions
+
+    processDict = getOrCreateProcess(url, divIndex) # CHANGE THIS
+
+    # WHEN PROCESS ALREADY EXISTS AT DIFFERENT DIVINDEX
+    if 'process' not in processDict:
+        # print("""\t\t\tif 'process' not in processDict: !!!!!!!!!!!!!!!!!!!!!!!!!""")
+        return json.dumps(processDict) # {'message':...}
+
+    processDict['taskQueue'].put((SeleniumBrowser.fullScraping, (), {})) # pass tuple to seleniumFunctions
     # time.sleep(random.uniform(1,2))
-    res = process['resultQueue'].get()
-    if 'killProcess' in res and res['killProcess'] == True: # if killProcess key found in dictionary
-        killProcess(url)
+    res = processDict['resultQueue'].get()
+    if 'killProcess' in res and res['killProcess'] == True: # if killProcess key found in dictionary and == True
+        killProcess(url) # KILL PROCESS
     return json.dumps(res)
 
+@app.route('/killProcessIfExists', methods=['POST'])
+def killProcessIfExistsEndpoint():
+    try:
+        print('\t\tkillProcessIfExistsEndpoint')
+        requestData = request.get_json('url') # arguments
+        url = requestData.get('url')
+        divIndex = requestData.get('divIndex')
 
-######################################################## PROCESSES MANAGEMENT
+        if returnProcessIfBothMatchOrNone(url, divIndex) == None:
+            print('NO PROCESS TO KILL')
+            return json.dumps({'success':True, 'message':'no process to kill'})
+
+        killProcess(url) # PRINTS
+        # print(url, divIndex)
+        return json.dumps({'success':True, 'message':'process killed'})
+    except Exception as exception:
+        return json.dumps({'success':False, 'message':str(exception)})
+
+
+########################################################################### PROCESSES MANAGEMENT ########################################################################### 
 
 
 def workerBrowser(url, task_queue, result_queue):
@@ -167,9 +196,10 @@ def workerBrowser(url, task_queue, result_queue):
     print('INITIALIZED workerBrowser for url ' + url)
     while True:
         task = task_queue.get()
-        if task == "KILL PROCESS":
-            print('KILLED workerBrowser for url ' + url)
-            break
+        # if task == "KILL PROCESS": # not being used anywhere tho
+        #     killProcess(url)
+        #     print('KILLED workerBrowser for url ' + url)
+        #     break
         func, args, kwargs = task
         try:
             result = func(browserInstance, *args, **kwargs) # USE THE BROWSER INSTANCE
@@ -178,64 +208,85 @@ def workerBrowser(url, task_queue, result_queue):
             result_queue.put({'success':False, 'message':'workerBrowser exception: ' + str(exception)})
 
 def listProcesses():
-    active_processes = [ {"url": process["url"], "is_alive": process["process"].is_alive()} for process in PROCESSES_LIST ] # works for PROCESSES_LIST == [] as well
-    print('\t\tlistProcesses')
-    print('\t\tactive_processes len = ' + str(len(active_processes)))
-    print(active_processes)
-    # return jsonify(active_processes)
+    # processes = [ {"url": process["url"], "is_alive": process["process"].is_alive()} for process in PROCESSES_LIST ] # works for PROCESSES_LIST == [] as well
+    processes = [{'divIndex':item['divIndex'], 'url':item['url']} for item in PROCESSES_LIST]
+    print('\n')
+    print('\t\tactive_processes len = ' + str(len(processes)))
+    print(processes)
+    print('\n')
 
 # check typeof(process) and if it already did start() - check is_alive() / exitcode 
-def getOrCreateProcess(url):
-    # no running process
+def getOrCreateProcess(url, divIndex):
+    # no running process case
     if len(PROCESSES_LIST) == 0:
-        return startProcess(url) # appends to empty PROCESSES_LIST
+        return startProcess(url, divIndex) # startProcess() appends to empty PROCESSES_LIST
     # look for URL
     for processDict in PROCESSES_LIST:
-        if processDict['url'] == url: # if URL found - MAKE HTTPS NOT NECESSARY
-            if processDict['process'] != None:       # lepiej typeof()
-                print('process for url '+url+' already exists')
-                return processDict # FOUND RUNNING PROCESS
-    # if URL not found start new process
-    return startProcess(url) # appends to PROCESSES_LIST
+        if processDict['url'] == url:
+            # IF URL FOUND
+            if type(processDict['process']) == multiprocessing.context.Process:
+                
+                if processDict['divIndex'] == divIndex: # URL and divIndex match
+                    return processDict # FOUND RUNNING PROCESS FOR THIS divIndex
+                
+                elif processDict['divIndex'] != divIndex: # just URL match
+                    ########################## THE ONLY PATH WHICH DOES NOT RETURN A PROCESS ##########################
+                    # print('\tprocess for url '+url+' already exists at divIndex '+str(processDict['divIndex']))
+                    return {'message':'a process for that URL already exists'}
 
-def startProcess(url):
-    # Create a new process
+            else: # type(processDict['process']) != multiprocessing.context.Process - just for safety
+                return startProcess(url, divIndex)
+    # if URL not found start new process
+    return startProcess(url, divIndex) # appends to PROCESSES_LIST
+
+def returnProcessIfBothMatchOrNone(url, divIndex):
+    # no running process case
+    if len(PROCESSES_LIST) == 0:
+        return None
+    # look for URL
+    for processDict in PROCESSES_LIST:
+        if processDict['url'] == url and int(processDict['divIndex']) == int(divIndex):
+            return processDict # FOUND PROCESS FOR THAT ARGUMENTS
+    # if URL not found return None
+    return None
+
+def startProcess(url, divIndex):
     taskQueue = multiprocessing.Queue()  # Queue for sending tasks to the worker
     resultQueue = multiprocessing.Queue()  # Queue for receiving results from the worker
+    # Create a new process
     process = multiprocessing.Process(target=workerBrowser, args=(url, taskQueue, resultQueue))
     process.daemon = True # end this process when main process dies
-    processDict = {"url": url, "process": process, 'taskQueue':taskQueue, 'resultQueue':resultQueue}
-    # Add to the global list
+    processDict = {"url": url, "divIndex": divIndex, "process": process, 'taskQueue':taskQueue, 'resultQueue':resultQueue}
+    # Append to the global list
     PROCESSES_LIST.append(processDict)
     # Start the process
     process.start()
     return processDict
 
 def killProcess(url):
+    listProcesses()
     for process in PROCESSES_LIST:
-        if process["url"] == url:
+        if process["url"] == url: # DELETES ALL FOR THAT URL (should be just 1 tho)
             process["process"].terminate()  # Stop the process
             process["process"].join()  # Ensure the process finishes cleanup
-            del process # remove from the PROCESSES_LIST
-            print(f"Process for '{url}' terminated successfully!")
+            PROCESSES_LIST.remove(process)  # remove from the PROCESSES_LIST
+            print(f"killProcess() - TERMINATED PROCESS FOR '{url}'")
             listProcesses()
             return
             # return jsonify({"message": f"Process for '{url}' terminated successfully!"})
     print('no process to terminate for ' + url)
 
-# {"url": url, "process": process, 'taskQueue':taskQueue, 'resultQueue':resultQueue}
-PROCESSES_LIST = []
+PROCESSES_LIST = [] #[ {"url": url, "process": process, 'taskQueue':taskQueue, 'resultQueue':resultQueue}, {}, ... ]
 
 if __name__ == "__main__":
-    listProcesses()
     app.run(debug=False)
     print("""if __name__ == "__main__": ends here""")
 
 
 
 
-##TODO
-# paramsy do ustawienia - #vat, window size?, table name, url - część w pliku settings?
+###########################################  TODO
+# paramsy do ustawienia - #vat, window size?, table name, url, time randomizers - część w pliku settings?
 # use grossToNetMultiplier just to recalculate before displaying?
 # link table-plot??
 # execute query endpoint?
@@ -244,94 +295,10 @@ if __name__ == "__main__":
 # dodac do DB 'oferujemy/benefity?
 # napisać o nested query w readme
 # KILL PROCESS ON URL CHANGE
-
+# if processDict['process'] != None:       # better check typeof()
 # NEED TO FIND 'OFFER NOT FOUND MSG AND CHECK WHICH DIVS DOES IT HAVE (jj.it)
+# if task == "KILL PROCESS": # not being used anywhere tho
+# terminate cookiesBrowser at some point (check ifBrowserOpen on any fullscraping click?)
+# kill all processess on refresh? killProcess(PROCESSES_LIST) approach?
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-#  KOD PRZED GLOBAL PROCESS LISTA
-
-# ####################################
-
-# @app.route('/openBrowser', methods=['GET'])
-# def openBrowserEndpoint():
-#     print('\t\topenBrowserEndpoint')
-#     TASK_QUEUE.put((SeleniumBrowser.openBrowserIfNeeded, (), {}))
-#     # time.sleep(300) #still shows in JS
-#     res = RESULT_QUEUE.get()
-#     print(res)
-#     return json.dumps(res)
-
-# @app.route('/saveCookiesToJson', methods=['GET'])
-# def saveCookiesToJsonEndpoint():
-#     print('\t\tsaveCookiesToJsonEndpoint')
-#     TASK_QUEUE.put((SeleniumBrowser.saveCookiesToJson, (), {}))
-#     res = RESULT_QUEUE.get()
-#     return json.dumps(res)
-
-# @app.route('/fullScraping', methods=['POST'])
-# def fullScrapingEndpoint():
-#     # print('\t\\fullScrapingEndpoint')
-#     url = request.get_json()
-#     # print(url)
-#     TASK_QUEUE.put((SeleniumBrowser.fullScraping, (), {})) # pass tuple to seleniumFunctions
-#     # time.sleep(random.uniform(1,2))
-#     res = RESULT_QUEUE.get()
-#     if 'killProcess' in res: # if killProcess key found in dictionary
-#         if res['killProcess'] == True:
-#             TASK_QUEUE.put("KILL PROCESS") # STOP THE PROCESS
-#     return json.dumps(res)
-
-# ## PROCESS QUEUE MANAGEMENT
-# def workerBrowser(url, task_queue, result_queue):
-#     browserInstance = SeleniumBrowser(url) # EACH PROCESS (WORKER) HAS ITS OWN BROWSER INSTANCE
-#     print('INITIALIZED workerBrowser for url ' + url)
-#     while True:
-#         task = task_queue.get()
-#         if task == "KILL PROCESS":
-#             print('KILLED workerBrowser for url ' + url)
-#             break
-#         func, args, kwargs = task
-#         try:
-#             result = func(browserInstance, *args, **kwargs) # USE THE BROWSER INSTANCE
-#             result_queue.put(result)
-#         except Exception as exception:
-#             result_queue.put({'success':False, 'message':'workerBrowser exception: ' + str(exception)})
-
-
-
-# # check typeof(process) and if it already did start() - check is_alive() / exitcode 
-# # def getOrCreateProcess(url):
-# #     if len(PROCESSES_LIST) <= 1:
-# #         return 
-# #     for PROCESS in PROCESSES_LIST:
-# #         if PROCESS['url'] == url: # if URL found
-# #             if PROCESS['instance'] != None:       # lepiej typeof()
-# #                 return PROCESS
-# #             else
-
-
-# PROCESSES_LIST = [{'url':None, 'process':None, 'taskQueue':None, 'resultQueue':None}]
-# TASK_QUEUE = multiprocessing.Queue()  # Queue for sending tasks to the worker
-# RESULT_QUEUE = multiprocessing.Queue()  # Queue for receiving results from the worker
-
-# if __name__ == "__main__":
-#     # Start the worker process
-#     process = multiprocessing.Process(target=workerBrowser, args=('https://theprotocol.it/filtry/ai-ml;sp', TASK_QUEUE, RESULT_QUEUE))
-#     process.daemon = True # exit with main process
-#     process.start()
-
-#     app.run(debug=False)
-#     print("""if __name__ == "__main__": ends here""")
+# przesylac JS index  i sprawdzac ktory requestuje zeby 2 JS divy nie callowaly tego samego endpointa
