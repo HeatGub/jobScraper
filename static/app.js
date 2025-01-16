@@ -1,7 +1,45 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+const buttonMessageStart = 'START'
+const buttonMessagePause = 'PAUSE'
+const sliceMessageToThisAmountOfCharacters = 250
+
+fetchProcesses() // HAS TO STAY AT THE TOP TO FETCH PROCESSES FIRST
+
 document.getElementById("openBrowserButton").addEventListener("click", () => { fetchEndpointAndAwaitResponse('openBrowser', 'openBrowserOutput') })
 document.getElementById("saveCookiesToJsonButton").addEventListener("click", () => { fetchEndpointAndAwaitResponse('saveCookiesToJson', 'saveCookiesToJsonOutput') })
+
+function fetchProcesses() {
+    // const output = document.getElementById(outputDiv)
+    try {
+        let url = window.origin.toString() + "/getProcesses"
+        fetch( url, {
+            cache: "no-cache",
+        }) // FETCH RETURNS ASYNC PROMISE AND AWAITS RESPONSE
+            .then(function (response) {
+                if (response.status !== 200) { //response status from flask
+                    output.innerText = 'response status code: ' + response.status + '. Check python console for more info'
+                    return
+                }
+                response.json().then(function (processesList) {
+                    if (processesList.length === 0) {
+                        createNewFullScrapingDiv()  // no arguments provided, just a div ready to start
+                        return
+                    }
+                    // console.log(data)
+                    processesList.forEach((process) => {
+                        // console.log(process.divIndex, process.url)
+                        createNewFullScrapingDiv(process.url, process.divIndex, process.lastMessage)
+                    })
+                    return
+                })
+            })
+    }
+    catch (error) {
+        console.log('JS ERROR CATCHED' + error)
+        return
+    }
+}
 
 function fetchEndpointAndAwaitResponse (endpoint, outputDiv) {
     const output = document.getElementById(outputDiv)
@@ -16,7 +54,7 @@ function fetchEndpointAndAwaitResponse (endpoint, outputDiv) {
                     return
                 }
                 response.json().then(function (data) {
-                    output.innerText = data.message.slice(0,250) //slice if str too long
+                    output.innerText = data.message.slice(0,sliceMessageToThisAmountOfCharacters) //slice if str too long
                 })
             })
     }
@@ -26,27 +64,35 @@ function fetchEndpointAndAwaitResponse (endpoint, outputDiv) {
     }
 }
 
-function createNewFullScrapingDiv () {
+function createNewFullScrapingDiv (url, index, lastMessage) {
     const fullScrapingDivsContainer = document.getElementById('fullScrapingDivsContainer')
     const existingFullScrapingDivs = document.querySelectorAll('.fullScrapingDiv div')
 
-    // SET INDEX
-    let index = 0 // start indexing with 0
-    if (existingFullScrapingDivs.length === 0) {
-        // do nothing as index is already declared
+    // HANDLING UNDEFINED ARGUMENTS
+    if (url === undefined) { // IF URL ARGUMENT NOT PROVIDED
+        url = "https://theprotocol.it/filtry/ai-ml;sp/"
     }
-    else if (existingFullScrapingDivs.length > 0) {
-        const lastElement = existingFullScrapingDivs[existingFullScrapingDivs.length - 1] // last element
-        index = Number(lastElement.id.match(/\d+$/)) // regex for numbers at the end of line
-        index += 1
+    if (index === undefined) { // IF INDEX ARGUMENT NOT PROVIDED
+        index = 0 // start indexing with 0
+        if (existingFullScrapingDivs.length === 0) {
+            // do nothing as index is already declared
+        }
+        else if (existingFullScrapingDivs.length > 0) {
+            const lastElement = existingFullScrapingDivs[existingFullScrapingDivs.length - 1] // last element
+            index = Number(lastElement.id.match(/\d+$/)) // regex for numbers at the end of line
+            index += 1
+        }
     }
     index = index.toString()
+    if (lastMessage === undefined) { // IF LAST MESSAGE ARGUMENT NOT PROVIDED
+        lastMessage = 'ready to start'
+    }
 
     // DECLARE ELEMENTS
     const fullScrapingDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDiv_'+index, className: 'fullScrapingDiv'})
-    const button = Object.assign(document.createElement('button'), {id: 'fullScrapingButton_'+index, innerHTML:'START'})
-    const input = Object.assign(document.createElement('input'), {id: 'fullScrapingInputUrl_'+index, type:'text', value:'https://theprotocol.it/filtry/ai-ml;sp/', placeholder:'url'})
-    const output = Object.assign(document.createElement('div'), {id: 'fullScrapingOutput_'+index, innerHTML:'output text'})
+    const button = Object.assign(document.createElement('button'), {id: 'fullScrapingButton_'+index, innerHTML:buttonMessageStart})
+    const input = Object.assign(document.createElement('input'), {id: 'fullScrapingInputUrl_'+index, type:'text', value:url, placeholder:'url'})
+    const output = Object.assign(document.createElement('div'), {id: 'fullScrapingOutput_'+index, innerHTML:lastMessage})
     const deleteDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDeleteDiv_'+index, className: 'fullScrapingDeleteDiv', innerHTML:'DELETE'})
     const indexDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingIndexDiv_'+index, innerHTML: 'index: '+index})
 
@@ -58,7 +104,7 @@ function createNewFullScrapingDiv () {
     fullScrapingDiv.appendChild(indexDiv)
     fullScrapingDivsContainer.appendChild(fullScrapingDiv)
 
-    // DECLARE INSIDE TO USE VARIABLES
+    // DECLARE INSIDE TO USE OUTER FUNCITON'S VARIABLES
     function fetchKillProcessIfExistsEndpoint() {
         const url = input.value
         console.log('fetchKillProcessIfExistsEndpoint')
@@ -85,7 +131,7 @@ function createNewFullScrapingDiv () {
                             return
                         }
                         else if (data.success === false) {
-                            output.innerText = data.message.slice(0,250)
+                            output.innerText = data.message.slice(0,sliceMessageToThisAmountOfCharacters)
                             return
                         }
                     })
@@ -101,8 +147,6 @@ function createNewFullScrapingDiv () {
     button.addEventListener("click", () => { checkButtonStateAndFetchFullScrapingEndpointRecursively(button, 'fullScrapingOutput_'+index, 'fullScrapingInputUrl_'+index) })
     deleteDiv.addEventListener("click", () => { fetchKillProcessIfExistsEndpoint() })
 }
-
-createNewFullScrapingDiv()
 
 addNewProcessButton = document.getElementById('addNewProcessButton')
 addNewProcessButton.addEventListener("click", () => { createNewFullScrapingDiv()})
@@ -156,15 +200,15 @@ function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, output
                         console.log(data.message)
                         if (data.message.includes('SCRAPING DONE. ') | data.message.includes('process for that URL already exists')) {
                             // EXIT RECURRENCE WHEN THAT PHRASES ARE FOUND
-                            output.innerText = data.message.slice(0,250)
-                            button.innerHTML = 'START'
+                            output.innerText = data.message.slice(0,sliceMessageToThisAmountOfCharacters)
+                            button.innerHTML = buttonMessageStart
                             button.disabled = false
                             inputUrlDiv.disabled = false
                             return // EXIT FETCHING
                         }
                         else {
                             // RECURRENCE PATH
-                            output.innerText = data.message.slice(0,250)
+                            output.innerText = data.message.slice(0,sliceMessageToThisAmountOfCharacters)
                             // console.log('\tRECURRENCE CHECK > buttonStateReadyToFetch = ' + buttonStateReadyToFetch())
                             if (buttonStateReadyToFetch(button)) {
                                 // console.log('\t<<< RECURRENCE CALL >>> \n\tbuttonStateReadyToFetch === true')
@@ -257,21 +301,21 @@ function sendFormAndFetchBokeh(e) {
 // BUTTON INNER HTML
 function buttonSwapInnerHtmlStartStop(button) { //because JS requires to return inner func inside outer func to use outer scope
     // console.log('\tbuttonSwapInnerHtmlStartStop')
-    if (button.innerHTML === 'START') {
-        button.innerHTML = 'STOP'
+    if (button.innerHTML === buttonMessageStart) {
+        button.innerHTML = buttonMessagePause
     }
     else {
-        button.innerHTML = 'START'
+        button.innerHTML = buttonMessageStart
     }
 }
 
 // CHECK BUTTON STATE
 function buttonStateReadyToFetch(button){
     // console.log('\t\tbuttonStateReadyToFetch > button.disabled = ' + button.disabled)
-    if (button.innerHTML === 'START') {
+    if (button.innerHTML === buttonMessageStart) {
         if      (button.disabled === true)  {return true}     // START | disabled
         else if (button.disabled === false) {return false}    // START | enabled
-    } else if (button.innerHTML === 'STOP') {
+    } else if (button.innerHTML === buttonMessagePause) {
         if      (button.disabled === true)  {return false}    // STOP  | disabled
         else if (button.disabled === false) {return true}     // STOP  | enabled
     }

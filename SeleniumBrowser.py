@@ -7,6 +7,7 @@ import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 import json, re
 import theprotocol
+from settings import BROWSER_WINDOW_WIDTH, BROWSER_WINDOW_HEIGHT
 
 ##############################################################################
 #                                                                            #
@@ -17,7 +18,7 @@ import theprotocol
 
 class SeleniumBrowser:
     def __init__(self, baseUrl):
-        print('\tSeleniumBrowser __init__')
+        # print('\tSeleniumBrowser __init__')
         self.DRIVER = None
         self.BASE_URL = baseUrl # passed to worker
         # self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/"
@@ -42,7 +43,7 @@ class SeleniumBrowser:
                 # print(self.DRIVER.current_url)
                 return True
             except WebDriverException as exception:
-                print(exception)
+                # print(exception)
                 return False
         else:
             return False
@@ -60,7 +61,7 @@ class SeleniumBrowser:
             service = Service(executable_path="chromedriver.exe")
             chrome_options = Options()
             chrome_options.add_argument("--disable-search-engine-choice-screen")
-            chrome_options.add_argument("window-size=700,900")
+            chrome_options.add_argument("window-size="+str(BROWSER_WINDOW_WIDTH)+","+str(BROWSER_WINDOW_HEIGHT))
             chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) #disable error logging
             # chrome_options.add_experimental_option("detach", True) # to keep browser open after python script execution ended. Not needed anymore?
             self.DRIVER = webdriver.Chrome(service=service, options=chrome_options) #Selenium opens a new browser window whenever it initializes a WebDriver instance
@@ -68,6 +69,13 @@ class SeleniumBrowser:
             return {'success':True, 'functionDone':True, 'message':'opened a selenium browser'}
         except Exception as exception:
             return {'success':False, 'functionDone':False, 'message':str(exception)}
+    
+    def closeBrowser(self):
+        try:
+            self.DRIVER.quit()
+            return {'success':True, 'functionDone':True, 'message':'closed a broswer'}
+        except Exception as exception: # if exception it is closed already anyway
+            return {'success':False, 'functionDone':True, 'message':str(exception)}
     
     def getScrapingStatus(self):
         if ((self.currentFunctionIndex +1) <= len(self.scrapingFunctionsInOrder)):

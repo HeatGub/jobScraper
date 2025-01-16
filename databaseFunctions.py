@@ -1,14 +1,14 @@
 import sqlite3, re, datetime
 import pandas as pd
+from settings import DATABASE_TABLE_NAME
 
-tableName = 'test4' #DB TABLE NAME
-columnsAll = ['datetimeFirst', 'datetimeLast', 'url', 'title', 'salaryAndContract', 'salaryMin', 'salaryMax', 'employer', 'workModes', 'positionLevels', 'offerValidTo', 'location', 'techstackExpected', 'techstackOptional', 'responsibilities', 'requirements', 'optionalRequirements'] # move out of global scope later
+columnsAll = ['datetimeFirst', 'datetimeLast', 'url', 'title', 'salaryAndContract', 'salaryMin', 'salaryMax', 'employer', 'workModes', 'positionLevels', 'offerValidTo', 'location', 'techstackExpected', 'techstackOptional', 'responsibilities', 'requirements', 'optionalRequirements']
 
 class Database():
     def createTableIfNotExists(): #if not exists
         connection = sqlite3.connect('results.db')
         cursor = connection.cursor()
-        cursor.execute("CREATE TABLE IF NOT EXISTS " + tableName + """ (
+        cursor.execute("CREATE TABLE IF NOT EXISTS " + DATABASE_TABLE_NAME + """ (
                     datetimeFirst TEXT,
                     datetimeLast TEXT,
                     url TEXT,
@@ -33,7 +33,7 @@ class Database():
     def selectAll():
         connection = sqlite3.connect('results.db')
         cursor = connection.cursor()
-        cursor.execute("SELECT * FROM" + tableName +";")
+        cursor.execute("SELECT * FROM" + DATABASE_TABLE_NAME +";")
         connection.commit()
         print(cursor.fetchall())
         cursor.close()
@@ -53,7 +53,7 @@ class Database():
         # print(urlPartToCompare)
         connection = sqlite3.connect('results.db')
         cursor = connection.cursor()
-        cursor.execute("SELECT datetimeFirst FROM " + tableName + " WHERE url LIKE ('%" + urlPartToCompare + "%');")
+        cursor.execute("SELECT datetimeFirst FROM " + DATABASE_TABLE_NAME + " WHERE url LIKE ('%" + urlPartToCompare + "%');")
         connection.commit()
         result = cursor.fetchall()
         cursor.close()
@@ -66,7 +66,7 @@ class Database():
     def insertRecord(dictionary):
         connection = sqlite3.connect('results.db')
         cursor = connection.cursor()
-        cursor.execute("INSERT INTO " + tableName + " VALUES (:datetimeFirst, :datetimeLast, :url, :title, :salaryAndContract, :salaryMin, :salaryMax, :employer, :workModes, :positionLevels, :offerValidTo, :location, :techstackExpected, :techstackOptional, :responsibilities, :requirements, :optionalRequirements)", dictionary)
+        cursor.execute("INSERT INTO " + DATABASE_TABLE_NAME + " VALUES (:datetimeFirst, :datetimeLast, :url, :title, :salaryAndContract, :salaryMin, :salaryMax, :employer, :workModes, :positionLevels, :offerValidTo, :location, :techstackExpected, :techstackOptional, :responsibilities, :requirements, :optionalRequirements)", dictionary)
         connection.commit()
         cursor.close()
         connection.close()
@@ -75,8 +75,8 @@ class Database():
         urlPartToCompare = re.split("[?]s=", url)[0] #split on '?s=' because after that it's only session related stuff. If no pattern found url unchanged
         connection = sqlite3.connect('results.db')
         cursor = connection.cursor()
-        cursor.execute("UPDATE " + tableName + " SET datetimeLast = '" + str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")) + "'  WHERE url LIKE ('%" + urlPartToCompare + "%');")
-        # cursor.execute("SELECT datetimeLast FROM " + tableName + " WHERE url LIKE ('%" + urlPartToCompare + "%');")
+        cursor.execute("UPDATE " + DATABASE_TABLE_NAME + " SET datetimeLast = '" + str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")) + "'  WHERE url LIKE ('%" + urlPartToCompare + "%');")
+        # cursor.execute("SELECT datetimeLast FROM " + DATABASE_TABLE_NAME + " WHERE url LIKE ('%" + urlPartToCompare + "%');")
         connection.commit()
         cursor.close()
         connection.close()
@@ -84,7 +84,7 @@ class Database():
     def countAllRecords():
         connection = sqlite3.connect('results.db')
         cursor = connection.cursor()
-        cursor.execute("SELECT COUNT (*) FROM " + tableName +";")
+        cursor.execute("SELECT COUNT (*) FROM " + DATABASE_TABLE_NAME +";")
         connection.commit()
         resultTuple = cursor.fetchall()[0]
         (count,) = resultTuple #unpacking tuple
@@ -95,7 +95,7 @@ class Database():
     def queryToDataframe(fullQuery):
         connection = sqlite3.connect('results.db')
         cursor = connection.cursor()
-        # df = pd.read_sql("SELECT datetimeFirst, datetimeLast FROM " +tableName+ ";", con=connection)
+        # df = pd.read_sql("SELECT datetimeFirst, datetimeLast FROM " +DATABASE_TABLE_NAME+ ";", con=connection)
         df = pd.read_sql(fullQuery, con=connection)
         connection.commit()
         # print(cursor.fetchall())

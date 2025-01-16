@@ -3,6 +3,7 @@ import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 import time, json, random, re, datetime
 from databaseFunctions import Database, columnsAll
+from settings import GROSS_TO_NET_MULTIPLIER
 
 ########################################################################### Scrap offer URLs from all the pages ###########################################################################
 
@@ -69,7 +70,7 @@ def getOfferDetails(SeleniumBrowser):
     salaryMinAndMax = [None, None] # Nones as these are INTs in DB
     if salaryAndContract != '':
         try: #to recalculate salary to [PLN/month net] #PLN=only unit on protocol?
-            grossToNetMultiplier = 0.7
+            GROSS_TO_NET_MULTIPLIER = 0.7
             hoursPerMonthInFullTimeJob = 168
             lines = salaryAndContract.splitlines()
             if len(lines) >= 3: #should be 2-3 tho
@@ -80,7 +81,7 @@ def getOfferDetails(SeleniumBrowser):
                 # salaryUnit = re.findall(r"[^\d–-]", lines[0]) #[exclude digits and –/-]
                 # salaryUnit = ''.join(salaryUnit) #join list elements
                 if re.findall("brutto", lines[1]) or re.findall("gross", lines[1]): # gross -> net
-                    salaryMinAndMax = [(float(elmnt) * grossToNetMultiplier) for elmnt in salaryMinAndMax]
+                    salaryMinAndMax = [(float(elmnt) * GROSS_TO_NET_MULTIPLIER) for elmnt in salaryMinAndMax]
                     # print(salaryMinAndMax)
                 if re.findall("godz", lines[1]) or re.findall("hr.", lines[1]): # hr -> month
                     salaryMinAndMax = [(float(elmnt) * hoursPerMonthInFullTimeJob) for elmnt in salaryMinAndMax] #possible input float/str
