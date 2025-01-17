@@ -21,7 +21,7 @@ def scrapOffersUrlsFromSinglePage(SeleniumBrowser):
         # offers = offersContainer.find_elements(By.CSS_SELECTOR, '#offer-title') #also works
         # print('\t'+ str(len(offers)) + ' offers:')
         for offer in offers:
-            SeleniumBrowser.OFFERS_URLS.append(offer.get_property("href"))
+            SeleniumBrowser.OFFERS_URLS.append({'url':offer.get_property("href"), 'index':len(SeleniumBrowser.OFFERS_URLS)}) # just some index as theprotocol doesn't use that
         return {'success':True, 'functionDone':True, 'message': 'page ' + str(SeleniumBrowser.currentlyScrapedPageIndex) + ' offers scraped'}
     except:
         return {'success':False, 'functionDone':False, 'message': 'probably too high request frequency triggered bot check'}
@@ -202,13 +202,13 @@ def scrapToDatabase(SeleniumBrowser):
                 return {'success':True, 'functionDone':True, 'message': 'SCRAPING DONE. ' + str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates'}
         # IF NOT FINISHED
         else:
-            SeleniumBrowser.DRIVER.get(SeleniumBrowser.OFFERS_URLS[SeleniumBrowser.currentlyScrapedOfferIndex])
+            SeleniumBrowser.DRIVER.get(SeleniumBrowser.OFFERS_URLS[SeleniumBrowser.currentlyScrapedOfferIndex]['url'])
             if not offerNotFound(SeleniumBrowser):
                 # LOOK FOR COMMON KEYS AS getOfferDetails() can return more keys than custom shortened DB has columns
                 offerDetailsDict = getOfferDetails(SeleniumBrowser)
                 # a dictionary containing only the keys appearing in both dictionaries
                 commonKeysDict = {key: offerDetailsDict[key] for key in DATABASE_COLUMNS if key in offerDetailsDict}
-                
+
                 # # before = time.time()
                 if Database.recordFound(SeleniumBrowser.DRIVER.current_url):
                     Database.updateDatetimeLast(SeleniumBrowser.DRIVER.current_url)

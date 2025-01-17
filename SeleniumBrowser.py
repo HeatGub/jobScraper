@@ -28,7 +28,7 @@ class SeleniumBrowser:
         self.currentFunctionIndex = 0
 
         self.currentlyScrapedPageIndex = 1 #theprotocol starts page enumeration with 1
-        self.OFFERS_URLS = [] # appended in scrapUrlsFromAllThePages()
+        self.OFFERS_URLS = [] # appended in scrapUrlsFromAllThePages() #[{'index':'3', 'url':'https...'}, {}, ...] 
 
         self.currentlyScrapedOfferIndex = 0
         self.databaseInserts = 0

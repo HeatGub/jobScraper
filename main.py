@@ -320,3 +320,4 @@ if __name__ == "__main__":
 # terminate test browser instance at some point (check ifBrowserOpen on any add/delete process click?)
 # requirements.txt
 # urlPartToCompare (database functions) for jj.it may be different
+# slow down or do more reps (include in settings?) in fetchAllOffersUrls() for justjoin
