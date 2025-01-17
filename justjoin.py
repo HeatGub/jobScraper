@@ -2,8 +2,35 @@ from selenium.webdriver.common.by import By
 import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 import time, json, random, re, datetime
-from databaseFunctions import Database
-from settings import GROSS_TO_NET_MULTIPLIER, DATABASE_COLUMNS
+from databaseFunctions import Database, columnsAll
+from settings import GROSS_TO_NET_MULTIPLIER
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ########################################################################### Scrap offer URLs from all the pages ###########################################################################
 
@@ -180,15 +207,8 @@ def getOfferDetails(SeleniumBrowser):
         optionalRequirements= ''
     # print('OPTIONAL:\n' + str(optionalRequirements) + '\n' + driver.current_url)
     datetimeNow = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    return [datetimeNow, datetimeNow, SeleniumBrowser.DRIVER.current_url, jobTitle, salaryAndContract, salaryMinAndMax[0], salaryMinAndMax[1], employer, workModes, positionLevels, offerValidTo, location, techstackExpected, techstackOptional, responsibilities, requirements, optionalRequirements]
 
-    # FULL DESCRIPTION
-    fullDescription = ''
-    try:
-        fullDescription = SeleniumBrowser.DRIVER.find_element(By.CSS_SELECTOR, '#TECHNOLOGY_AND_POSITION').text
-    except:
-        pass # fullDescription = ''
-
-    return {'datetimeLast':datetimeNow, 'datetimeFirst':datetimeNow, 'url':SeleniumBrowser.DRIVER.current_url, 'title':jobTitle, 'salaryAndContract':salaryAndContract, 'salaryMin':salaryMinAndMax[0], 'salaryMax':salaryMinAndMax[1], 'employer':employer, 'workModes':workModes, 'positionLevels':positionLevels, 'location':location, 'techstackExpected':techstackExpected, 'techstackOptional':techstackOptional, 'responsibilities':responsibilities, 'requirements':requirements, 'optionalRequirements':optionalRequirements, 'fullDescription':fullDescription}
 
 ########################################################################### Scraping to Database ###########################################################################
 
@@ -204,17 +224,16 @@ def scrapToDatabase(SeleniumBrowser):
         else:
             SeleniumBrowser.DRIVER.get(SeleniumBrowser.OFFERS_URLS[SeleniumBrowser.currentlyScrapedOfferIndex])
             if not offerNotFound(SeleniumBrowser):
-                # LOOK FOR COMMON KEYS AS getOfferDetails() can return more keys than custom shortened DB has columns
-                offerDetailsDict = getOfferDetails(SeleniumBrowser)
-                # a dictionary containing only the keys appearing in both dictionaries
-                commonKeysDict = {key: offerDetailsDict[key] for key in DATABASE_COLUMNS if key in offerDetailsDict}
-                
-                # # before = time.time()
+                resultsList = getOfferDetails(SeleniumBrowser)
+                outputDictionary = {}
+                for column, offerDetail in zip(columnsAll, resultsList):
+                    outputDictionary[column] = offerDetail #combine 2 lists into 1 dictionary
+                # before = time.time()
                 if Database.recordFound(SeleniumBrowser.DRIVER.current_url):
                     Database.updateDatetimeLast(SeleniumBrowser.DRIVER.current_url)
                     SeleniumBrowser.databaseUpdates += 1
                 else:
-                    Database.insertRecord(commonKeysDict) # insert into database
+                    Database.insertRecord(outputDictionary) # insert into database
                     SeleniumBrowser.databaseInserts += 1
                 SeleniumBrowser.currentlyScrapedOfferIndex += 1 # increment if successfully analysed
                 return {'success':True, 'functionDone':False, 'message': str(SeleniumBrowser.currentlyScrapedOfferIndex) + '/' + str(len(SeleniumBrowser.OFFERS_URLS)) + ' offers analysed'}

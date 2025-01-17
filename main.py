@@ -6,10 +6,10 @@ from bokeh.resources import CDN
 from bokeh.embed import json_item
 import multiprocessing, io, time
 # import numpy as np
-from databaseFunctions import Database, columnsAll
+from databaseFunctions import Database
 from SeleniumBrowser import SeleniumBrowser
 from makeBokehFigures import makeBokehPlot, makeBokehTable
-from settings import DATABASE_TABLE_NAME
+from settings import DATABASE_TABLE_NAME, DATABASE_COLUMNS
 
 ########################################################################## FLASK ENDPOINTS ###########################################################################
 
@@ -19,13 +19,13 @@ testBrowserUrlPlaceholder = 'testBrowserUrlPlaceholder'
 @app.route('/', methods=['GET', 'POST'])
 def root():
     if request.method == 'GET':
-        return render_template("app.html", columnsAll=columnsAll, resources=CDN.render())
+        return render_template("app.html", columnsAll=list(DATABASE_COLUMNS.keys()), resources=CDN.render())
     
     elif request.method == 'POST':
         def makeFormOutputDictionary():
             formDictFromJson = request.get_json() #get form values from a request
             outputDict = {}
-            for column in columnsAll:
+            for column in list(DATABASE_COLUMNS.keys()):
                 rowDictionary = {'show': False, 'necessary': None, 'forbidden': None, 'above': None, 'below': None}
                 #show column
                 if formDictFromJson.get(column+'Show', False): #if not found assign False. Found only if form field not empty
@@ -292,6 +292,7 @@ PROCESSES_LIST = [] #[ {'url': url, 'divIndex': divIndex, 'lastMessage':'', 'pro
 
 if __name__ == "__main__":
     # try:
+    Database.createTableIfNotExists()
     app.run(debug=False)
     # finally: # at flask server exit? DOESNT WORK THOUGH
     #     print('\t\tFINALLY')
@@ -312,8 +313,10 @@ if __name__ == "__main__":
 # execute query endpoint?
 # console errors in brave?? Seems to be brave's issue
 # na justjoin nie scrapuje dodatkowych location przy zminimalizowanym oknie - force active window?
-# dodac do DB 'oferujemy/benefity?
+# ADD fullDescription to offerAnalysis!!!
 # napisać o nested query w readme
 # NEED TO FIND 'OFFER NOT FOUND MSG AND CHECK WHICH DIVS DOES IT HAVE (jj.it)
 # close all browsers on main script end?
 # terminate test browser instance at some point (check ifBrowserOpen on any add/delete process click?)
+# requirements.txt
+# urlPartToCompare (database functions) for jj.it may be different

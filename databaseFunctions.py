@@ -1,31 +1,20 @@
 import sqlite3, re, datetime
 import pandas as pd
-from settings import DATABASE_TABLE_NAME
-
-columnsAll = ['datetimeFirst', 'datetimeLast', 'url', 'title', 'salaryAndContract', 'salaryMin', 'salaryMax', 'employer', 'workModes', 'positionLevels', 'offerValidTo', 'location', 'techstackExpected', 'techstackOptional', 'responsibilities', 'requirements', 'optionalRequirements']
+from settings import DATABASE_TABLE_NAME, DATABASE_COLUMNS
 
 class Database():
     def createTableIfNotExists(): #if not exists
         connection = sqlite3.connect('results.db')
         cursor = connection.cursor()
-        cursor.execute("CREATE TABLE IF NOT EXISTS " + DATABASE_TABLE_NAME + """ (
-                    datetimeFirst TEXT,
-                    datetimeLast TEXT,
-                    url TEXT,
-                    title TEXT, 
-                    salaryAndContract TEXT,
-                    salaryMin INT,
-                    salaryMax INT,
-                    employer TEXT,
-                    workModes TEXT,
-                    positionLevels TEXT,
-                    offerValidTo TEXT,
-                    location TEXT,
-                    techstackExpected TEXT,
-                    techstackOptional TEXT,
-                    responsibilities TEXT,
-                    requirements TEXT,
-                    optionalRequirements TEXT);""")
+        
+        # PREPARE STRING TO CREATE DB FROM
+        databaseColumnsCreationString = ''
+        for key, value in DATABASE_COLUMNS.items():
+            databaseColumnsCreationString += f"""{key} {value['dataType']} DEFAULT {value['default']}, """ 
+        databaseColumnsCreationString = re.sub(r',\s*$', '', databaseColumnsCreationString) # remove the comma and space(s) from the end
+
+        # EXECUTE COMMAND
+        cursor.execute("CREATE TABLE IF NOT EXISTS " + DATABASE_TABLE_NAME + "("+ databaseColumnsCreationString +");")
         connection.commit()
         cursor.close()
         connection.close()
@@ -66,7 +55,14 @@ class Database():
     def insertRecord(dictionary):
         connection = sqlite3.connect('results.db')
         cursor = connection.cursor()
-        cursor.execute("INSERT INTO " + DATABASE_TABLE_NAME + " VALUES (:datetimeFirst, :datetimeLast, :url, :title, :salaryAndContract, :salaryMin, :salaryMax, :employer, :workModes, :positionLevels, :offerValidTo, :location, :techstackExpected, :techstackOptional, :responsibilities, :requirements, :optionalRequirements)", dictionary)
+        # PREPARE COLUMN NAMES STR FROM PASSED DICTIONARY CONTAINING ONLY COMMON K-V PAIRS
+        columnValuesString = ''
+        for name in dictionary.keys():
+            columnValuesString += f":{name}, "
+        columnValuesString = re.sub(r',\s*$', '', columnValuesString) # remove the comma and space(s) from the end
+        columnNamesString = re.sub(r':', '', columnValuesString) # just remove every :
+        # EXECUTE INSERT
+        cursor.execute("INSERT INTO " + DATABASE_TABLE_NAME + " ("+columnNamesString+") VALUES ("+columnValuesString+")", dictionary)
         connection.commit()
         cursor.close()
         connection.close()

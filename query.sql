@@ -40,6 +40,10 @@
 
 -- SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;
 
+-- DELETE FROM test6; --removes all
+-- SELECT * FROM test4;
+-- DROP TABLE IF EXISTS test5;
+
 -- SELECT datetimeLast, datetimeFirst, techstackExpected FROM test4 WHERE 1=1
 -- AND datetimeLast > '2024-10-01';
 -- ORDER BY datetimeLast, techstackExpected;

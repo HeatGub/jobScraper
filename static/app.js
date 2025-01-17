@@ -274,8 +274,8 @@ function sendFormAndFetchBokeh(e) {
             document.getElementById('queryDiv').innerHTML = items.query.replace(/\n/g, "<br>") //replace python newline with html <br>
 
             if (items.resultsAmount === 0) {
-                document.getElementById('plotDiv').innerHTML = 'no data'
-                document.getElementById('tableDiv').innerHTML = 'no data'
+                document.getElementById('plotDiv').innerHTML = ''
+                document.getElementById('tableDiv').innerHTML = ''
                 document.getElementById('downloadCsv').innerHTML = ''
                 document.getElementById('resultsAmount').innerHTML = 'no results ¯\\_(ツ)_/¯'
                 return
