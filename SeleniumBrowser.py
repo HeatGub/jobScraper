@@ -6,8 +6,8 @@ from selenium.common.exceptions import WebDriverException
 import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 import json, re
-import theprotocol
-from settings import BROWSER_WINDOW_WIDTH, BROWSER_WINDOW_HEIGHT
+import theprotocol, justjoin
+from settings import BROWSER_WINDOW_WIDTH, BROWSER_WINDOW_HEIGHT, testBrowserUrlPlaceholder, makeBrowserInvisible
 
 ##############################################################################
 #                                                                            #
@@ -20,20 +20,34 @@ class SeleniumBrowser:
     def __init__(self, baseUrl):
         # print('\tSeleniumBrowser __init__')
         self.DRIVER = None
-        self.BASE_URL = baseUrl # passed to worker
-        # self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/"
-
+        self.BASE_URL = baseUrl # passed to worker # self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/"
+        
+        # CHECK DOMAIN TO ASSIGN PROPER FUNCTIONS
         #all of the below functions must return dictionary like          {'success':True, 'functionDone':False, 'message':'working'}
-        self.scrapingFunctionsInOrder = [self.openBrowserIfNeeded, self.setCookiesFromJson, theprotocol.scrapUrlsFromAllThePages, theprotocol.scrapToDatabase]
-        self.currentFunctionIndex = 0
+        # self.domainCorrect = True # as __init__ can only return None
+        if "theprotocol.it" in str(self.BASE_URL):
+            self.scrapingFunctionsInOrder = [self.openBrowserIfNeeded, self.setCookiesFromJson, theprotocol.scrapUrlsFromAllThePages, theprotocol.scrapToDatabase]
+        elif "justjoin.it" in str(self.BASE_URL): 
+            self.scrapingFunctionsInOrder = [self.openBrowserIfNeeded, self.setCookiesFromJson, justjoin.scrapAllOffersUrls, justjoin.scrapToDatabase]
+        else:
+            self.scrapingFunctionsInOrder = [self.returnIncorrectDomainDictionary]
 
-        self.currentlyScrapedPageIndex = 1 #theprotocol starts page enumeration with 1
+        self.currentFunctionIndex = 0
+        
         self.OFFERS_URLS = [] # appended in scrapUrlsFromAllThePages() #[{'index':'3', 'url':'https...'}, {}, ...] 
 
-        self.currentlyScrapedOfferIndex = 0
+        self.currentlyScrapedPageIndex = 1 # theprotocol starts page enumeration with 1
+        self.currentlyScrapedOfferIndex = 0 # THEPROTOCOL
+
+        self.noNewResultsCounter = 0 # JUSTJOIN
+        self.lastSeenIndex = 0 # JUSTJOIN
+
         self.databaseInserts = 0
         self.databaseUpdates = 0
         # print(self.BASE_URL)
+    
+    def returnIncorrectDomainDictionary(self):
+        return {'success':False, 'functionDone':True, 'message':'only scraping theprotocol.it and justjoin.it for now', 'killProcess':True} # killProcess - incorrect URL provided
 
     def isBrowserOpen(self):
         # print('\tisBrowserOpen')
@@ -59,12 +73,15 @@ class SeleniumBrowser:
         try:
             # SELENIUM CHROME DRIVER SETTINGS
             service = Service(executable_path="chromedriver.exe")
-            chrome_options = Options()
-            chrome_options.add_argument("--disable-search-engine-choice-screen")
-            chrome_options.add_argument("window-size="+str(BROWSER_WINDOW_WIDTH)+","+str(BROWSER_WINDOW_HEIGHT))
-            chrome_options.add_experimental_option('excludeSwitches', ['enable-logging']) #disable error logging
-            # chrome_options.add_experimental_option("detach", True) # to keep browser open after python script execution ended. Not needed anymore?
-            self.DRIVER = webdriver.Chrome(service=service, options=chrome_options) #Selenium opens a new browser window whenever it initializes a WebDriver instance
+            chromeOptions = Options()
+            chromeOptions.add_argument("--disable-search-engine-choice-screen")
+            chromeOptions.add_argument("window-size="+str(BROWSER_WINDOW_WIDTH)+","+str(BROWSER_WINDOW_HEIGHT))
+            chromeOptions.add_experimental_option('excludeSwitches', ['enable-logging']) #disable error logging
+            # MAKE BROWSER INVISIBLE
+            if self.BASE_URL != testBrowserUrlPlaceholder and makeBrowserInvisible == True:
+                chromeOptions.add_argument('--headless')
+            # chromeOptions.add_experimental_option("detach", True) # to keep browser open after python script execution ended. Not needed anymore?
+            self.DRIVER = webdriver.Chrome(service=service, options=chromeOptions) #Selenium opens a new browser window whenever it initializes a WebDriver instance
             self.DRIVER.get("https://google.com")
             return {'success':True, 'functionDone':True, 'message':'opened a selenium browser'}
         except Exception as exception:
@@ -151,7 +168,7 @@ class SeleniumBrowser:
                 elif (cookiesAdded == 0):
                     return {'success':False, 'functionDone':True, 'message':'no cookies for ' + currentUrlDomain + ' found in cookies.json'}
         except Exception as exception:
-            return {'success':False, 'functionDone':True, 'message':str(exception)} # 'functionDone':True because it's not necessary
+            return {'success':False, 'functionDone':True, 'message':str(exception), 'killProcess':True} # killProcess on error as most likely wrong URL was provided 
     
     def fullScraping(self):
         # print('FULL SCRAPING SELENIUM')
@@ -170,7 +187,7 @@ class SeleniumBrowser:
             self.currentFunctionIndex +=1              # SINGLE FUNCTION DONE
         elif (functionResultDict['functionDone'] == True) and ((self.currentFunctionIndex +1) >= len(self.scrapingFunctionsInOrder)):
             self.resetScrapingFunctionsProgress()      # ALL FUNCTIONS DONE
-            functionResultDict['killProcess'] = True   # KILL THE PROCESS SIGNAL
+            # functionResultDict['killProcess'] = True   # KILL THE PROCESS SIGNAL
 
         # print('\t\t' + str(functionResultDict))
         # self.getScrapingStatus()

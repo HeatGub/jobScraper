@@ -3,7 +3,9 @@ import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 import time, json, random, re, datetime
 from databaseFunctions import Database
-from settings import GROSS_TO_NET_MULTIPLIER, DATABASE_COLUMNS
+from settings import DATABASE_COLUMNS
+
+# theprotocol is being scraped well even when browser minimized
 
 ########################################################################### Scrap offer URLs from all the pages ###########################################################################
 
@@ -196,10 +198,10 @@ def scrapToDatabase(SeleniumBrowser):
     try:
         # FINISH CONDITIONS
         if len(SeleniumBrowser.OFFERS_URLS) == 0:
-            return {'success':True, 'functionDone':True, 'message':'no offers to analyse'}
+            return {'success':True, 'functionDone':True, 'message':'no offers to analyse', 'killProcess': True}
         elif int(SeleniumBrowser.currentlyScrapedOfferIndex +1) > int(len(SeleniumBrowser.OFFERS_URLS)):
                 print(str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates')
-                return {'success':True, 'functionDone':True, 'message': 'SCRAPING DONE. ' + str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates'}
+                return {'success':True, 'functionDone':True, 'message': 'scraping done. ' + str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates', 'killProcess': True}
         # IF NOT FINISHED
         else:
             SeleniumBrowser.DRIVER.get(SeleniumBrowser.OFFERS_URLS[SeleniumBrowser.currentlyScrapedOfferIndex]['url'])

@@ -38,11 +38,11 @@ class Database():
         connection.close()
     
     def recordFound(url):
-        urlPartToCompare = re.split("[?]s=", url)[0] #split on '?s=' because after that it's only session related stuff. If no pattern found url unchanged
+        urlPartToCompare = re.split("[?]s=", url)[0] #split on '?s=' because after that it's only session related stuff. If no pattern found url stays unchanged (so it's just a whole URL for justjoin)
         # print(urlPartToCompare)
         connection = sqlite3.connect('results.db')
         cursor = connection.cursor()
-        cursor.execute("SELECT datetimeFirst FROM " + DATABASE_TABLE_NAME + " WHERE url LIKE ('%" + urlPartToCompare + "%');")
+        cursor.execute("SELECT datetimeFirst FROM " + DATABASE_TABLE_NAME + " WHERE url LIKE ('%" + urlPartToCompare + "%');") # also matches if urlPartToCompare is a part of another URL. But that's okay since these are usually the same offers
         connection.commit()
         result = cursor.fetchall()
         cursor.close()

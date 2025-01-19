@@ -70,7 +70,9 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
 
     // HANDLING UNDEFINED ARGUMENTS
     if (url === undefined) { // IF URL ARGUMENT NOT PROVIDED
-        url = "https://theprotocol.it/filtry/ai-ml;sp/"
+        // url = "https://theprotocol.it/filtry/ai-ml;sp/"
+        url = "https://justjoin.it/job-offers/bialystok"
+        // url = "https://justjoin.it/job-offers/bialystok?experience-level=mid&remote=yes&orderBy=DESC&sortBy=published"
     }
     if (index === undefined) { // IF INDEX ARGUMENT NOT PROVIDED
         index = 0 // start indexing with 0
@@ -161,12 +163,13 @@ function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, output
 
     function isUrlValid(url) {
         try {
-          new URL(url)
-          return true
+          const parsedUrl = new URL(url);
+          // Validate the scheme is either http or https
+          return /^(http|https):$/.test(parsedUrl.protocol);
         } catch (e) {
-          return false
+          return false;
         }
-    }
+      }
 
     // CHECK IF URL VALID FIRST
     if (isUrlValid(url) === false) {
@@ -197,9 +200,9 @@ function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, output
                         return //EXIT on error
                     }
                     response.json().then(function (data) {
-                        console.log(data.message)
-                        if (data.message.includes('SCRAPING DONE. ') | data.message.includes('process for that URL already exists')) {
-                            // EXIT RECURRENCE WHEN THAT PHRASES ARE FOUND
+                        // if (data.message.includes('SCRAPING DONE. ') | data.message.includes('process for that URL already exists')) {
+                        if (data.killProcess === true) {
+                            // EXIT RECURRENCE PATH
                             output.innerText = data.message.slice(0,sliceMessageToThisAmountOfCharacters)
                             button.innerHTML = buttonMessageStart
                             button.disabled = false
@@ -223,7 +226,7 @@ function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, output
                 })
         }
         catch (error) {
-            console.log('JS ERROR CATCHED ' + error)
+            console.log('JS error catched ' + error) // never happened yet
             return //EXIT on error
         }
     }

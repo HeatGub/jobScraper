@@ -9,12 +9,11 @@ import multiprocessing, io, time
 from databaseFunctions import Database
 from SeleniumBrowser import SeleniumBrowser
 from makeBokehFigures import makeBokehPlot, makeBokehTable
-from settings import DATABASE_TABLE_NAME, DATABASE_COLUMNS
+from settings import DATABASE_TABLE_NAME, DATABASE_COLUMNS, testBrowserUrlPlaceholder
 
 ########################################################################## FLASK ENDPOINTS ###########################################################################
 
 app = Flask(__name__)
-testBrowserUrlPlaceholder = 'testBrowserUrlPlaceholder'
 
 @app.route('/', methods=['GET', 'POST'])
 def root():
@@ -128,8 +127,8 @@ def downloadCsvEndpoint():
     return send_file(buffer, as_attachment=True, download_name=csvName, mimetype='text/csv')
 
 @app.route('/openBrowser', methods=['GET'])
-def openBrowserEndpoint():
-    print('\t\topenBrowserEndpoint')
+def openTestBrowserEndpoint():
+    print('\t\topenTestBrowserEndpoint')
     process = getOrCreateProcess(testBrowserUrlPlaceholder, -1) # JUST SOME STRING AND NEGATIVE INDEX AS IT'S NOT A SCRAPING BROWSER
     process['taskQueue'].put((SeleniumBrowser.openBrowserIfNeeded, (), {})) # pass tuple to seleniumFunctions
     # time.sleep(300) # still shows in JS
@@ -152,7 +151,7 @@ def fullScrapingEndpoint():
     url = requestData.get('url')
     divIndex = requestData.get('divIndex')
     # print('\t\t\t\t', url, divIndex)
-    listProcessesExceptTestBrowser()
+    # listProcessesExceptTestBrowser()
 
     processDict = getOrCreateProcess(url, divIndex)
 
@@ -164,6 +163,7 @@ def fullScrapingEndpoint():
     # time.sleep(random.uniform(1,2))
     res = processDict['resultQueue'].get()
     processDict['lastMessage'] = res['message'] # overwrite last message
+
     if 'killProcess' in res and res['killProcess'] == True: # if killProcess key found in dictionary and == True
         killProcessAndCloseBrowser(url) # KILL PROCESS
     return json.dumps(res)
@@ -198,8 +198,8 @@ def workerBrowser(url, task_queue, result_queue):
     print('INITIALIZED workerBrowser for url ' + url)
     while True:
         task = task_queue.get()
-        # if task == "KILL PROCESS": # not being used anywhere tho
-        #     killProcess(url)
+        # if 'killProcess' in task and task['killProcess'] == True: # if killProcess key found in dictionary and == True
+        #     killProcessIfExistsEndpoint(url)
         #     print('KILLED workerBrowser for url ' + url)
         #     break
         func, args, kwargs = task
@@ -242,7 +242,7 @@ def getOrCreateProcess(url, divIndex):
                 elif processDict['divIndex'] != divIndex: # just URL match
                     ########################## THE ONLY PATH WHICH DOES NOT RETURN A PROCESS ##########################
                     # print('\tprocess for url '+url+' already exists at divIndex '+str(processDict['divIndex']))
-                    return {'message':'a process for that URL already exists'}
+                    return {'message':'a process for that URL already exists', 'killProcess': True}
 
             else: # type(processDict['process']) != multiprocessing.context.Process - just for safety
                 return startProcess(url, divIndex)
@@ -291,33 +291,24 @@ def killProcessAndCloseBrowser(url):
 PROCESSES_LIST = [] #[ {'url': url, 'divIndex': divIndex, 'lastMessage':'', 'process': process, 'taskQueue':taskQueue, 'resultQueue':resultQueue}, {}, ... ]
 
 if __name__ == "__main__":
-    # try:
     Database.createTableIfNotExists()
     app.run(debug=False)
-    # finally: # at flask server exit? DOESNT WORK THOUGH
-    #     print('\t\tFINALLY')
-    #     print(len(PROCESSES_LIST))
-    #     # KILL ALL PROCESSES AS MAIN ENDS
-    #     if len(PROCESSES_LIST) > 0: # DOESNT REACH HERE
-    #         for processDict in PROCESSES_LIST:
-    #             killProcessAndCloseBrowser(processDict['url'])
-
     print(len(PROCESSES_LIST))
     print("MAIN PROCESS ENDS HERE")
 
 
 ###########################################  TODO
-# settings file - # add time randomizers?
+# settings file - # add time randomizers and different win size for different portals?
 # use grossToNetMultiplier just to recalculate before displaying?? explaing that as well in readme
-# link table-plot??
 # execute query endpoint?
 # console errors in brave?? Seems to be brave's issue
-# na justjoin nie scrapuje dodatkowych location przy zminimalizowanym oknie - force active window?
 # ADD fullDescription to offerAnalysis!!!
 # napisać o nested query w readme
 # NEED TO FIND 'OFFER NOT FOUND MSG AND CHECK WHICH DIVS DOES IT HAVE (jj.it)
 # close all browsers on main script end?
 # terminate test browser instance at some point (check ifBrowserOpen on any add/delete process click?)
 # requirements.txt
-# urlPartToCompare (database functions) for jj.it may be different
-# slow down or do more reps (include in settings?) in fetchAllOffersUrls() for justjoin
+
+# slow down or do more reps (include in settings?) in fetchAllOffersUrls() for justjoin?
+
+# Database.recordFound - adjust for JJ

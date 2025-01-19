@@ -27,3 +27,7 @@ DATABASE_COLUMNS = {
     "optionalRequirements": {"dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT},
     "fullDescription": {"dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT},
 }
+
+makeBrowserInvisible = True # justjoin HAS TO HAVE INVISIBLE (headless) OR active (not minimized) window to work
+
+testBrowserUrlPlaceholder = 'testBrowserUrlPlaceholder'
