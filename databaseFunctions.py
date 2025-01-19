@@ -7,11 +7,18 @@ class Database():
         connection = sqlite3.connect('results.db')
         cursor = connection.cursor()
         
+        # # PREPARE STRING TO CREATE DB FROM
+        # databaseColumnsCreationString = ''
+        # for key, value in DATABASE_COLUMNS.items():
+        #     databaseColumnsCreationString += f"""{key} {value['dataType']} DEFAULT {value['default']}, """ 
+        # databaseColumnsCreationString = re.sub(r',\s*$', '', databaseColumnsCreationString) # remove the comma and space(s) from the end
+
         # PREPARE STRING TO CREATE DB FROM
         databaseColumnsCreationString = ''
-        for key, value in DATABASE_COLUMNS.items():
-            databaseColumnsCreationString += f"""{key} {value['dataType']} DEFAULT {value['default']}, """ 
+        for column in DATABASE_COLUMNS:
+            databaseColumnsCreationString += f"""{column['dbColumnName']} {column['dataType']} DEFAULT {column['default']}, """ 
         databaseColumnsCreationString = re.sub(r',\s*$', '', databaseColumnsCreationString) # remove the comma and space(s) from the end
+        # print(databaseColumnsCreationString)
 
         # EXECUTE COMMAND
         cursor.execute("CREATE TABLE IF NOT EXISTS " + DATABASE_TABLE_NAME + "("+ databaseColumnsCreationString +");")

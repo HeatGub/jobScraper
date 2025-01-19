@@ -71,8 +71,8 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
     // HANDLING UNDEFINED ARGUMENTS
     if (url === undefined) { // IF URL ARGUMENT NOT PROVIDED
         // url = "https://theprotocol.it/filtry/ai-ml;sp/"
-        url = "https://justjoin.it/job-offers/bialystok"
-        // url = "https://justjoin.it/job-offers/bialystok?experience-level=mid&remote=yes&orderBy=DESC&sortBy=published"
+        // url = "https://justjoin.it/job-offers/bialystok"
+        url = "https://justjoin.it/job-offers/bialystok?experience-level=mid&remote=yes&orderBy=DESC&sortBy=published"
     }
     if (index === undefined) { // IF INDEX ARGUMENT NOT PROVIDED
         index = 0 // start indexing with 0
@@ -89,21 +89,21 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
     if (lastMessage === undefined) { // IF LAST MESSAGE ARGUMENT NOT PROVIDED
         lastMessage = 'ready to start'
     }
-
+    
     // DECLARE ELEMENTS
     const fullScrapingDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDiv_'+index, className: 'fullScrapingDiv'})
     const button = Object.assign(document.createElement('button'), {id: 'fullScrapingButton_'+index, innerHTML:buttonMessageStart})
     const input = Object.assign(document.createElement('input'), {id: 'fullScrapingInputUrl_'+index, type:'text', value:url, placeholder:'url'})
-    const output = Object.assign(document.createElement('div'), {id: 'fullScrapingOutput_'+index, innerHTML:lastMessage})
+    const output = Object.assign(document.createElement('div'), {id: 'fullScrapingOutput_'+index, innerHTML:lastMessage.slice(0,sliceMessageToThisAmountOfCharacters)})
     const deleteDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDeleteDiv_'+index, className: 'fullScrapingDeleteDiv', innerHTML:'DELETE'})
-    const indexDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingIndexDiv_'+index, innerHTML: 'index: '+index})
+    // const indexDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingIndexDiv_'+index, innerHTML: 'index: '+index})
 
     // APPEND ELEMENTS
     fullScrapingDiv.appendChild(button)
     fullScrapingDiv.appendChild(input)
     fullScrapingDiv.appendChild(output)
     fullScrapingDiv.appendChild(deleteDiv)
-    fullScrapingDiv.appendChild(indexDiv)
+    // fullScrapingDiv.appendChild(indexDiv)
     fullScrapingDivsContainer.appendChild(fullScrapingDiv)
 
     // DECLARE INSIDE TO USE OUTER FUNCITON'S VARIABLES

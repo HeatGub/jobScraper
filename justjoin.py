@@ -291,7 +291,7 @@ def scrapToDatabase(SeleniumBrowser):
                 # LOOK FOR COMMON KEYS AS getOfferDetails() can return more keys than custom shortened DB has columns
                 offerDetailsDict = getOfferDetails(SeleniumBrowser)
                 # a dictionary containing only the keys appearing in both dictionaries
-                commonKeysDict = {key: offerDetailsDict[key] for key in DATABASE_COLUMNS if key in offerDetailsDict}
+                commonKeysDict = {key: offerDetailsDict[key] for key in [item["dbColumnName"] for item in DATABASE_COLUMNS] if key in offerDetailsDict}
 
                 # # before = time.time()
                 if Database.recordFound(SeleniumBrowser.DRIVER.current_url):

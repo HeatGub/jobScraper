@@ -1,3 +1,47 @@
+.categoryShowHideDiv {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid blue;
+  cursor: pointer;
+}
+
+.categoryContainer {
+  border: 1px solid blue;
+}
+
+.categoryContent{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.categoryContentBokeh{
+  width: 100%;
+  /* margin: 0;
+  padding: 0; */
+}
+
+#mainContainer > div{
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+#mainContainer{
+  min-width: 300px;
+  width: 95%;
+  background-color: rgba(100,100,100,0.1)
+}
+
+body  {
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
 button {
     color: lightgreen;
     background-color: grey;
@@ -18,19 +62,32 @@ td {
     border: 1px solid black;
 }
 
+input[type="datetime-local"] {
+  min-width: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 10px;
+}
+
 td>input {
     width: 97%;
 }
-
-/* .fetchDiv {
-border: 1px solid green;
-} */
+/* td:nth-child(1) {
+    max-width: 70px;
+  }
+  td:nth-child(2) { 
+    max-width: 10px;
+  }
+  td:nth-child(5), td:nth-child(6){
+    max-width: 70px;
+  } */
 
 .fullScrapingDiv {
   border: 1px solid greenyellow;
 }
 
 #fullScrapingDivsContainer {
+  width: 90%;
   border: 2px solid gray;
   padding: 3px;
 }
@@ -52,15 +109,6 @@ border: 1px solid green;
   cursor: pointer;
 }
 
-/* td:nth-child(1) {
-    max-width: 70px;
-  }
-  td:nth-child(2) { 
-    max-width: 10px;
-  }
-  td:nth-child(5), td:nth-child(6){
-    max-width: 70px;
-  } */
 #downloadCsv {
     /* just for visibility */
     /* border: 1px blue solid; */

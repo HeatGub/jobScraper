@@ -10,70 +10,116 @@
 </head>
 
 <body>
-  <!-- <div class="fetchDiv"> -->
-    <button id="openBrowserButton">open test browser</button>
-    <div id="openBrowserOutput">output text</div>
-  <!-- </div> -->
 
-  <!-- <div class="fetchDiv"> -->
-    <!-- <button id="saveCookiesToJsonButton" disabled="true" >SaveCookiesToJson</button> -->
-    <button id="saveCookiesToJsonButton" >update cookies.json</button>
-    <div id="saveCookiesToJsonOutput">output text</div>
-  <!-- </div> -->
+  <div id="mainContainer">
 
-  <div id="fullScrapingDivsContainer"></div>
-  <button id="addNewProcessButton">ADD NEW PROCESS</button>
+    <!-- TEST BROWSER -->
+    <div class="categoryContainer">
+      <div class="categoryShowHideDiv">TEST BROWSER</div>
+        <div class="categoryContent">
+          <button id="openBrowserButton">open test browser</button>
+          <div id="openBrowserOutput">output text</div>
 
-  <form id="mainForm">
-    <table>
-      <thead>
-        <tr>
-          <th scope="col">parameter</th>
-          <th scope="col">show in table <p class="checkUncheckAll">UNCHECK ALL</p>
-          </th>
-          <th scope="col">necessary</th>
-          <th scope="col">forbidden</th>
-          <th scope="col">above</th>
-          <th scope="col">below</th>
-        </tr>
-      </thead>
-      {% for column in columnsAll %}
-      <tr>
-        <td>{{column}}</td>
-        <td><input type="checkbox" class="ckeckBox" checked="checked" name={{column}}Show></td>
-        {% if column != "salaryMin" and column != "salaryMax" %}
-        <!-- oninput="this.size = this.value.length" makes it resize, but it might be unnecessary -->
-        <td><input type="text" placeholder="necessary phrase" name={{column}}Necessary></td>
-        <td><input type="text" placeholder="forbidden phrase" name={{column}}Forbidden></td>
-        {% elif column == "salaryMin" or column == "salaryMax" %}
-        <td></td>
-        <td></td>
-        {% endif %}
-        {% if column == "datetimeFirst" or column == "datetimeLast" %}
-        <td><input type="datetime-local" placeholder="above" name={{column}}Above></td>
-        <td><input type="datetime-local" placeholder="below" name={{column}}Below></td>
-        {% elif column == "salaryMin" or column == "salaryMax" %}
-        <td><input type="number" placeholder="4000" name={{column}}Above></td>
-        <td><input type="number" placeholder="10000" name={{column}}Below></td>
-        {% endif %}
-      </tr>
-      {% endfor %}
-    </table>
-    <!-- <div class="fetchDiv"> -->
-      <input type="submit" value="submit" id="sendFormAndFetchBokehButton">
-      <div id="sendFormAndFetchBokehOutput"></div>
-    <!-- </div> -->
-  </form>
+          <button id="saveCookiesToJsonButton" >update cookies.json</button>
+          <div id="saveCookiesToJsonOutput">output text</div>
+        </div>
+    </div>
 
-  <span contenteditable="true" id="queryDiv" spellcheck="false"></span>
-  <br>
-  <h1 id="resultsAmount"></h1>
-  <a id="downloadCsv" href="{{ url_for('downloadCsvEndpoint') }}" class="btn"></a>
-  <div id="plotDiv"></div>
-  <br>
-  <div id="tableDiv"></div>
+    <!-- SCRAPING CONTAINER  -->
+    <div class="categoryContainer">
+      <div class="categoryShowHideDiv">SCRAPING BROWSERS</div>
+        <div class="categoryContent">
+          <div id="fullScrapingDivsContainer"></div>
+          <button id="addNewProcessButton">ADD NEW PROCESS</button>
+        </div>
+    </div>
+
+    <!-- FORM -->
+    <div class="categoryContainer">
+      <div class="categoryShowHideDiv">QUERY TOOL</div>
+        <div class="categoryContent">
+
+          <form id="mainForm">
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">parameter (hover for description)</th>
+                  <th scope="col">show in table <p class="checkUncheckAll">UNCHECK ALL</p>
+                  </th>
+                  <th scope="col">necessary</th>
+                  <th scope="col">forbidden</th>
+                  <th scope="col">above</th>
+                  <th scope="col">below</th>
+                </tr>
+              </thead>
+              {% for columnDict in databaseColumns %}
+              <tr>
+                <td title="{{columnDict.description}}">{{columnDict.displayName}}</td>
+                <td><input type="checkbox" class="ckeckBox" checked="checked" name={{columnDict.dbColumnName}}Show></td>
+                {% if columnDict.dbColumnName != "salaryMin" and columnDict.dbColumnName != "salaryMax" %}
+                <!-- oninput="this.size = this.value.length" makes it resize, but it might be unnecessary -->
+                <td><input type="text" placeholder="necessary phrase" name={{columnDict.dbColumnName}}Necessary></td>
+                <td><input type="text" placeholder="forbidden phrase" name={{columnDict.dbColumnName}}Forbidden></td>
+                {% elif columnDict.dbColumnName == "salaryMin" or columnDict.dbColumnName == "salaryMax" %}
+                <td></td>
+                <td></td>
+                {% endif %}
+                {% if columnDict.dbColumnName == "datetimeFirst" or columnDict.dbColumnName == "datetimeLast" %}
+                <td><input type="datetime-local" placeholder="above" name={{columnDict.dbColumnName}}Above></td>
+                <td><input type="datetime-local" placeholder="below" name={{columnDict.dbColumnName}}Below></td>
+                {% elif columnDict.dbColumnName == "salaryMin" or columnDict.dbColumnName == "salaryMax" %}
+                <td><input type="number" placeholder="4000" name={{columnDict.dbColumnName}}Above></td>
+                <td><input type="number" placeholder="10000" name={{columnDict.dbColumnName}}Below></td>
+                {% endif %}
+              </tr>
+              {% endfor %}
+            </table>
+            <!-- <div class="fetchDiv"> -->
+              <input type="submit" value="submit" id="sendFormAndFetchBokehButton">
+              <div id="sendFormAndFetchBokehOutput"></div>
+            <!-- </div> -->
+          </form>
+
+        </div>
+    </div>
+
+    <!-- QUERY -->
+    <div class="categoryContainer">
+      <div class="categoryShowHideDiv">QUERY STRING</div>
+        <div class="categoryContent">
+          <span contenteditable="true" id="queryDiv" spellcheck="false"></span>
+        </div>
+    </div>
+
+    <!-- RESULTS & DOWNLOAD CSV -->
+    <div class="categoryContainer">
+      <div class="categoryShowHideDiv">RESULTS & DOWNLOAD</div>
+        <div class="categoryContent">
+          <h1 id="resultsAmount"></h1>
+          <a id="downloadCsv" href="{{ url_for('downloadCsvEndpoint') }}" class="btn"></a>
+        </div>
+    </div>
+
+    <!-- PLOT -->
+    <div class="categoryContainer">
+      <div class="categoryShowHideDiv">PLOT</div>
+        <div class="categoryContentBokeh">
+          <div id="plotDiv"></div>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="categoryContainer">
+      <div class="categoryShowHideDiv">TABLE</div>
+        <div class="categoryContentBokeh">
+          <div id="tableDiv"></div>
+        </div>
+    </div>
+    
+  </div> <!--mainContainer -->
 
   <script src="{{ url_for('static', filename='app.js') }}"></script>
+
 </body>
 
 </html>

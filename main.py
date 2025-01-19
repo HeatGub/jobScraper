@@ -18,13 +18,13 @@ app = Flask(__name__)
 @app.route('/', methods=['GET', 'POST'])
 def root():
     if request.method == 'GET':
-        return render_template("app.html", columnsAll=list(DATABASE_COLUMNS.keys()), resources=CDN.render())
+        return render_template("app.html", databaseColumns=DATABASE_COLUMNS, resources=CDN.render()) # columnsAll=list(DATABASE_COLUMNS_OLD.keys())
     
     elif request.method == 'POST':
         def makeFormOutputDictionary():
             formDictFromJson = request.get_json() #get form values from a request
             outputDict = {}
-            for column in list(DATABASE_COLUMNS.keys()):
+            for column in [column["dbColumnName"] for column in DATABASE_COLUMNS]:
                 rowDictionary = {'show': False, 'necessary': None, 'forbidden': None, 'above': None, 'below': None}
                 #show column
                 if formDictFromJson.get(column+'Show', False): #if not found assign False. Found only if form field not empty
@@ -292,7 +292,8 @@ PROCESSES_LIST = [] #[ {'url': url, 'divIndex': divIndex, 'lastMessage':'', 'pro
 
 if __name__ == "__main__":
     Database.createTableIfNotExists()
-    app.run(debug=False)
+    # app.run(debug=False)
+    app.run(debug=True)
     print(len(PROCESSES_LIST))
     print("MAIN PROCESS ENDS HERE")
 
@@ -308,7 +309,6 @@ if __name__ == "__main__":
 # close all browsers on main script end?
 # terminate test browser instance at some point (check ifBrowserOpen on any add/delete process click?)
 # requirements.txt
-
 # slow down or do more reps (include in settings?) in fetchAllOffersUrls() for justjoin?
 
-# Database.recordFound - adjust for JJ
+# param name and description on hover (title attribute) - pass object to render_template
