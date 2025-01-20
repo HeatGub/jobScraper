@@ -74,6 +74,7 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
         // url = "https://justjoin.it/job-offers/bialystok"
         url = "https://justjoin.it/job-offers/bialystok?experience-level=mid&remote=yes&orderBy=DESC&sortBy=published"
     }
+
     if (index === undefined) { // IF INDEX ARGUMENT NOT PROVIDED
         index = 0 // start indexing with 0
         if (existingFullScrapingDivs.length === 0) {
@@ -86,6 +87,7 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
         }
     }
     index = index.toString()
+
     if (lastMessage === undefined) { // IF LAST MESSAGE ARGUMENT NOT PROVIDED
         lastMessage = 'ready to start'
     }
@@ -94,13 +96,13 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
     const fullScrapingDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDiv_'+index, className: 'fullScrapingDiv'})
     const button = Object.assign(document.createElement('button'), {id: 'fullScrapingButton_'+index, innerHTML:buttonMessageStart})
     const input = Object.assign(document.createElement('input'), {id: 'fullScrapingInputUrl_'+index, type:'text', value:url, placeholder:'url'})
-    const output = Object.assign(document.createElement('div'), {id: 'fullScrapingOutput_'+index, innerHTML:lastMessage.slice(0,sliceMessageToThisAmountOfCharacters)})
-    const deleteDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDeleteDiv_'+index, className: 'fullScrapingDeleteDiv', innerHTML:'DELETE'})
+    const output = Object.assign(document.createElement('div'), {id: 'fullScrapingOutput_'+index, className: 'fullScrapingDivOutput', innerHTML:lastMessage.slice(0,sliceMessageToThisAmountOfCharacters)})
+    const deleteDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDeleteDiv_'+index, className: 'fullScrapingDeleteDiv', innerHTML:'<i class="fa fa-trash-o"></i>'})
     // const indexDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingIndexDiv_'+index, innerHTML: 'index: '+index})
 
     // APPEND ELEMENTS
-    fullScrapingDiv.appendChild(button)
     fullScrapingDiv.appendChild(input)
+    fullScrapingDiv.appendChild(button)
     fullScrapingDiv.appendChild(output)
     fullScrapingDiv.appendChild(deleteDiv)
     // fullScrapingDiv.appendChild(indexDiv)
@@ -274,12 +276,15 @@ function sendFormAndFetchBokeh(e) {
             }
         })
         .then(function (items) { // when response 200 and JSON items list received
+            document.getElementById('queryDiv').innerHTML.display = 'flex'
             document.getElementById('queryDiv').innerHTML = items.query.replace(/\n/g, "<br>") //replace python newline with html <br>
 
             if (items.resultsAmount === 0) {
                 document.getElementById('plotDiv').innerHTML = ''
                 document.getElementById('tableDiv').innerHTML = ''
-                document.getElementById('downloadCsv').innerHTML = ''
+                document.getElementById('downloadCsvContainer').style.display = 'none'
+                document.getElementById('downloadCsvIcon').innerHTML = ''
+                document.getElementById('downloadCsvText').innerHTML = ''
                 document.getElementById('resultsAmount').innerHTML = 'no results ¯\\_(ツ)_/¯'
                 return
             }
@@ -289,7 +294,9 @@ function sendFormAndFetchBokeh(e) {
                 document.getElementById('tableDiv').innerHTML = ''
                 Bokeh.embed.embed_item(items.plot, 'plotDiv')
                 Bokeh.embed.embed_item(items.table, 'tableDiv')
-                document.getElementById('downloadCsv').innerHTML = 'Download CSV'
+                document.getElementById('downloadCsvContainer').style.display = 'flex'
+                document.getElementById('downloadCsvIcon').innerHTML = '<i class="fa fa-download" aria-hidden="true"></i>'
+                document.getElementById('downloadCsvText').innerHTML = 'DOWNLOAD CSV'
 
                 if (items.resultsAmount === 1) { //if 1 result
                     document.getElementById('resultsAmount').innerHTML = '1 result'
@@ -335,15 +342,39 @@ function atLeastOneCheckboxChecked () {
 }
 
 // CHANGING CHECKBOXES STATE - CHECK/UNCHECK
-document.querySelector('.checkUncheckAll').addEventListener('click', (event) => {
-    if (document.querySelector('.checkUncheckAll').textContent == 'UNCHECK ALL') {
+document.getElementById('checkUncheckAll').addEventListener('click', () => {
+    // The HTML entity &check; is converted into the Unicode character ✓ by the browser when the page is rendered
+    if (document.getElementById('checkUncheckAll').textContent == '✗') {
         document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = false })
-        document.querySelector('.checkUncheckAll').textContent = 'CHECK ALL'
+        document.getElementById('checkUncheckAll').textContent = '✓'
     }
-    else if (document.querySelector('.checkUncheckAll').textContent == 'CHECK ALL') {
+    else if (document.getElementById('checkUncheckAll').textContent == '✓') {
         document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = true })
-        document.querySelector('.checkUncheckAll').textContent = 'UNCHECK ALL'
+        document.getElementById('checkUncheckAll').textContent = '✗'
     }
+})
+
+// MAKE WHOLE DOWNLOAD CSV CONTAINER CLICKABLE
+document.getElementById('downloadCsvContainer').addEventListener('click', function() {
+    let url = window.origin.toString() + "/downloadCsv"
+    window.location.href = url
+})
+
+// HIDE / SHOW CATEGORIES
+document.querySelectorAll('.categoryShowHideDiv').forEach(hideShowDiv => {
+    hideShowDiv.addEventListener('click', () => {
+        // Find the associated categoryContent sibling
+        const content = hideShowDiv.nextElementSibling
+        // content.style.display = 'flex'
+        console.log(content)
+        console.log(content.style.display)
+        // Toggle the display property
+        if (content.style.display === 'flex') {
+            content.style.display = 'none'
+        } else {
+            content.style.display = 'flex'
+        }
+    })
 })
 
 }) //onDOMContentLoaded ends here

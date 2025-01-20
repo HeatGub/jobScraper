@@ -7,21 +7,24 @@
   <title>Plot and Table</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
   {{ resources|safe }}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Trirong">
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Anonymous Pro'>
+  <link href='https://fonts.googleapis.com/css?family=Anta' rel='stylesheet'>
 </head>
 
 <body>
 
   <div id="mainContainer">
-
+    
     <!-- TEST BROWSER -->
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">TEST BROWSER</div>
         <div class="categoryContent">
           <button id="openBrowserButton">open test browser</button>
-          <div id="openBrowserOutput">output text</div>
-
+          <div id="openBrowserOutput" class="testBrowserOutput">open the browser to update cookies.json</div>
           <button id="saveCookiesToJsonButton" >update cookies.json</button>
-          <div id="saveCookiesToJsonOutput">output text</div>
+          <div id="saveCookiesToJsonOutput" class="testBrowserOutput"></div>
         </div>
     </div>
 
@@ -43,13 +46,13 @@
             <table>
               <thead>
                 <tr>
-                  <th scope="col">parameter (hover for description)</th>
-                  <th scope="col">show in table <p class="checkUncheckAll">UNCHECK ALL</p>
+                  <th scope="col" class="constantWidthColumnParameters">parameter (hover for description)</th>
+                  <th scope="col" class="constantWidthColumnShow">show?<p id="checkUncheckAll">&cross;</p>
                   </th>
-                  <th scope="col">necessary</th>
-                  <th scope="col">forbidden</th>
-                  <th scope="col">above</th>
-                  <th scope="col">below</th>
+                  <th scope="col" class="flexibleWidthColumn">necessary</th>
+                  <th scope="col" class="flexibleWidthColumn">forbidden</th>
+                  <th scope="col" class="constantWidthColumnAboveAndBelow">above</th>
+                  <th scope="col" class="constantWidthColumnAboveAndBelow">below</th>
                 </tr>
               </thead>
               {% for columnDict in databaseColumns %}
@@ -58,24 +61,24 @@
                 <td><input type="checkbox" class="ckeckBox" checked="checked" name={{columnDict.dbColumnName}}Show></td>
                 {% if columnDict.dbColumnName != "salaryMin" and columnDict.dbColumnName != "salaryMax" %}
                 <!-- oninput="this.size = this.value.length" makes it resize, but it might be unnecessary -->
-                <td><input type="text" placeholder="necessary phrase" name={{columnDict.dbColumnName}}Necessary></td>
-                <td><input type="text" placeholder="forbidden phrase" name={{columnDict.dbColumnName}}Forbidden></td>
+                <td><input type="text" placeholder="(a OR b OR c) AND (d OR e)" name={{columnDict.dbColumnName}}Necessary></td>
+                <td><input type="text" placeholder="((a AND b AND c) OR (d OR e) OR (f AND g))" name={{columnDict.dbColumnName}}Forbidden></td>
                 {% elif columnDict.dbColumnName == "salaryMin" or columnDict.dbColumnName == "salaryMax" %}
                 <td></td>
                 <td></td>
                 {% endif %}
                 {% if columnDict.dbColumnName == "datetimeFirst" or columnDict.dbColumnName == "datetimeLast" %}
-                <td><input type="datetime-local" placeholder="above" name={{columnDict.dbColumnName}}Above></td>
-                <td><input type="datetime-local" placeholder="below" name={{columnDict.dbColumnName}}Below></td>
+                <td><input type="datetime-local" name={{columnDict.dbColumnName}}Above></td>
+                <td><input type="datetime-local" name={{columnDict.dbColumnName}}Below></td>
                 {% elif columnDict.dbColumnName == "salaryMin" or columnDict.dbColumnName == "salaryMax" %}
-                <td><input type="number" placeholder="4000" name={{columnDict.dbColumnName}}Above></td>
-                <td><input type="number" placeholder="10000" name={{columnDict.dbColumnName}}Below></td>
+                <td><input type="number" placeholder="4200" name={{columnDict.dbColumnName}}Above></td>
+                <td><input type="number" placeholder="100000" name={{columnDict.dbColumnName}}Below></td>
                 {% endif %}
               </tr>
               {% endfor %}
             </table>
             <!-- <div class="fetchDiv"> -->
-              <input type="submit" value="submit" id="sendFormAndFetchBokehButton">
+              <input type="submit" value="SEARCH" id="sendFormAndFetchBokehButton">
               <div id="sendFormAndFetchBokehOutput"></div>
             <!-- </div> -->
           </form>
@@ -83,20 +86,23 @@
         </div>
     </div>
 
-    <!-- QUERY -->
-    <div class="categoryContainer">
-      <div class="categoryShowHideDiv">QUERY STRING</div>
-        <div class="categoryContent">
-          <span contenteditable="true" id="queryDiv" spellcheck="false"></span>
-        </div>
-    </div>
-
     <!-- RESULTS & DOWNLOAD CSV -->
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">RESULTS & DOWNLOAD</div>
-        <div class="categoryContent">
+        <div id="categoryContentResultsAndDownload" class="categoryContent">
           <h1 id="resultsAmount"></h1>
-          <a id="downloadCsv" href="{{ url_for('downloadCsvEndpoint') }}" class="btn"></a>
+          <div id="downloadCsvContainer">
+            <div id="downloadCsvIcon"></div>
+            <div id="downloadCsvText"></div>
+          </div>
+        </div>
+    </div>
+
+    <!-- QUERY -->
+    <div class="categoryContainer">
+      <div class="categoryShowHideDiv">QUERY</div>
+        <div class="categoryContent">
+          <span contenteditable="true" id="queryDiv" spellcheck="false"></span>
         </div>
     </div>
 
@@ -115,7 +121,7 @@
           <div id="tableDiv"></div>
         </div>
     </div>
-    
+
   </div> <!--mainContainer -->
 
   <script src="{{ url_for('static', filename='app.js') }}"></script>

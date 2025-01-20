@@ -311,4 +311,5 @@ if __name__ == "__main__":
 # requirements.txt
 # slow down or do more reps (include in settings?) in fetchAllOffersUrls() for justjoin?
 
-# param name and description on hover (title attribute) - pass object to render_template
+# make dark bokeh table
+# table hover tool?

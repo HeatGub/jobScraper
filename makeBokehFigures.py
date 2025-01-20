@@ -3,6 +3,7 @@ from bokeh.models import ColumnDataSource
 from bokeh.models.widgets import DataTable, TableColumn
 from bokeh.models import ColumnDataSource, WheelZoomTool, HTMLTemplateFormatter, HoverTool, TapTool, Range1d, LinearAxis
 from bokeh.io import curdoc #for dark theme
+from settings import BOKEH_TABLE_HEIGHT, BOKEH_TABLE_ROW_HEIGHT
 
 import pandas as pd
 
@@ -102,5 +103,11 @@ def makeBokehTable(dataframe):
             columns.append(TableColumn(field=column, title=column, formatter=HTMLTemplateFormatter(template="""<a href="<%= value %>" target="_blank"><%= value %></a>""")))
         else:
             columns.append(TableColumn(field=column, title=column))     
-    table = DataTable(source=source, columns=columns, height = 800, editable=True, sizing_mode="stretch_width")
+    table = DataTable(source=source, columns=columns, editable=True, sizing_mode="stretch_width")
+
+    # Customize the theme for dark mode
+    table.background = "black"  # Dark background
+    table.height = BOKEH_TABLE_HEIGHT
+    table.row_height = BOKEH_TABLE_ROW_HEIGHT
+
     return table

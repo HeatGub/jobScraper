@@ -1,4 +1,69 @@
+html {
+  font-size: 16px; /* SETTING REM TO 10PX (rem = HTML FONT SIZE) */
+  background-color: rgb(29, 29, 29);
+  color: rgb(209, 209, 209);
+}
+
+body  {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* font-family: Arial, sans-serif; */
+  /* font-family: "Trirong", serif; */
+  font-family: 'Anta';
+}
+
+input {
+  font-size: 0.8rem;
+  background-color: rgb(29, 29, 29);
+  color: rgb(209, 209, 209);
+  font-family: "Anonymous Pro", serif;
+}
+
+button, #sendFormAndFetchBokehButton {
+  color: lightgreen;
+  background-color: grey;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Anta';
+}
+
+#sendFormAndFetchBokehButton {
+  margin: 0.5rem;
+}
+
+/* #queryDiv {
+  display: none;
+} */
+
+span {
+  outline: none;
+}
+
+.testBrowserOutput {
+  font-size: 1.2rem;
+  margin: 0.2rem;
+}
+
+#mainContainer{
+  min-width: 300px;
+  width: 95%;
+  background-color: rgba(100,100,100,0.1)
+}
+
+/*////////////////////////////////////////////// CATEGORIES //////////////////////////////////////////////*/
+
+#mainContainer > .categoryContainer {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
 .categoryShowHideDiv {
+  padding: 0.1rem;
+  font-size: 1.3rem;
+  font-weight: 400;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -10,6 +75,11 @@
   border: 1px solid blue;
 }
 
+.categoryContent {
+  padding: 0.7rem;
+  display: flex; /* JS still sees no display??? */
+}
+
 .categoryContent{
   display: flex;
   align-items: center;
@@ -17,104 +87,164 @@
   flex-direction: column;
 }
 
+#categoryContentResultsAndDownload{
+  flex-direction: row;
+  gap: 3rem;
+}
 .categoryContentBokeh{
   width: 100%;
   /* margin: 0;
   padding: 0; */
 }
 
-#mainContainer > div{
-  margin-top: 10px;
-  margin-bottom: 10px;
+/*////////////////////////////////////////////// DOWNLOAD & RESULTS //////////////////////////////////////////////*/
+#resultsAmount {
+  padding: 0;
+  margin: 0;
+  font-size: 3rem;
 }
 
-#mainContainer{
-  min-width: 300px;
-  width: 95%;
-  background-color: rgba(100,100,100,0.1)
+#downloadCsvContainer {
+  display: none; /* JUST FOR THE FIRST RENDER */
+  border: 3px solid blue;
+  border-radius: 0.4rem;
+  /* background-color: darkgray; */
+  padding: 0.5rem;
+  cursor: pointer;
 }
-
-body  {
-  padding: 10px;
+/* Apply styles to all elements inside #downloadCsv */
+#downloadCsvContainer > * {
+  color: blue;
+  margin: 0;
+  padding: 0.1rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-}
-
-button {
-    color: lightgreen;
-    background-color: grey;
-    font-size: 15px;
-    font-weight: 600;
-}
-
-form,
-table {
-    width: 100%;
-    /* margin: 0;
-    padding: 0; */
-    text-align: center;
-}
-
-th,
-td {
-    border: 1px solid black;
-}
-
-input[type="datetime-local"] {
-  min-width: 10px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 10px;
-}
-
-td>input {
-    width: 97%;
-}
-/* td:nth-child(1) {
-    max-width: 70px;
-  }
-  td:nth-child(2) { 
-    max-width: 10px;
-  }
-  td:nth-child(5), td:nth-child(6){
-    max-width: 70px;
-  } */
-
-.fullScrapingDiv {
-  border: 1px solid greenyellow;
-}
-
-#fullScrapingDivsContainer {
-  width: 90%;
-  border: 2px solid gray;
-  padding: 3px;
-}
-
-#fullScrapingDivsContainer > div {
-  margin-top: 5px;
-  margin-bottom: 5px;
-}
-
-.fullScrapingDiv > input {
-  width: 80%;
-}
-
-.fullScrapingDeleteDiv{
-  padding: 2px;
-  /* height: 10px; */
-  max-width: 20%;
-  border: 2px solid red;
   cursor: pointer;
 }
 
-#downloadCsv {
-    /* just for visibility */
-    /* border: 1px blue solid; */
-    color: blue;
+/* DOWNLOAD ICON */
+#downloadCsvIcon {
+  font-size: 2rem;
 }
 
-span {
-  outline: none;
+#downloadCsvText {
+  font-size: 0.8rem;
+}
+
+/*////////////////////////////////////////////// FULL SCRAPING RELATED //////////////////////////////////////////////*/
+
+#fullScrapingDivsContainer {
+  width: 95%;
+  border: 2px solid gray;
+  /* padding: 3px; */
+}
+
+#fullScrapingDivsContainer > .fullScrapingDiv {
+  /* width: 95%; */
+  margin-top: 0.6rem;
+  margin-bottom: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.fullScrapingDiv {
+  border: 1px solid greenyellow;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.fullScrapingDiv > * {
+  margin-bottom: 0.1rem;
+}
+
+.fullScrapingDiv > input {
+  margin-top: -0.1rem; /*makes it always hidden*/
+  margin-bottom: 0.4rem;
+  border: 3px solid rgb(180, 180, 180);
+  font-size: 1rem;
+  width: 100%;
+  max-width: 120rem;
+  text-align: center;
+}
+
+.fullScrapingDivOutput {
+  font-size: 1.2rem;
+}
+
+/* CONTAINS <i> ELEMENT INSIDE WITH FONTAWESOME ICON */
+.fullScrapingDeleteDiv > i {
+  color: red;
+  font-size: 2rem;
+  /* padding: 2px; */
+  /* height: 10px; */
+  max-width: 20%;
+  cursor: pointer;
+}
+
+/*////////////////////////////////////////////// TABLE RELATED //////////////////////////////////////////////*/
+
+form {
+  width: 99%; /* SHRINKS TABLE AS IT'S INSIDE FORM */
+  text-align: center; /* CENTERS SEARCH BUTTON xD */
+}
+table {
+  width: 100%; /* Let the table span the full width */
+  border-collapse: collapse;
+  table-layout: fixed; /* Enforce fixed layout for predictable column sizing */
+  /* text-align: center; */
+}
+
+th {
+  font-size: 1.2rem;
+  /* border: 2px solid grey; */
+}
+
+th, td {
+  overflow: hidden;
+  text-align: center;
+}
+
+td {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+td > input {
+  width: 100%;
+  min-width: 2rem;
+  /* border-radius: 0.2rem; */
+}
+
+/* HEADER (th) CHANGES WIDTH FOR CELLS (td) AS WELL  */
+th.constantWidthColumnParameters { 
+  width: 9rem; /* Fixed width */
+}
+th.constantWidthColumnShow { 
+  width: 4rem; /* Fixed width */
+}
+th.constantWidthColumnAboveAndBelow { 
+  width: 10.5rem; /* Fixed width */
+}
+/* Flexible columns take up the remaining space */
+th.flexibleWidthColumn {
+  min-width: 3rem;
+  width: auto; /* Distributes remaining space */
+}
+
+#checkUncheckAll {
+  margin: 0;
+  padding: 0;
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  cursor: pointer;
 }

@@ -2,6 +2,9 @@ BROWSER_WINDOW_WIDTH = 700
 BROWSER_WINDOW_HEIGHT = 500
 GROSS_TO_NET_MULTIPLIER = 0.77 # values like 0.77 which is equal to 23% tax
 
+BOKEH_TABLE_HEIGHT = 800 # numeric values like 800. Changes Bokeh table height [pixels]
+BOKEH_TABLE_ROW_HEIGHT = 25 # numeric values like 25. Changes row height [pixels]
+
 DATABASE_TABLE_NAME = 'test5' # values like 'table1'. Creates new table if it doesn't exist already
 DATABASE_DEFAULT_TEXT = '""'# '""' represents an empty string. Used when value not provided
 DATABASE_DEFAULT_INT = 'NULL'# it's displayed as NULL in DB
@@ -14,8 +17,8 @@ DATABASE_COLUMNS = [
     {"dbColumnName": "url", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "URL", "description":"'url' - link to an offer"},
     {"dbColumnName": "title", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "job title", "description":"'title' - job title"},
     {"dbColumnName": "salaryAndContract", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "salary & contract", "description":"'salaryAndContract' - salary and contract type"},
-    {"dbColumnName": "salaryMin", "dataType": "INT", "default":DATABASE_DEFAULT_INT, "displayName": "salary min", "description":"'salaryMin' - minimal salary"},
-    {"dbColumnName": "salaryMax", "dataType": "INT", "default":DATABASE_DEFAULT_INT, "displayName": "salary max", "description":"'salaryMax' - maximum salary"},
+    {"dbColumnName": "salaryMin", "dataType": "INT", "default":DATABASE_DEFAULT_INT, "displayName": "salary min", "description":"'salaryMin' - minimal salary converted to [net PLN/month]"},
+    {"dbColumnName": "salaryMax", "dataType": "INT", "default":DATABASE_DEFAULT_INT, "displayName": "salary max", "description":"'salaryMax' - maximum salary converted to [net PLN/month]"},
     {"dbColumnName": "employer", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "employer", "description":"'employer' - employer or juker"},
     {"dbColumnName": "workModes", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "work modes", "description":"'workModes' - work modes"},
     {"dbColumnName": "positionLevels", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "position", "description":"'positionLevels' - position level(s), so called seniority"},
