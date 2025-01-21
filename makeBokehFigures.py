@@ -3,7 +3,7 @@ from bokeh.models import ColumnDataSource
 from bokeh.models.widgets import DataTable, TableColumn
 from bokeh.models import ColumnDataSource, WheelZoomTool, HTMLTemplateFormatter, HoverTool, TapTool, Range1d, LinearAxis
 from bokeh.io import curdoc #for dark theme
-from settings import BOKEH_TABLE_HEIGHT, BOKEH_TABLE_ROW_HEIGHT
+from settings import BOKEH_TABLE_HEIGHT, BOKEH_TABLE_ROW_HEIGHT, BOKEH_TABLE_CSS
 
 import pandas as pd
 
@@ -96,18 +96,24 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
     return plot
 
 def makeBokehTable(dataframe):
+
     source = ColumnDataSource(dataframe)
     columns = []
     for column in dataframe.columns:
         if column == 'url': # to make a hyperlink
             columns.append(TableColumn(field=column, title=column, formatter=HTMLTemplateFormatter(template="""<a href="<%= value %>" target="_blank"><%= value %></a>""")))
         else:
-            columns.append(TableColumn(field=column, title=column))     
+            # columns.append(TableColumn(field=column, title=column, formatter=HTMLTemplateFormatter(template="""<div style="background-color: rgb(29, 29, 29);" """)))
+            columns.append(TableColumn(field=column, title=column))
     table = DataTable(source=source, columns=columns, editable=True, sizing_mode="stretch_width")
 
-    # Customize the theme for dark mode
-    table.background = "black"  # Dark background
     table.height = BOKEH_TABLE_HEIGHT
     table.row_height = BOKEH_TABLE_ROW_HEIGHT
+    # table.index_position = None
+
+    from bokeh.models import InlineStyleSheet
+
+    tableStyle = InlineStyleSheet(css=BOKEH_TABLE_CSS)
+    table.stylesheets = [tableStyle]
 
     return table

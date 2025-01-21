@@ -365,14 +365,17 @@ document.querySelectorAll('.categoryShowHideDiv').forEach(hideShowDiv => {
     hideShowDiv.addEventListener('click', () => {
         // Find the associated categoryContent sibling
         const content = hideShowDiv.nextElementSibling
-        // content.style.display = 'flex'
-        console.log(content)
-        console.log(content.style.display)
+        console.log()
         // Toggle the display property
-        if (content.style.display === 'flex') {
+        if (content.style.display === 'flex' || content.style.display === 'block') {
             content.style.display = 'none'
-        } else {
-            content.style.display = 'flex'
+        } else if (content.style.display === 'none') {
+            if (content.className === 'categoryContentBokeh') {
+                content.style.display = 'block' // bokeh doesn't accept flex display
+            }
+            else { // content.className === 'categoryContent'
+                content.style.display = 'flex'
+            }
         }
     })
 })

@@ -95,7 +95,7 @@ def getOfferDetails(SeleniumBrowser):
     # EMPLOYER
     try:
         employerElement = SeleniumBrowser.DRIVER.find_element("xpath", '//*[@data-test="anchor-company-link"]') # this element should always exist
-        employer = employerElement.text + ' ' + employerElement.get_property("href")
+        employer = employerElement.text# + ' ' + employerElement.get_property("href")
     except:
         employer= ''
     # print(employer  + '\n')

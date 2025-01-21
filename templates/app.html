@@ -20,7 +20,8 @@
     <!-- TEST BROWSER -->
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">TEST BROWSER</div>
-        <div class="categoryContent">
+      <!-- style="display: flex;" OTHERWISE JS CANT RECOGNIZE STYLE.DISPLAY -->
+      <div class="categoryContent" style="display: flex;">
           <button id="openBrowserButton">open test browser</button>
           <div id="openBrowserOutput" class="testBrowserOutput">open the browser to update cookies.json</div>
           <button id="saveCookiesToJsonButton" >update cookies.json</button>
@@ -31,7 +32,7 @@
     <!-- SCRAPING CONTAINER  -->
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">SCRAPING BROWSERS</div>
-        <div class="categoryContent">
+        <div class="categoryContent" style="display: flex;">
           <div id="fullScrapingDivsContainer"></div>
           <button id="addNewProcessButton">ADD NEW PROCESS</button>
         </div>
@@ -40,13 +41,13 @@
     <!-- FORM -->
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">QUERY TOOL</div>
-        <div class="categoryContent">
+        <div class="categoryContent" style="display: flex;">
 
           <form id="mainForm">
             <table>
               <thead>
                 <tr>
-                  <th scope="col" class="constantWidthColumnParameters">parameter (hover for description)</th>
+                  <th scope="col" class="constantWidthColumnParameters">hover for description</th>
                   <th scope="col" class="constantWidthColumnShow">show?<p id="checkUncheckAll">&cross;</p>
                   </th>
                   <th scope="col" class="flexibleWidthColumn">necessary</th>
@@ -89,7 +90,7 @@
     <!-- RESULTS & DOWNLOAD CSV -->
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">RESULTS & DOWNLOAD</div>
-        <div id="categoryContentResultsAndDownload" class="categoryContent">
+        <div id="categoryContentResultsAndDownload" class="categoryContent" style="display: flex;">
           <h1 id="resultsAmount"></h1>
           <div id="downloadCsvContainer">
             <div id="downloadCsvIcon"></div>
@@ -101,15 +102,15 @@
     <!-- QUERY -->
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">QUERY</div>
-        <div class="categoryContent">
-          <span contenteditable="true" id="queryDiv" spellcheck="false"></span>
+        <div class="categoryContent" style="display: flex;">
+          <span contenteditable="true" id="queryDiv" spellcheck="false" ></span>
         </div>
     </div>
 
     <!-- PLOT -->
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">PLOT</div>
-        <div class="categoryContentBokeh">
+        <div class="categoryContentBokeh" style="display: block;">
           <div id="plotDiv"></div>
         </div>
     </div>
@@ -117,7 +118,7 @@
     <!-- TABLE -->
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">TABLE</div>
-        <div class="categoryContentBokeh">
+        <div class="categoryContentBokeh" style="display: block;">
           <div id="tableDiv"></div>
         </div>
     </div>
