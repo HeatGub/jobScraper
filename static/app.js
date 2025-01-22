@@ -276,8 +276,9 @@ function sendFormAndFetchBokeh(e) {
             }
         })
         .then(function (items) { // when response 200 and JSON items list received
-            document.getElementById('queryDiv').innerHTML.display = 'flex'
-            document.getElementById('queryDiv').innerHTML = items.query.replace(/\n/g, "<br>") //replace python newline with html <br>
+            const queryDiv = document.getElementById('queryDiv')
+            queryDiv.innerHTML.display = 'flex'
+            queryDiv.innerHTML = items.query.replace(/\n/g, "<br>") //replace python newline with html <br>
 
             if (items.resultsAmount === 0) {
                 document.getElementById('plotDiv').innerHTML = ''
@@ -343,14 +344,17 @@ function atLeastOneCheckboxChecked () {
 
 // CHANGING CHECKBOXES STATE - CHECK/UNCHECK
 document.getElementById('checkUncheckAll').addEventListener('click', () => {
+    const checkUncheckAll = document.getElementById('checkUncheckAll')
     // The HTML entity &check; is converted into the Unicode character ✓ by the browser when the page is rendered
-    if (document.getElementById('checkUncheckAll').textContent == '✗') {
+    if (checkUncheckAll.textContent == '✗') {
         document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = false })
-        document.getElementById('checkUncheckAll').textContent = '✓'
+        checkUncheckAll.textContent = '✓'
+        checkUncheckAll.style = 'color: var(--secondary-color);'
     }
-    else if (document.getElementById('checkUncheckAll').textContent == '✓') {
+    else if (checkUncheckAll.textContent == '✓') {
         document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = true })
-        document.getElementById('checkUncheckAll').textContent = '✗'
+        checkUncheckAll.textContent = '✗'
+        checkUncheckAll.style = 'color: var(--primary-color);'
     }
 })
 
@@ -379,5 +383,19 @@ document.querySelectorAll('.categoryShowHideDiv').forEach(hideShowDiv => {
         }
     })
 })
+
+// // Locate the element with the shadow root
+// const shadowHost = document.querySelector('#shadow-root')
+
+// console.log(shadowHost) // didnt find
+// // Access the shadow root
+// const shadowRoot = shadowHost.shadowRoot
+
+// // Target the input element inside the shadow root
+// const input = shadowRoot.querySelector('input')
+
+// // Modify the size using JavaScript
+// input.style.width = '300px'
+// input.style.height = '400px'
 
 }) //onDOMContentLoaded ends here

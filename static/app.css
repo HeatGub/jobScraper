@@ -1,3 +1,9 @@
+:root { /* root - globally available variables */
+  --primary-color: #0064e7;
+  --secondary-color: #9c07e1;
+  --font-size: 16px;
+}
+
 html {
   font-size: 16px; /* SETTING REM TO 10PX (rem = HTML FONT SIZE) */
   background-color: rgb(29, 29, 29);
@@ -39,6 +45,7 @@ button, #sendFormAndFetchBokehButton {
 } */
 
 span {
+  min-height: 0;
   outline: none;
 }
 
@@ -67,12 +74,13 @@ span {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid blue;
+  border: 2px solid var(--secondary-color);
+  outline: 3px solid var(--primary-color);
   cursor: pointer;
 }
 
 .categoryContainer {
-  border: 1px solid blue;
+  border: 1px solid var(--primary-color);
 }
 
 .categoryContent {
@@ -106,7 +114,7 @@ span {
 
 #downloadCsvContainer {
   display: none; /* JUST FOR THE FIRST RENDER */
-  border: 3px solid blue;
+  border: 3px solid var(--primary-color);
   border-radius: 0.4rem;
   /* background-color: darkgray; */
   padding: 0.5rem;
@@ -114,7 +122,7 @@ span {
 }
 /* Apply styles to all elements inside #downloadCsv */
 #downloadCsvContainer > * {
-  color: blue;
+  color: var(--secondary-color);
   margin: 0;
   padding: 0.1rem;
   display: flex;
@@ -186,6 +194,15 @@ span {
   cursor: pointer;
 }
 
+#addNewProcessButton{
+  margin: 0.5rem;
+  font-size: 2rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 100%;
+  padding-bottom: 2rem; /* moves + sign up as it's naturally at the bottom of textline */
+}
+
 /*////////////////////////////////////////////// TABLE RELATED //////////////////////////////////////////////*/
 
 form {
@@ -196,11 +213,16 @@ table {
   width: 100%; /* Let the table span the full width */
   border-collapse: collapse;
   table-layout: fixed; /* Enforce fixed layout for predictable column sizing */
+  font-size: 0.8rem;
   /* text-align: center; */
 }
 
+/* #tableDiv {
+  min-height: 10rem;
+} */
+
 th {
-  font-size: 1.2rem;
+  font-size: 1rem;
   /* border: 2px solid grey; */
 }
 
@@ -222,7 +244,7 @@ td > input {
 
 /* HEADER (th) CHANGES WIDTH FOR CELLS (td) AS WELL  */
 th.constantWidthColumnParameters { 
-  width: 9rem; /* Fixed width */
+  width: 10rem; /* Fixed width */
 }
 th.constantWidthColumnShow { 
   width: 4rem; /* Fixed width */
@@ -244,7 +266,8 @@ th.flexibleWidthColumn {
 }
 
 input[type="checkbox"] {
-  width: 1.1rem;
-  height: 1.1rem;
+  max-width: 0.4rem;
   cursor: pointer;
+  /* -webkit-appearance: none;
+  appearance: none; */
 }

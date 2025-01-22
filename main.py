@@ -303,7 +303,6 @@ if __name__ == "__main__":
 # use grossToNetMultiplier just to recalculate before displaying?? explaing that as well in readme
 # execute query endpoint?
 # console errors in brave?? Seems to be brave's issue
-# ADD fullDescription to offerAnalysis!!!
 # napisać o nested query w readme
 # NEED TO FIND 'OFFER NOT FOUND MSG AND CHECK WHICH DIVS DOES IT HAVE (jj.it)
 # close all browsers on main script end?
@@ -311,5 +310,4 @@ if __name__ == "__main__":
 # requirements.txt
 # slow down or do more reps (include in settings?) in fetchAllOffersUrls() for justjoin?
 
-# make dark bokeh table
 # table hover tool?

@@ -8,15 +8,15 @@ makeBrowserInvisible = False # justjoin HAS TO HAVE INVISIBLE (headless) OR ACTI
 
 testBrowserUrlPlaceholder = 'testBrowserUrlPlaceholder'
 
-BOKEH_TABLE_HEIGHT = 800 # numeric values like 800. Changes Bokeh table height [pixels]
-BOKEH_TABLE_ROW_HEIGHT = 25 # numeric values like 25. Changes row height [pixels]
+BOKEH_TABLE_MAX_HEIGHT = 700 # numeric values like 800. Changes Bokeh table height [pixels]
+BOKEH_TABLE_ROW_HEIGHT = 100 # numeric values like 25. Changes row height [pixels]
 BOKEH_TABLE_CSS = """
 /* GENERAL DIV */
 .bk-data-table * {
     font-size: 0.7rem;
     font-family: "Anonymous Pro", serif;
     font-weight: 100;
-    background-color: rgba(200, 0, 0, 0); 
+    /*background-color: rgba(200, 0, 0, 0); */
 }
 
 /* HEADER */
@@ -32,7 +32,7 @@ BOKEH_TABLE_CSS = """
 /* INDEX CELLS */
 .bk-cell-index {
     background-color: rgba(0, 0, 0, 0.7) !important;
-    font-size: 0.6rem;
+    font-size: 0.7rem;
 }
 
 /* SPACES BETWEEN ROWS*/
@@ -42,7 +42,8 @@ BOKEH_TABLE_CSS = """
 
 /* HIGHLIGHT HEADER COLOR */
 .ui-state-hover {
-    background-color: rgba(60, 60, 140, 0.7) !important;
+    /*background-color: rgba(60, 60, 140, 0.7) !important;*/
+    background-color: var(--secondary-color) !important;
 }
                             
 /* EVEN/ODD ROWS COLORS */
@@ -73,18 +74,27 @@ BOKEH_TABLE_CSS = """
 .slick-cell > a:visited {
     color: rgba(80, 80, 180, 1) !important;
 }
-                            
-/* DISABLE SCROLLBARS */
+                           
+/* DISABLE MAIN TABLE SCROLLBARS VISIBILITY*/
 .slick-viewport::-webkit-scrollbar {
-    display: none; /* For Chrome/Safari */
+    display: none !important; /* For Chrome/Safari */
 }
 .slick-viewport {
-    width: 100%;
-    height: 100%;
-    overflow: scroll;        /* Enable scrolling, but no visible scrollbar */
-    -ms-overflow-style: none; /* For Internet Explorer (IE) */
-    scrollbar-width: none;    /* For Firefox */
+    background-color: rgba(0, 0, 0, 0.7); /* colors vertical lines on both sides */
+    overflow: scroll !important;        /* Enable scrolling, but no visible scrollbar */
+    -ms-overflow-style: none !important; /* For Internet Explorer (IE) */
+    scrollbar-width: none !important;    /* For Firefox */
 }
+
+/* DISABLE CELLS SCROLLBARS VISIBILITY (overflow: auto set in bokeh python file) */
+.slick-cell::-webkit-scrollbar {
+    display: none !important; /* For Chrome/Safari */
+}
+.slick-cell * {
+    -ms-overflow-style: none !important; /* For Internet Explorer (IE) */
+    scrollbar-width: none !important;    /* For Firefox */
+}
+
 """
 
 

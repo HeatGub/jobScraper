@@ -220,7 +220,7 @@ def scrapToDatabase(SeleniumBrowser):
                     Database.insertRecord(commonKeysDict) # insert into database
                     SeleniumBrowser.databaseInserts += 1
                 SeleniumBrowser.currentlyScrapedOfferIndex += 1 # increment if successfully analysed
-                return {'success':True, 'functionDone':False, 'message': str(SeleniumBrowser.currentlyScrapedOfferIndex) + '/' + str(len(SeleniumBrowser.OFFERS_URLS)) + ' offers analysed'}
+                return {'success':True, 'functionDone':False, 'message': str(SeleniumBrowser.currentlyScrapedOfferIndex) + '/' + str(len(SeleniumBrowser.OFFERS_URLS)) + ' offers scraped'}
             elif offerNotFound(SeleniumBrowser):
                 # print('OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url)
                 SeleniumBrowser.currentlyScrapedOfferIndex += 1 # increment even if offer not found not to get stuck

@@ -1,9 +1,7 @@
 from bokeh.plotting import figure
-from bokeh.models import ColumnDataSource
 from bokeh.models.widgets import DataTable, TableColumn
 from bokeh.models import ColumnDataSource, WheelZoomTool, HTMLTemplateFormatter, HoverTool, TapTool, Range1d, LinearAxis
-from bokeh.io import curdoc #for dark theme
-from settings import BOKEH_TABLE_HEIGHT, BOKEH_TABLE_ROW_HEIGHT, BOKEH_TABLE_CSS
+from settings import BOKEH_TABLE_MAX_HEIGHT, BOKEH_TABLE_ROW_HEIGHT, BOKEH_TABLE_CSS
 
 import pandas as pd
 
@@ -76,11 +74,33 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
     
     plot.add_layout(LinearAxis(y_range_name="y2", axis_label="Days adtive"), 'right') # Add the second y-axis to the right
     
-    # Configure minor gridlines
+    # COLOR SETTINGS
+    plot.border_fill_color = 'rgb(40,40,40)' # outside the plot area
+    plot.background_fill_color = 'rgb(40,40,40)' # plot area
+    plot.title = ''
+
+    plot.xgrid.grid_line_color = 'rgb(80,80,80)'
+    plot.ygrid.grid_line_color = 'rgb(80,80,80)'
+
     plot.xgrid.minor_grid_line_color = 'rgb(80,80,80)'
     plot.ygrid.minor_grid_line_color = 'rgb(80,80,80)'
     plot.xgrid.minor_grid_line_alpha = 0.5 # Opacity
     plot.ygrid.minor_grid_line_alpha = 0.5
+
+    plot.xaxis.axis_label_text_color = 'rgb(200,200,200)'
+    plot.yaxis.axis_label_text_color = 'rgb(200,200,200)'
+    plot.xaxis.major_label_text_color = 'rgb(200,200,200)'
+    plot.yaxis.major_label_text_color = 'rgb(200,200,200)'
+    
+    # FONT SETTINGS
+    plot.xaxis.axis_label_text_font = "Anta"
+    plot.yaxis.axis_label_text_font = "Anta"
+    plot.xaxis.major_label_text_font = "Anonymous Pro" # font imported in html
+    plot.yaxis.major_label_text_font = "Anonymous Pro"
+    
+    plot.xaxis.axis_label_text_font_style = "bold" # italic by default
+    plot.yaxis.axis_label_text_font_style = "bold"
+
 
     taptool = TapTool() #highlight on tap
     wheel_zoom = WheelZoomTool()
@@ -89,27 +109,41 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
     hoverSalaryUnpecified.renderers = [plot.renderers[0]]# hover tool only on the salary bars
     hoverSalarySpecified = HoverTool(tooltips=[("Offer index:", "@x"), ("Job title:", "@title"), ("Min/Avg/Max:", "@salaryMin{0.}/@salaryAvg{0.}/@salaryMax{0.}"), ("Active for:", "@activeFor days")]) #{0} = no decimals
     hoverSalarySpecified.renderers = [plot.renderers[2]]# hover tool only on the salary bars
-    plot.add_tools(hoverSalarySpecified, hoverSalaryUnpecified, taptool) #wheel_zoom removed for now
-    #DARK THEME
-    curdoc().theme = 'dark_minimal'
-    curdoc().add_root(plot) #to apply the theme
+    plot.add_tools(hoverSalarySpecified, hoverSalaryUnpecified, taptool, wheel_zoom) #wheel_zoom removed for now
+
     return plot
 
 def makeBokehTable(dataframe):
+
+    dataframe = dataframe.replace({'^\s+': '', '\n': '<br>', '\t': '<br>'}, regex=True) # replace for HTML displaying. ^\s* matches zero or more whitespace characters at the beginning of a string
+
+    # FORMAT SOME COLUMNS (change \n and \t to <br> as it wouldn't display a new line in the table cell div otherwise)
+    columnsToFormatNewlines = ["salaryAndContract", "workModes", "positionLevels", "location", "techstackExpected", "techstackOptional", "responsibilities", "requirements", "optionalRequirements", "fullDescription"]
+
+    for col in columnsToFormatNewlines:
+        if col in dataframe.columns:
+            dataframe[col] = dataframe[col].apply(lambda cellContent: f"<div style='overflow: auto; max-height: {BOKEH_TABLE_ROW_HEIGHT}px;'>{cellContent}</div>")
+
+    # dataframe = dataframe.map(lambda cellContent: f"<div style='overflow: auto; max-height: {BOKEH_TABLE_ROW_HEIGHT}px;'>{cellContent}</div>") # surround every cell content with div element to customize it (ENABLE SCROLLING)
 
     source = ColumnDataSource(dataframe)
     columns = []
     for column in dataframe.columns:
         if column == 'url': # to make a hyperlink
-            columns.append(TableColumn(field=column, title=column, formatter=HTMLTemplateFormatter(template="""<a href="<%= value %>" target="_blank"><%= value %></a>""")))
+            columns.append(TableColumn(field=column, title=column, formatter=HTMLTemplateFormatter(template="""<a style='overflow: auto;' href="<%= value %>" target="_blank"><%= value %></a>""")))
+        # elif column == 'requirements':
         else:
             # columns.append(TableColumn(field=column, title=column, formatter=HTMLTemplateFormatter(template="""<div style="background-color: rgb(29, 29, 29);" """)))
-            columns.append(TableColumn(field=column, title=column))
-    table = DataTable(source=source, columns=columns, editable=True, sizing_mode="stretch_width")
+            columns.append(TableColumn(field=column, title=column, formatter=HTMLTemplateFormatter())) # HTMLTemplateFormatter to render <div> elements
+    table = DataTable(source=source, columns=columns, sizing_mode="stretch_width") #editable=True
 
-    table.height = BOKEH_TABLE_HEIGHT
+    # calculate table height
+    height = BOKEH_TABLE_ROW_HEIGHT * (len(dataframe)) # would display all without scrolling but it could get too long fast
+    if height > BOKEH_TABLE_MAX_HEIGHT:
+        height = BOKEH_TABLE_MAX_HEIGHT
+    table.height = height
     table.row_height = BOKEH_TABLE_ROW_HEIGHT
-    # table.index_position = None
+    # table.index_position = None # turns off indexes
 
     from bokeh.models import InlineStyleSheet
 

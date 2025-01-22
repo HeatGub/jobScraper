@@ -17,27 +17,6 @@
 
   <div id="mainContainer">
     
-    <!-- TEST BROWSER -->
-    <div class="categoryContainer">
-      <div class="categoryShowHideDiv">TEST BROWSER</div>
-      <!-- style="display: flex;" OTHERWISE JS CANT RECOGNIZE STYLE.DISPLAY -->
-      <div class="categoryContent" style="display: flex;">
-          <button id="openBrowserButton">open test browser</button>
-          <div id="openBrowserOutput" class="testBrowserOutput">open the browser to update cookies.json</div>
-          <button id="saveCookiesToJsonButton" >update cookies.json</button>
-          <div id="saveCookiesToJsonOutput" class="testBrowserOutput"></div>
-        </div>
-    </div>
-
-    <!-- SCRAPING CONTAINER  -->
-    <div class="categoryContainer">
-      <div class="categoryShowHideDiv">SCRAPING BROWSERS</div>
-        <div class="categoryContent" style="display: flex;">
-          <div id="fullScrapingDivsContainer"></div>
-          <button id="addNewProcessButton">ADD NEW PROCESS</button>
-        </div>
-    </div>
-
     <!-- FORM -->
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">QUERY TOOL</div>
@@ -48,7 +27,7 @@
               <thead>
                 <tr>
                   <th scope="col" class="constantWidthColumnParameters">hover for description</th>
-                  <th scope="col" class="constantWidthColumnShow">show?<p id="checkUncheckAll">&cross;</p>
+                  <th scope="col" class="constantWidthColumnShow">show?<p id="checkUncheckAll" style="color: var(--primary-color);">&cross;</p>
                   </th>
                   <th scope="col" class="flexibleWidthColumn">necessary</th>
                   <th scope="col" class="flexibleWidthColumn">forbidden</th>
@@ -89,7 +68,7 @@
 
     <!-- RESULTS & DOWNLOAD CSV -->
     <div class="categoryContainer">
-      <div class="categoryShowHideDiv">RESULTS & DOWNLOAD</div>
+      <div class="categoryShowHideDiv">DOWNLOAD</div>
         <div id="categoryContentResultsAndDownload" class="categoryContent" style="display: flex;">
           <h1 id="resultsAmount"></h1>
           <div id="downloadCsvContainer">
@@ -103,7 +82,7 @@
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">QUERY</div>
         <div class="categoryContent" style="display: flex;">
-          <span contenteditable="true" id="queryDiv" spellcheck="false" ></span>
+          <span contenteditable="true" id="queryDiv" spellcheck="false"></span>
         </div>
     </div>
 
@@ -120,6 +99,27 @@
       <div class="categoryShowHideDiv">TABLE</div>
         <div class="categoryContentBokeh" style="display: block;">
           <div id="tableDiv"></div>
+        </div>
+    </div>
+
+    <!-- TEST BROWSER -->
+    <div class="categoryContainer">
+      <div class="categoryShowHideDiv">TEST BROWSER</div>
+      <!-- style="display: flex;" OTHERWISE JS CANT RECOGNIZE STYLE.DISPLAY -->
+      <div class="categoryContent" style="display: flex;">
+          <button id="openBrowserButton">open test browser</button>
+          <div id="openBrowserOutput" class="testBrowserOutput">open the browser to update cookies.json</div>
+          <button id="saveCookiesToJsonButton" >update cookies.json</button>
+          <div id="saveCookiesToJsonOutput" class="testBrowserOutput"></div>
+        </div>
+    </div>
+
+    <!-- SCRAPING CONTAINER  -->
+    <div class="categoryContainer">
+      <div class="categoryShowHideDiv">SCRAPING BROWSERS</div>
+        <div class="categoryContent" style="display: flex;">
+          <div id="fullScrapingDivsContainer"></div>
+          <button id="addNewProcessButton">+</button>
         </div>
     </div>
 
