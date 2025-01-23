@@ -1,15 +1,23 @@
-BROWSER_WINDOW_WIDTH = 700
-BROWSER_WINDOW_HEIGHT = 500
-GROSS_TO_NET_MULTIPLIER = 0.77 # values like 0.77 which is equal to 23% tax
-
-
+# SAVE SETTINGS AND RUN THE APP AGAIN FOR CHANGES TO TAKE EFFECT
 
 makeBrowserInvisible = False # justjoin HAS TO HAVE INVISIBLE (headless) OR ACTIVE (not minimized) window to work
 
-testBrowserUrlPlaceholder = 'testBrowserUrlPlaceholder'
+BROWSER_WINDOW_WIDTH = 700 # integer [pixels]
+BROWSER_WINDOW_HEIGHT = 800 # integer [pixels]
+GROSS_TO_NET_MULTIPLIER = 0.77 # values like 0.77 which is equal to 23% tax. It converts gross -> net at the time of scraping, not on table display
 
-BOKEH_TABLE_MAX_HEIGHT = 700 # numeric values like 800. Changes Bokeh table height [pixels]
-BOKEH_TABLE_ROW_HEIGHT = 100 # numeric values like 25. Changes row height [pixels]
+BOKEH_PLOT_HEIGHT = 300 # integer [pixels]
+BOKEH_TABLE_MAX_HEIGHT = 700 # integer [pixels]
+BOKEH_TABLE_ROW_HEIGHT = 100 # integer [pixels]
+
+CSS_VARIABLES = {
+    "testin12": "12",
+    "primary-color": "#3498db",
+    "secondary-color": "#9c07e1",
+    "color-message-error": "red",
+    "color-message": "white",
+}
+
 BOKEH_TABLE_CSS = """
 /* GENERAL DIV */
 .bk-data-table * {
@@ -74,7 +82,9 @@ BOKEH_TABLE_CSS = """
 .slick-cell > a:visited {
     color: rgba(80, 80, 180, 1) !important;
 }
-                           
+
+
+                    
 /* DISABLE MAIN TABLE SCROLLBARS VISIBILITY*/
 .slick-viewport::-webkit-scrollbar {
     display: none !important; /* For Chrome/Safari */
@@ -85,6 +95,7 @@ BOKEH_TABLE_CSS = """
     -ms-overflow-style: none !important; /* For Internet Explorer (IE) */
     scrollbar-width: none !important;    /* For Firefox */
 }
+
 
 /* DISABLE CELLS SCROLLBARS VISIBILITY (overflow: auto set in bokeh python file) */
 .slick-cell::-webkit-scrollbar {
@@ -97,14 +108,12 @@ BOKEH_TABLE_CSS = """
 
 """
 
-
-
-
 ######################################################## DATABASE ########################################################
 
-DATABASE_TABLE_NAME = 'test5' # values like 'table1'. Creates new table if it doesn't exist already
-DATABASE_DEFAULT_TEXT = '""'# '""' represents an empty string. Used when value not provided
-DATABASE_DEFAULT_INT = 'NULL'# it's displayed as NULL in DB
+DATABASE_TABLE_NAME = 'test6' # values like 'table1'. Creates new table if it doesn't exist already
+
+DATABASE_DEFAULT_INT = 'NULL' # '""' represents an empty string. Default value is used when value not provided
+DATABASE_DEFAULT_TEXT = 'NULL' # Default value is used when value not provided
 
 # adjust DATABASE_COLUMNS if you'd like different table structure. 
 # CAUTION: it could cause problem on existing tables (running select query on columns which does not exist)
@@ -127,3 +136,5 @@ DATABASE_COLUMNS = [
     {"dbColumnName": "optionalRequirements", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "optional requirements", "description":"'optionalRequirements' - employer's optional requirements"},
     {"dbColumnName": "fullDescription", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "full description", "description":"'fullDescription' - full description of a job offer, useful when more specific fields couldn't be scraped"},
 ]
+
+testBrowserUrlPlaceholder = 'testBrowserUrlPlaceholder' # no need to change it, just a process 'name'

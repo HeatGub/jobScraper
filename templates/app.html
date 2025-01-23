@@ -5,7 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Plot and Table</title>
+  <!-- DEFINE CSS VARIABLES FROM SETTINGS.PY IN :ROOT TO ACCESS THEM ANYWHERE -->
+  {{ cssRoot|safe }}
+  <!-- MAIN CSS FILE -->
   <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <!-- BOKEH RESOURCES -->
   {{ resources|safe }}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Trirong">
@@ -40,7 +44,25 @@
                 <td title="{{columnDict.description}}">{{columnDict.displayName}}</td>
                 <td><input type="checkbox" class="ckeckBox" checked="checked" name={{columnDict.dbColumnName}}Show></td>
                 {% if columnDict.dbColumnName != "salaryMin" and columnDict.dbColumnName != "salaryMax" %}
-                <!-- oninput="this.size = this.value.length" makes it resize, but it might be unnecessary -->
+                <td><input type="text" placeholder="(a OR b OR c) AND (d OR e)" name={{columnDict.dbColumnName}}Necessary></td>
+                <td><input type="text" placeholder="((NULL AND a AND b) OR (c OR d) OR (f AND g))" name={{columnDict.dbColumnName}}Forbidden></td>
+                {% elif columnDict.dbColumnName == "salaryMin" or columnDict.dbColumnName == "salaryMax" %}
+                <td><input type="text" placeholder="420" name={{columnDict.dbColumnName}}Necessary></td>
+                <td><input type="text" placeholder="NULL OR 0" name={{columnDict.dbColumnName}}Forbidden></td>
+                {% endif %}
+                {% if columnDict.dbColumnName == "datetimeFirst" or columnDict.dbColumnName == "datetimeLast" %}
+                <td><input type="datetime-local" name={{columnDict.dbColumnName}}Above></td>
+                <td><input type="datetime-local" name={{columnDict.dbColumnName}}Below></td>
+                {% elif columnDict.dbColumnName == "salaryMin" or columnDict.dbColumnName == "salaryMax" %}
+                <td><input type="number" placeholder="1337" name={{columnDict.dbColumnName}}Above></td>
+                <td><input type="number" placeholder="1000000" name={{columnDict.dbColumnName}}Below></td>
+                {% endif %}
+              </tr>
+
+              <!-- <tr>
+                <td title="{{columnDict.description}}">{{columnDict.displayName}}</td>
+                <td><input type="checkbox" class="ckeckBox" checked="checked" name={{columnDict.dbColumnName}}Show></td>
+                {% if columnDict.dbColumnName != "salaryMin" and columnDict.dbColumnName != "salaryMax" %}
                 <td><input type="text" placeholder="(a OR b OR c) AND (d OR e)" name={{columnDict.dbColumnName}}Necessary></td>
                 <td><input type="text" placeholder="((a AND b AND c) OR (d OR e) OR (f AND g))" name={{columnDict.dbColumnName}}Forbidden></td>
                 {% elif columnDict.dbColumnName == "salaryMin" or columnDict.dbColumnName == "salaryMax" %}
@@ -54,7 +76,8 @@
                 <td><input type="number" placeholder="4200" name={{columnDict.dbColumnName}}Above></td>
                 <td><input type="number" placeholder="100000" name={{columnDict.dbColumnName}}Below></td>
                 {% endif %}
-              </tr>
+              </tr> -->
+
               {% endfor %}
             </table>
             <!-- <div class="fetchDiv"> -->

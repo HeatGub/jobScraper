@@ -279,6 +279,11 @@ function sendFormAndFetchBokeh(e) {
             const queryDiv = document.getElementById('queryDiv')
             queryDiv.innerHTML.display = 'flex'
             queryDiv.innerHTML = items.query.replace(/\n/g, "<br>") //replace python newline with html <br>
+            queryDiv.style = 'color: var(--color-message);'
+            if (items.error === true){
+                // queryDiv.style.display = 'flex'
+                queryDiv.style = 'color: var(--color-message-error);'
+            }
 
             if (items.resultsAmount === 0) {
                 document.getElementById('plotDiv').innerHTML = ''
@@ -349,7 +354,7 @@ document.getElementById('checkUncheckAll').addEventListener('click', () => {
     if (checkUncheckAll.textContent == '✗') {
         document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = false })
         checkUncheckAll.textContent = '✓'
-        checkUncheckAll.style = 'color: var(--secondary-color);'
+        checkUncheckAll.style = 'color: var(--secondary-color);' // root variable
     }
     else if (checkUncheckAll.textContent == '✓') {
         document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = true })
@@ -384,18 +389,47 @@ document.querySelectorAll('.categoryShowHideDiv').forEach(hideShowDiv => {
     })
 })
 
-// // Locate the element with the shadow root
-// const shadowHost = document.querySelector('#shadow-root')
 
-// console.log(shadowHost) // didnt find
-// // Access the shadow root
-// const shadowRoot = shadowHost.shadowRoot
 
-// // Target the input element inside the shadow root
-// const input = shadowRoot.querySelector('input')
+function printAllRootVariables() {
+    function getAllCSSVariableNames(styleSheets = document.styleSheets){
+        var cssVars = [];
+        // loop each stylesheet
+        for(var i = 0; i < styleSheets.length; i++){
+        // loop stylesheet's cssRules
+        try{ // try/catch used because 'hasOwnProperty' doesn't work
+            for( var j = 0; j < styleSheets[i].cssRules.length; j++){
+                try{
+                    // loop stylesheet's cssRules' style (property names)
+                    for(var k = 0; k < styleSheets[i].cssRules[j].style.length; k++){
+                    let name = styleSheets[i].cssRules[j].style[k];
+                    // test name for css variable signiture and uniqueness
+                    if(name.startsWith('--') && cssVars.indexOf(name) == -1){
+                        cssVars.push(name);
+                    }
+                    }
+                } catch (error) {}
+            }
+        } catch (error) {}
+        }
+        return cssVars;
+    }
+    
+    function getElementCSSVariables (allCSSVars, element = document.body, pseudo){
+        var elStyles = window.getComputedStyle(element, pseudo);
+        var cssVars = {};
+        for(var i = 0; i < allCSSVars.length; i++){
+        let key = allCSSVars[i];
+        let value = elStyles.getPropertyValue(key)
+        if(value){cssVars[key] = value;}
+        }
+        return cssVars;
+    }
+    
+    var cssVars = getAllCSSVariableNames();
+    console.log(':root variables', getElementCSSVariables(cssVars, document.documentElement));
+}
+printAllRootVariables()
 
-// // Modify the size using JavaScript
-// input.style.width = '300px'
-// input.style.height = '400px'
 
 }) //onDOMContentLoaded ends here

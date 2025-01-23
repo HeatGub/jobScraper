@@ -1,8 +1,7 @@
-:root { /* root - globally available variables */
-  --primary-color: #0064e7;
-  --secondary-color: #9c07e1;
-  --font-size: 16px;
-}
+/* root - globally available variables */
+/* :root {
+  --css-root-var: red;
+} */
 
 html {
   font-size: 16px; /* SETTING REM TO 10PX (rem = HTML FONT SIZE) */

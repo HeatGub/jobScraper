@@ -9,7 +9,7 @@ import multiprocessing, io, time
 from databaseFunctions import Database
 from SeleniumBrowser import SeleniumBrowser
 from makeBokehFigures import makeBokehPlot, makeBokehTable
-from settings import DATABASE_TABLE_NAME, DATABASE_COLUMNS, testBrowserUrlPlaceholder
+from settings import DATABASE_TABLE_NAME, DATABASE_COLUMNS, CSS_VARIABLES, testBrowserUrlPlaceholder
 
 ########################################################################## FLASK ENDPOINTS ###########################################################################
 
@@ -18,7 +18,13 @@ app = Flask(__name__)
 @app.route('/', methods=['GET', 'POST'])
 def root():
     if request.method == 'GET':
-        return render_template("app.html", databaseColumns=DATABASE_COLUMNS, resources=CDN.render()) # columnsAll=list(DATABASE_COLUMNS_OLD.keys())
+        # PREPARE TEMPLATE FOR CSS ROOT VARIABLES
+        variablesString = ''
+        for key, value in CSS_VARIABLES.items():
+            variablesString += f"--{key}:{value};" # no new line needed as it css has ;
+        cssRootTemplate = "<style>:root{"+variablesString+"}</style>"
+        # print(cssRootTemplate)
+        return render_template("app.html", cssRoot=cssRootTemplate, databaseColumns=DATABASE_COLUMNS, resources=CDN.render()) # columnsAll=list(DATABASE_COLUMNS_OLD.keys())
     
     elif request.method == 'POST':
         def makeFormOutputDictionary():
@@ -54,20 +60,33 @@ def root():
         def queryBuilder(formDictionary):
             
             def handleBracketsAndLogicalOperators(input, param, like):
+                # print('handleBracketsAndLogicalOperators')
                 if like:
                     likePart = ' LIKE '
                 elif not like:
                     likePart = ' NOT LIKE '
-                splittedResults = re.split(r" OR | AND ", input) #split on logic operator
+                splittedResults = re.split(r" OR | AND ", input) # split on logic operator
                 phrases = []
                 for res in splittedResults:
-                    res = re.sub(r'\(|\)', '', res) #remove brackets
-                    res = re.sub(r'^ +| +$', '', res) #remove spaces at both ends
+                    res = re.sub(r'\(|\)', '', res) # remove brackets
+                    res = re.sub(r'^ +| +$', '', res) # remove spaces at both ends
+                    # print(res)
+                    # print()
                     phrases.append(res)
-                for phrase in phrases: #make placeholders one by one
-                    input = re.sub(phrase, '<<<>>>', input, count=1) #count=1 to only replace the first match. This is needed because phrases content can overlap
-                for phrase in phrases: #fill placeholders one by one
-                    input = re.sub('<<<>>>', param + likePart + "('%" +phrase+"%')", input, count=1) #only first match
+                # BY NOW ALL PHRASES ARE IN THE LIST SO IT CAN PUT THE PHRASES INTO THE BRACKETS
+                for phrase in phrases: # MAKE PLACEHOLDERS ONE BY ONE
+                    input = re.sub(phrase, '<<<>>>', input, count=1) # count=1 to only replace the first match. This is needed because phrases content can overlap
+                    # print(input)
+                    # print()
+                for phrase in phrases: # FILL PLACEHOLDERS ONE BY ONE
+                    if phrase != 'NULL':# and phrase != 'NaN':
+                        input = re.sub('<<<>>>', param + likePart + "('%" +phrase+"%')", input, count=1) # only first match
+                    elif phrase == 'NULL':# or phrase == 'NaN':
+                        isIsNotPart = re.sub(r' LIKE ', '', likePart) # just remove ' LIKE ' to fit
+                        # print(likePart, isIsNotPart)
+                        input = re.sub('<<<>>>', param + " IS " + isIsNotPart + " NULL", input, count=1) # only first match
+                    # print(input)
+                    # print()
                 return input
 
             querySelectPart = "SELECT "
@@ -78,15 +97,15 @@ def root():
                     # SELECT STATEMENT APPENDING
                     if key == 'show' and value:
                         querySelectPart += columnName + ', '
-                    #ABOVE & BELOW 
+                    # ABOVE & BELOW 
                     elif key == 'above' and value:
                         queryMainPart += "\nAND ("+columnName+" > '"+value+"')"
                     elif key == 'below' and value:
                         queryMainPart += "\nAND ("+columnName+" < '"+value+"')"
-                    #NECESSARY PHRASE
+                    # NECESSARY PHRASE
                     elif key == 'necessary' and value: # if list not empty
                         queryMainPart += "\nAND ("+ handleBracketsAndLogicalOperators(value, columnName, like=True) + ")"
-                    #FORBIDDEN PHRASE
+                    # FORBIDDEN PHRASE
                     elif key == "forbidden" and value:
                         queryMainPart += "\nAND ("+ handleBracketsAndLogicalOperators(value, columnName, like=False) + ")"
             queryMainPart += '\nORDER BY (salaryMin+SalaryMax)/2 ASC, (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 * 60 DESC;' #order by
@@ -102,9 +121,13 @@ def root():
         
         global dataframeTable # to make it accessible to download at all times
         dataframeTable, dataframePlot = queryBuilder(makeFormOutputDictionary())
-        dataframeTable = Database.queryToDataframe(dataframeTable)
-        dataframePlot = Database.queryToDataframe(dataframePlot)
-        queryToDisplay = queryBuilder(makeFormOutputDictionary())[0]
+        try:
+            dataframeTable = Database.queryToDataframe(dataframeTable)
+            dataframePlot = Database.queryToDataframe(dataframePlot)
+            queryToDisplay = queryBuilder(makeFormOutputDictionary())[0]
+        except Exception as exception:
+            # WRONG QUERY ERROR
+            return json.dumps({'resultsAmount':0, 'query': str(exception), 'error':True}), 200, {'Content-Type': 'application/json'} # return 200 even tho its error (JS check)
         # print(queryToDisplay)
 
         if len(dataframePlot) > 0 and len(dataframeTable) > 0: #tho their lengths should be equal
@@ -113,7 +136,7 @@ def root():
             # return json.dumps([json_item(plot), json_item(table), int(len(dataframeTable))])
             return json.dumps({'resultsAmount':int(len(dataframeTable)), 'plot': json_item(plot), 'table':json_item(table), 'query': queryToDisplay}), 200, {'Content-Type': 'application/json'}
 
-        return json.dumps({'resultsAmount':0, 'query': queryToDisplay}), 200, {'Content-Type': 'application/json'} #when no results
+        return json.dumps({'resultsAmount':0, 'query': queryToDisplay}), 200, {'Content-Type': 'application/json'} # when no results
 
 @app.route('/downloadCsv')
 def downloadCsvEndpoint():
@@ -294,7 +317,7 @@ if __name__ == "__main__":
     Database.createTableIfNotExists()
     # app.run(debug=False)
     app.run(debug=True)
-    print(len(PROCESSES_LIST))
+    # print(len(PROCESSES_LIST))
     print("MAIN PROCESS ENDS HERE")
 
 
@@ -309,5 +332,8 @@ if __name__ == "__main__":
 # terminate test browser instance at some point (check ifBrowserOpen on any add/delete process click?)
 # requirements.txt
 # slow down or do more reps (include in settings?) in fetchAllOffersUrls() for justjoin?
+# pause scraping when too many Nones after analysis (dont scrap to db) and paint the message (add alert too?)
+
+# ((a OR (b AND c)))
 
 # table hover tool?

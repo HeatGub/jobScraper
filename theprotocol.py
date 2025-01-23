@@ -3,7 +3,7 @@ import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 import time, json, random, re, datetime
 from databaseFunctions import Database
-from settings import DATABASE_COLUMNS
+from settings import DATABASE_COLUMNS, GROSS_TO_NET_MULTIPLIER
 
 # theprotocol is being scraped well even when browser minimized
 
@@ -59,7 +59,7 @@ def getOfferDetails(SeleniumBrowser):
         jobTitle = SeleniumBrowser.DRIVER.find_element(By.XPATH, '//*[@data-test="text-offerTitle"]') # this element should always exist
         jobTitle = jobTitle.text
     except:
-        jobTitle= ''
+        jobTitle = None
     
     #SALARY
     try:
@@ -67,12 +67,11 @@ def getOfferDetails(SeleniumBrowser):
         salaryAndContract = salaryContainer.text
         # print(salaryAndContract  + '\n')
     except:
-        salaryAndContract= ''
+        salaryAndContract= None
     
     salaryMinAndMax = [None, None] # Nones as these are INTs in DB
-    if salaryAndContract != '':
+    if salaryAndContract != None:
         try: #to recalculate salary to [PLN/month net] #PLN=only unit on protocol?
-            GROSS_TO_NET_MULTIPLIER = 0.7
             hoursPerMonthInFullTimeJob = 168
             lines = salaryAndContract.splitlines()
             if len(lines) >= 3: #should be 2-3 tho
@@ -88,6 +87,8 @@ def getOfferDetails(SeleniumBrowser):
                 if re.findall("godz", lines[1]) or re.findall("hr.", lines[1]): # hr -> month
                     salaryMinAndMax = [(float(elmnt) * hoursPerMonthInFullTimeJob) for elmnt in salaryMinAndMax] #possible input float/str
 
+                if salaryMinAndMax[1] == None: # some offers provide just 1 extremum
+                    salaryMinAndMax[1] = salaryMinAndMax[0]
                 salaryMinAndMax = [int(elmnt) for elmnt in salaryMinAndMax] # to ints
         except:
             pass    # salaryMinAndMax = [None, None]
@@ -97,11 +98,11 @@ def getOfferDetails(SeleniumBrowser):
         employerElement = SeleniumBrowser.DRIVER.find_element("xpath", '//*[@data-test="anchor-company-link"]') # this element should always exist
         employer = employerElement.text# + ' ' + employerElement.get_property("href")
     except:
-        employer= ''
+        employer= None
     # print(employer  + '\n')
     
     #WORKFROM, EXP, VALIDTO, LOCATION - "PARAMETERS"
-    workModes, positionLevels, offerValidTo, location = '', '', '', ''
+    workModes, positionLevels, location = None, None, None
     try:
         parametersContainer = SeleniumBrowser.DRIVER.find_element(By.CLASS_NAME, "c21kfgf")
         parameters = parametersContainer.find_elements(By.CLASS_NAME, "s1bu9jax")
@@ -112,8 +113,8 @@ def getOfferDetails(SeleniumBrowser):
                     workModes = param.text
                 case "section-positionLevels":
                     positionLevels = param.text
-                case "section-offerValidTo":
-                    offerValidTo = param.text
+                # case "section-offerValidTo":
+                #     offerValidTo = param.text
                 case "section-workplace":
                     location = param.text
                     try: #to find and click 'more locations' button then fetch what's inside
@@ -124,12 +125,12 @@ def getOfferDetails(SeleniumBrowser):
                         location = locations.text
                     except:
                         pass #leave location as it was
-        # print(workModes + '\n\n' + positionLevels + '\n\n' +  offerValidTo + '\n\n' +  location + '\n')
+        # print(workModes + '\n\n' + positionLevels + '\n\n' + '\n\n' +  location + '\n')
     except:
-        pass # leave ''s
+        pass # leave Nones
 
     #TECHSTACK
-    techstackExpected, techstackOptional = '', ''
+    techstackExpected, techstackOptional = None, None
     try:
         descriptionsContainer = SeleniumBrowser.DRIVER.find_element(By.CSS_SELECTOR, '#TECHNOLOGY_AND_POSITION')
         techstack = descriptionsContainer.find_elements(By.CLASS_NAME, "c1fj2x2p")
@@ -142,7 +143,7 @@ def getOfferDetails(SeleniumBrowser):
                 techstackOptional = group.text[14:]
         # print(str(techstackExpected) + '\n\n' + str(techstackOptional) + '\n')
     except:
-        pass # leave ''s
+        pass # leave Nones
 
     #RESPONSIBILITIES
     try:
@@ -151,7 +152,7 @@ def getOfferDetails(SeleniumBrowser):
         except:
             responsibilities = descriptionsContainer.find_element("xpath", '//*[@data-test="section-responsibilities"]').text #/if it's a single entry
     except:
-        responsibilities= ''
+        responsibilities= None
         # print('RESPONSIBILITIES:\n' + str(responsibilities) + '\n' + driver.current_url)
 
     #REQUIREMENTS
@@ -161,7 +162,7 @@ def getOfferDetails(SeleniumBrowser):
         except:
             requirements = descriptionsContainer.find_element("xpath", '//*[@data-test="section-requirements"]').text #/if it's a single entry
     except:
-        requirements= ''
+        requirements= None
         # print('REQUIREMENTS:\n' + str(requirements) + '\n' + driver.current_url)
 
 
@@ -172,23 +173,23 @@ def getOfferDetails(SeleniumBrowser):
             optionalRequirements = ''
             for optionalRequirement in optionalRequirementsContainer:
                 optionalRequirements += optionalRequirement.text + '\n'
-        elif len(optionalRequirementsContainer) <= 0:
+        elif len(optionalRequirementsContainer) == 0:
             try:
                 optionalRequirements = descriptionsContainer.find_element("xpath", '//*[@data-test="section-requirements-optional"]').text
             except:
-                optionalRequirements= ''
+                optionalRequirements= None
                 # print('OPTIONAL:\n' + str(optionalRequirements) + '\n' + driver.current_url)        
     except:
-        optionalRequirements= ''
+        optionalRequirements= None
     # print('OPTIONAL:\n' + str(optionalRequirements) + '\n' + driver.current_url)
     datetimeNow = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     # FULL DESCRIPTION
-    fullDescription = ''
+    fullDescription = None
     try:
         fullDescription = SeleniumBrowser.DRIVER.find_element(By.CSS_SELECTOR, '#TECHNOLOGY_AND_POSITION').text
     except:
-        pass # fullDescription = ''
+        pass # fullDescription = None
 
     return {'datetimeLast':datetimeNow, 'datetimeFirst':datetimeNow, 'url':SeleniumBrowser.DRIVER.current_url, 'title':jobTitle, 'salaryAndContract':salaryAndContract, 'salaryMin':salaryMinAndMax[0], 'salaryMax':salaryMinAndMax[1], 'employer':employer, 'workModes':workModes, 'positionLevels':positionLevels, 'location':location, 'techstackExpected':techstackExpected, 'techstackOptional':techstackOptional, 'responsibilities':responsibilities, 'requirements':requirements, 'optionalRequirements':optionalRequirements, 'fullDescription':fullDescription}
 
@@ -220,10 +221,12 @@ def scrapToDatabase(SeleniumBrowser):
                     Database.insertRecord(commonKeysDict) # insert into database
                     SeleniumBrowser.databaseInserts += 1
                 SeleniumBrowser.currentlyScrapedOfferIndex += 1 # increment if successfully analysed
+                time.sleep(0.5) # move to settings
                 return {'success':True, 'functionDone':False, 'message': str(SeleniumBrowser.currentlyScrapedOfferIndex) + '/' + str(len(SeleniumBrowser.OFFERS_URLS)) + ' offers scraped'}
             elif offerNotFound(SeleniumBrowser):
                 # print('OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url)
                 SeleniumBrowser.currentlyScrapedOfferIndex += 1 # increment even if offer not found not to get stuck
+                time.sleep(0.5) # move to settings
                 return {'success':False, 'functionDone':False, 'message': 'OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url}
     except Exception as exception:
         return {'success':False, 'functionDone':False, 'message':str(exception)}

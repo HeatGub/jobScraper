@@ -40,8 +40,14 @@
 
 -- SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;
 
--- DELETE FROM test6; --removes all
-SELECT * FROM test4;
+
+SELECT * 
+FROM test6
+WHERE techstackOptional = '';
+
+DELETE FROM test6 WHERE salaryMax IS NULL; --removes all
+
+-- SELECT * FROM test4;
 -- DROP TABLE IF EXISTS test5;
 
 -- SELECT datetimeLast, datetimeFirst, techstackExpected FROM test4 WHERE 1=1

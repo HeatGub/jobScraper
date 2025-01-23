@@ -3,7 +3,7 @@ import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 import time, json, random, re, datetime
 from databaseFunctions import Database
-from settings import DATABASE_COLUMNS
+from settings import DATABASE_COLUMNS, GROSS_TO_NET_MULTIPLIER
 
 def anyOffersOnTheList(SeleniumBrowser):
     try:
@@ -122,19 +122,21 @@ def getOfferDetails(SeleniumBrowser):
         employer = employerAndLocationDiv.find_element(By.XPATH, './/h2').text # look for h2 as deep as necessary
         # print(employer) # name="multilocation_button"
     except:
-        jobTitle, employer = '', ''
+        jobTitle, employer = None, None
 
     try:
         location = employerAndLocationDiv.find_elements(By.CSS_SELECTOR, '.MuiBox-root.css-mswf74')[1].text # first one is employer
         location = re.sub(r'\+[0-9]+$', '', location) #remove '+x' where x is int
     except:
-        location = ''
+        location = None
     #try clicking for more locations
     try:
         locationButton = employerAndLocationDiv.find_element("xpath", '//*[@name="multilocation_button"]')
         locationButton.click()
         locationsMenu = offerContent.find_element("xpath", '//ul[@role="menu"]')
         # locationsMenu = locationsMenu.find_elements(By.CSS_SELECTOR, 'li')
+        if location == None:
+            location = ''
         location += '\n' + locationsMenu.text # TEXT EMPTY WHEN MINIMIZED!
     except Exception as exception:
         pass
@@ -144,12 +146,11 @@ def getOfferDetails(SeleniumBrowser):
     try:
         salaryAndContract = topContainer.find_element(By.CSS_SELECTOR, '.MuiBox-root.css-1km0bek').text
     except:
-        salaryAndContract= ''
+        salaryAndContract= None
 
     salaryMinAndMax = [None, None] # Nones as these are INTs in DB
-    if salaryAndContract != '':
+    if salaryAndContract != None:
         try: #to recalculate salary to [PLN/month net]
-            grossToNetMultiplier = 0.7
             hoursPerMonthInFullTimeJob = 168
             lines = salaryAndContract.splitlines()[0] # There could be multiple salaries depending on contract type though. It will be in salaryAndContract anyway
             splitValues = re.split(r'-', lines) # split on dash for min and max
@@ -158,21 +159,23 @@ def getOfferDetails(SeleniumBrowser):
                 splitValues[i] = splitValues[i].replace(" ", "") # remove spaces
                 splitValues[i] = re.sub(r",\d{1,2}", '', splitValues[i]) # removes , and /d{1 to 2 occurrences}  (needed when salary as 123,45)
                 salaryMinAndMax[i] = re.search(r"\d+", splitValues[i]).group() # r = raw, \d+ = at least 1 digit, group() contains results
-                
             if re.findall("brutto", lines[1]) or re.findall("gross", lines[1]): # gross -> net
-                salaryMinAndMax = [(float(elmnt) * grossToNetMultiplier) for elmnt in salaryMinAndMax]
+                salaryMinAndMax = [(float(elmnt) * GROSS_TO_NET_MULTIPLIER) for elmnt in salaryMinAndMax]
                 # print(salaryMinAndMax)
             if re.findall("godz", lines[1]) or re.findall("hr.", lines[1]): # hr -> month
                 salaryMinAndMax = [(float(elmnt) * hoursPerMonthInFullTimeJob) for elmnt in salaryMinAndMax] #possible input float/str
 
             salaryMinAndMax = [int(elmnt) for elmnt in salaryMinAndMax] # to ints
+            if salaryMinAndMax[1] == None: # some offers provide just 1 extremum
+                salaryMinAndMax[1] = salaryMinAndMax[0]
+                
         except Exception as exception:
             pass    # salaryMinAndMax = [None, None]
     # print(salaryMinAndMax)
 
     # print(salaryAndContract)
-    workModes = ''
-    positionLevels = ''
+    workModes = None
+    positionLevels = None
 
     try:
         # MuiBox-root css-ktfb40
@@ -184,6 +187,8 @@ def getOfferDetails(SeleniumBrowser):
             fourRectangles[i] = fourRectangles[i].find_elements(By.XPATH, "./div")[1] # second child div (not grandchild or further)
             fourRectangles[i] = fourRectangles[i].find_elements(By.XPATH, "./div")[1].text
             # print(fourRectangles[i])
+        if salaryAndContract == None:
+            salaryAndContract = ''
         salaryAndContract += '\n' + fourRectangles[0] + ' | ' + fourRectangles[2]
         positionLevels = fourRectangles[1]
         workModes = fourRectangles[3]
@@ -194,7 +199,7 @@ def getOfferDetails(SeleniumBrowser):
     # print(workModes, positionLevels + '\n')
 
     #TECHSTACK
-    techstackExpected, techstackOptional = '', ''
+    techstackExpected, techstackOptional = None, None
     try:
         techstackDiv = offerContent.find_elements(By.CSS_SELECTOR, '.MuiBox-root.css-qal8sw')[0]
         techstackDiv = techstackDiv.find_element(By.CSS_SELECTOR, 'div')
@@ -204,26 +209,32 @@ def getOfferDetails(SeleniumBrowser):
             techWithLvl = technologies[i].text + ' - ' + levels[i].text
             # print(techWithLvl)
             if levels[i].text == 'Nice To Have': # or levels[i].text == 'Junior'
+                if techstackOptional == None:
+                    techstackOptional = ''
                 techstackOptional += '\n' + techWithLvl
             else: # -(nice to have)/junior/regular/advanced/master
+                if techstackExpected == None:
+                    techstackExpected = ''
                 techstackExpected += '\n' + techWithLvl
 
-        techstackOptional = re.sub(r"^\n", '', techstackOptional)
-        techstackExpected = re.sub(r"^\n", '', techstackExpected)
+        if techstackOptional != None:
+            techstackOptional = re.sub(r"^\n", '', techstackOptional)
+        if techstackExpected != None:
+            techstackExpected = re.sub(r"^\n", '', techstackExpected)
+
     except Exception as exception:
         print(exception)
         pass # leave empty strs
     # print(techstackExpected + '\n\n' + techstackOptional)
 
     # ==================== DO THIS NOW ====================
-    offerValidTo = '' # REMOVE FROM DB?
-    fullDescription = '' # ADD TO DB
-    responsibilities, requirements, optionalRequirements, theyOffer = '', '', '', ''
+    fullDescription = None
+    responsibilities, requirements, optionalRequirements = None, None, None
 
     optionalRequirementsKeywords = ['nice to', 'optional', 'ideal', 'preferr', 'asset', 'appreciat', 'atut', 'dodatk', 'mile widzi']
     requirementsKeywords = ['require', 'expect', 'skill', 'look', 'qualifications', 'experience', 'must', 'competen', 'wymaga', 'oczek', 'umiejętn', 'aplikuj, jeśli', 'oczekuj', 'potrzeb', 'szukamy', 'kompeten']
     responsibilitiesKeywords = ['responsib', 'task', 'role', 'project', 'obowiązk', 'zadani', 'projek']
-    whatTheyOfferKeywords = ['offer', 'benefit' 'oferuj', 'oferow']
+    # whatTheyOfferKeywords = ['offer', 'benefit' 'oferuj', 'oferow']
 
     allKeywordsDict = {'optionalRequirementsKeywords':optionalRequirementsKeywords, 'requirementsKeywords':requirementsKeywords, 'responsibilitiesKeywords':responsibilitiesKeywords}
 
@@ -257,13 +268,20 @@ def getOfferDetails(SeleniumBrowser):
                     if re.search(rf'.*{re.escape(keyword)}.*', header, re.IGNORECASE): # .* = any symbol any number of times
                         # print('found ' + keyword)
                         if keywordsCategory =='optionalRequirementsKeywords': # check this first as it's more specific than requirements and contains similar keywords
+                            if optionalRequirements == None:
+                                optionalRequirements = ''
                             optionalRequirements += paragraph
+
                         elif keywordsCategory =='requirementsKeywords':
+                            if requirements == None:
+                                requirements = ''
                             requirements += paragraph
+
                         elif keywordsCategory =='responsibilitiesKeywords':
+                            if responsibilities == None:
+                                responsibilities = ''
                             responsibilities += paragraph
-                        elif keywordsCategory == 'whatTheyOfferKeywords':
-                            whatTheyOfferKeywords += paragraph
+
     except Exception as exception:
         print(exception)
         pass

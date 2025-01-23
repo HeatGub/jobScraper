@@ -1,8 +1,8 @@
 from bokeh.plotting import figure
 from bokeh.models.widgets import DataTable, TableColumn
-from bokeh.models import ColumnDataSource, WheelZoomTool, HTMLTemplateFormatter, HoverTool, TapTool, Range1d, LinearAxis
-from settings import BOKEH_TABLE_MAX_HEIGHT, BOKEH_TABLE_ROW_HEIGHT, BOKEH_TABLE_CSS
-
+from bokeh.models import ColumnDataSource, WheelZoomTool, HTMLTemplateFormatter, HoverTool, TapTool, Range1d, LinearAxis, InlineStyleSheet
+from settings import BOKEH_PLOT_HEIGHT, BOKEH_TABLE_MAX_HEIGHT, BOKEH_TABLE_ROW_HEIGHT, BOKEH_TABLE_CSS, CSS_VARIABLES
+from bokeh.themes import Theme
 import pandas as pd
 
 ############################################################################# BOKEH FUNCITONS ###############################################################################
@@ -18,7 +18,7 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
 
     # SPECIFY UNSPECIFIED BARS HEIGHT
     if len(nonNanRowsDf) > 0: #otherwise division by 0 possible
-        lookUpToValues = int(len(nonNanRowsDf)/6) #how many values to count average
+        lookUpToValues = int(len(nonNanRowsDf)/4) #how many values to count average
         if lookUpToValues == 0: # avoid /0
             lookUpToValues = 1
         avgOfNLowestMinSalaries = nonNanRowsDf['salaryMin'].head(lookUpToValues).tolist() #select up to lookUpToValues
@@ -54,7 +54,7 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
 
     sourceSalaryUnspecified = ColumnDataSource(dataSalaryUnspecified) #2 data sources
     sourceSalarySpecified = ColumnDataSource(dataSalarySpecified) #2 data sources
-    plot = figure(title="", x_axis_label='Offer index', y_axis_label='Salary', height = 400, sizing_mode='stretch_width')
+    plot = figure(title="", x_axis_label='offer index', y_axis_label='salary [pln net/month]', height = BOKEH_PLOT_HEIGHT, sizing_mode='stretch_width')
     plot.y_range = Range1d(start=0 - 1, end=maxSalary) # * 1.2 to fit the bars
     plot.x_range = Range1d(start=0 - 1, end=int(len(dataframe))) #too much empty space by default
     plot.extra_y_ranges = {"y2": Range1d(start=0, end=maxActiveFor)} #add 1 day
@@ -77,7 +77,7 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
     # COLOR SETTINGS
     plot.border_fill_color = 'rgb(40,40,40)' # outside the plot area
     plot.background_fill_color = 'rgb(40,40,40)' # plot area
-    plot.title = ''
+    # plot.background_fill_color = CSS_VARIABLES['primary-color'] # plot area
 
     plot.xgrid.grid_line_color = 'rgb(80,80,80)'
     plot.ygrid.grid_line_color = 'rgb(80,80,80)'
@@ -91,7 +91,7 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
     plot.yaxis.axis_label_text_color = 'rgb(200,200,200)'
     plot.xaxis.major_label_text_color = 'rgb(200,200,200)'
     plot.yaxis.major_label_text_color = 'rgb(200,200,200)'
-    
+        
     # FONT SETTINGS
     plot.xaxis.axis_label_text_font = "Anta"
     plot.yaxis.axis_label_text_font = "Anta"
@@ -101,7 +101,6 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
     plot.xaxis.axis_label_text_font_style = "bold" # italic by default
     plot.yaxis.axis_label_text_font_style = "bold"
 
-
     taptool = TapTool() #highlight on tap
     wheel_zoom = WheelZoomTool()
     plot.toolbar.active_scroll = wheel_zoom
@@ -110,12 +109,13 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
     hoverSalarySpecified = HoverTool(tooltips=[("Offer index:", "@x"), ("Job title:", "@title"), ("Min/Avg/Max:", "@salaryMin{0.}/@salaryAvg{0.}/@salaryMax{0.}"), ("Active for:", "@activeFor days")]) #{0} = no decimals
     hoverSalarySpecified.renderers = [plot.renderers[2]]# hover tool only on the salary bars
     plot.add_tools(hoverSalarySpecified, hoverSalaryUnpecified, taptool, wheel_zoom) #wheel_zoom removed for now
-
+    
     return plot
 
 def makeBokehTable(dataframe):
 
     dataframe = dataframe.replace({'^\s+': '', '\n': '<br>', '\t': '<br>'}, regex=True) # replace for HTML displaying. ^\s* matches zero or more whitespace characters at the beginning of a string
+    dataframe = dataframe.fillna("") # Nones to empty strs - cleaner table
 
     # FORMAT SOME COLUMNS (change \n and \t to <br> as it wouldn't display a new line in the table cell div otherwise)
     columnsToFormatNewlines = ["salaryAndContract", "workModes", "positionLevels", "location", "techstackExpected", "techstackOptional", "responsibilities", "requirements", "optionalRequirements", "fullDescription"]
@@ -144,8 +144,6 @@ def makeBokehTable(dataframe):
     table.height = height
     table.row_height = BOKEH_TABLE_ROW_HEIGHT
     # table.index_position = None # turns off indexes
-
-    from bokeh.models import InlineStyleSheet
 
     tableStyle = InlineStyleSheet(css=BOKEH_TABLE_CSS)
     table.stylesheets = [tableStyle]
