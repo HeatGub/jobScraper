@@ -55,52 +55,54 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
     sourceSalaryUnspecified = ColumnDataSource(dataSalaryUnspecified) #2 data sources
     sourceSalarySpecified = ColumnDataSource(dataSalarySpecified) #2 data sources
     plot = figure(title="", x_axis_label='offer index', y_axis_label='salary [pln net/month]', height = BOKEH_PLOT_HEIGHT, sizing_mode='stretch_width')
+    plot.add_layout(LinearAxis(y_range_name="y2", axis_label="days active"), 'right') # Add the second y-axis to the right. DONT MOVE IT - MAY BREAK CSS
     plot.y_range = Range1d(start=0 - 1, end=maxSalary) # * 1.2 to fit the bars
     plot.x_range = Range1d(start=0 - 1, end=int(len(dataframe))) #too much empty space by default
     plot.extra_y_ranges = {"y2": Range1d(start=0, end=maxActiveFor)} #add 1 day
-    #COLORS
-    salaryUnspecifiedColor = 'rgb(60,60,160)'
-    salarySpecifiedColor = 'rgb(80,80,220)'
-    # daysActiveColor = 'rgb(30,150,30)'
-    daysActiveColor = 'rgb(60,100,40)'
-    # SALARY UNSPECIFIED BARS
-    plot.vbar('x', top = 'salaryAvg', width = 0.70, source = sourceSalaryUnspecified, color=salaryUnspecifiedColor, alpha = 1) # MAIN BAR
-    plot.vbar('x', top = 'activeFor', y_range_name="y2", source = sourceSalaryUnspecified, color=daysActiveColor, alpha = 0.15, width=0.90) # Active for
-    # plot.segment(x0='x', y0='salaryMin', x1='x', y1='salaryMax', source=sourceSalaryUnspecified, line_width=2, color='black', alpha = 0.5) #Error bar
-    # SALARY SPECIFIED BARS
-    plot.vbar('x', top = 'salaryAvg', width = 0.70, source = sourceSalarySpecified, color=salarySpecifiedColor, alpha = 1) # MAIN BAR
-    plot.vbar('x', top = 'activeFor', y_range_name="y2", source = sourceSalarySpecified, color=daysActiveColor, alpha = 0.15, width=0.90) # Active for
-    plot.segment(x0='x', y0='salaryMin', x1='x', y1='salaryMax', source=sourceSalarySpecified, line_width=1.5, color='black', alpha=0.75) #Error bar
-    
-    plot.add_layout(LinearAxis(y_range_name="y2", axis_label="Days adtive"), 'right') # Add the second y-axis to the right
-    
+      
     # COLOR SETTINGS
-    plot.border_fill_color = 'rgb(40,40,40)' # outside the plot area
-    plot.background_fill_color = 'rgb(40,40,40)' # plot area
+    plot.border_fill_color = CSS_VARIABLES['color-background-secondary'] # outside the plot area
+    plot.background_fill_color = CSS_VARIABLES['color-background-tertiary'] # plot area
     # plot.background_fill_color = CSS_VARIABLES['primary-color'] # plot area
 
-    plot.xgrid.grid_line_color = 'rgb(80,80,80)'
-    plot.ygrid.grid_line_color = 'rgb(80,80,80)'
+    plot.xaxis.axis_line_color = CSS_VARIABLES['color-plot-grid-line']
+    plot.xaxis.major_tick_line_color = CSS_VARIABLES['color-plot-grid-line']
+    plot.xaxis.minor_tick_line_color = CSS_VARIABLES['color-plot-grid-line']
+    plot.yaxis.axis_line_color = CSS_VARIABLES['color-plot-grid-line']
+    plot.yaxis.major_tick_line_color = CSS_VARIABLES['color-plot-grid-line']
+    plot.yaxis.minor_tick_line_color = CSS_VARIABLES['color-plot-grid-line']
 
-    plot.xgrid.minor_grid_line_color = 'rgb(80,80,80)'
-    plot.ygrid.minor_grid_line_color = 'rgb(80,80,80)'
-    plot.xgrid.minor_grid_line_alpha = 0.5 # Opacity
-    plot.ygrid.minor_grid_line_alpha = 0.5
+    plot.xgrid.grid_line_color = CSS_VARIABLES['color-plot-grid-line']
+    plot.ygrid.grid_line_color = CSS_VARIABLES['color-plot-grid-line']
+    plot.xgrid.minor_grid_line_color = CSS_VARIABLES['color-plot-minor-grid-line']
+    plot.ygrid.minor_grid_line_color = CSS_VARIABLES['color-plot-minor-grid-line']
 
-    plot.xaxis.axis_label_text_color = 'rgb(200,200,200)'
-    plot.yaxis.axis_label_text_color = 'rgb(200,200,200)'
-    plot.xaxis.major_label_text_color = 'rgb(200,200,200)'
-    plot.yaxis.major_label_text_color = 'rgb(200,200,200)'
+    plot.xaxis.axis_label_text_color = CSS_VARIABLES['color-text-primary']
+    plot.yaxis.axis_label_text_color = CSS_VARIABLES['color-text-primary']
+    plot.xaxis.major_label_text_color = CSS_VARIABLES['color-text-secondary']
+    plot.yaxis.major_label_text_color = CSS_VARIABLES['color-text-secondary']
         
     # FONT SETTINGS
     plot.xaxis.axis_label_text_font = "Anta"
     plot.yaxis.axis_label_text_font = "Anta"
     plot.xaxis.major_label_text_font = "Anonymous Pro" # font imported in html
     plot.yaxis.major_label_text_font = "Anonymous Pro"
-    
-    plot.xaxis.axis_label_text_font_style = "bold" # italic by default
-    plot.yaxis.axis_label_text_font_style = "bold"
+    plot.xaxis.axis_label_text_font_style = "normal" # italic by default
+    plot.yaxis.axis_label_text_font_style = "normal"
+    plot.xaxis.axis_label_text_font_size = "0.8rem"
+    plot.yaxis.axis_label_text_font_size = "0.8rem"
+    plot.xaxis.major_label_text_font_size = "0.7rem"
+    plot.yaxis.major_label_text_font_size = "0.7rem"
 
+    # SALARY UNSPECIFIED BARS
+    plot.vbar('x', top = 'salaryAvg', width = 0.70, source = sourceSalaryUnspecified, color=CSS_VARIABLES["color-plot-salary-unspecified"]) # MAIN BAR
+    plot.vbar('x', top = 'activeFor', y_range_name="y2", source = sourceSalaryUnspecified, color=CSS_VARIABLES["color-plot-salary-days-active"], width=0.90) # Active for
+    # plot.segment(x0='x', y0='salaryMin', x1='x', y1='salaryMax', source=sourceSalaryUnspecified, line_width=2, color='black') #Error bar
+    # SALARY SPECIFIED BARS
+    plot.vbar('x', top = 'salaryAvg', width = 0.70, source = sourceSalarySpecified, color=CSS_VARIABLES["color-plot-salary-specified"]) # MAIN BAR
+    plot.vbar('x', top = 'activeFor', y_range_name="y2", source = sourceSalarySpecified, color=CSS_VARIABLES["color-plot-salary-days-active"],  width=0.90) # Active for
+    plot.segment(x0='x', y0='salaryMin', x1='x', y1='salaryMax', source=sourceSalarySpecified, line_width=1.5, color=CSS_VARIABLES["color-plot-error-bars"]) #Error bar
+    
     taptool = TapTool() #highlight on tap
     wheel_zoom = WheelZoomTool()
     plot.toolbar.active_scroll = wheel_zoom

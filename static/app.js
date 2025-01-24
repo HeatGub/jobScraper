@@ -279,10 +279,10 @@ function sendFormAndFetchBokeh(e) {
             const queryDiv = document.getElementById('queryDiv')
             queryDiv.innerHTML.display = 'flex'
             queryDiv.innerHTML = items.query.replace(/\n/g, "<br>") //replace python newline with html <br>
-            queryDiv.style = 'color: var(--color-message);'
+            queryDiv.style = 'color: var(--color-text-primary);'
             if (items.error === true){
                 // queryDiv.style.display = 'flex'
-                queryDiv.style = 'color: var(--color-message-error);'
+                queryDiv.style = 'color: var(--color-text-warning);'
             }
 
             if (items.resultsAmount === 0) {
@@ -354,12 +354,12 @@ document.getElementById('checkUncheckAll').addEventListener('click', () => {
     if (checkUncheckAll.textContent == '✗') {
         document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = false })
         checkUncheckAll.textContent = '✓'
-        checkUncheckAll.style = 'color: var(--secondary-color);' // root variable
+        checkUncheckAll.style = 'color: var(--color-secondary);' // root variable
     }
     else if (checkUncheckAll.textContent == '✓') {
         document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = true })
         checkUncheckAll.textContent = '✗'
-        checkUncheckAll.style = 'color: var(--primary-color);'
+        checkUncheckAll.style = 'color: var(--color-primary);'
     }
 })
 
@@ -431,5 +431,10 @@ function printAllRootVariables() {
 }
 printAllRootVariables()
 
+
+// // HIDE ALL CONTENT AT THE BEGINNING
+// document.querySelectorAll('.categoryContent').forEach(categoryContent => {
+//     categoryContent.style.display = 'none'
+// })
 
 }) //onDOMContentLoaded ends here

@@ -11,7 +11,8 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
   <!-- BOKEH RESOURCES -->
   {{ resources|safe }}
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"> <!-- TRASH BIN ICON -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"> <!-- PLUS ICON -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Trirong">
   <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Anonymous Pro'>
   <link href='https://fonts.googleapis.com/css?family=Anta' rel='stylesheet'>
@@ -24,14 +25,14 @@
     <!-- FORM -->
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">QUERY TOOL</div>
-        <div class="categoryContent" style="display: flex;">
+        <div class="categoryContent" style="display: flex;"> <!--style="display: flex;"-->
 
           <form id="mainForm">
             <table>
               <thead>
                 <tr>
                   <th scope="col" class="constantWidthColumnParameters">hover for description</th>
-                  <th scope="col" class="constantWidthColumnShow">show?<p id="checkUncheckAll" style="color: var(--primary-color);">&cross;</p>
+                  <th scope="col" class="constantWidthColumnShow">show?<p id="checkUncheckAll">&cross;</p>
                   </th>
                   <th scope="col" class="flexibleWidthColumn">necessary</th>
                   <th scope="col" class="flexibleWidthColumn">forbidden</th>
@@ -130,9 +131,9 @@
       <div class="categoryShowHideDiv">TEST BROWSER</div>
       <!-- style="display: flex;" OTHERWISE JS CANT RECOGNIZE STYLE.DISPLAY -->
       <div class="categoryContent" style="display: flex;">
-          <button id="openBrowserButton">open test browser</button>
+          <button id="openBrowserButton">OPEN</button>
           <div id="openBrowserOutput" class="testBrowserOutput">open the browser to update cookies.json</div>
-          <button id="saveCookiesToJsonButton" >update cookies.json</button>
+          <button id="saveCookiesToJsonButton" >UPDATE COOKIES</button>
           <div id="saveCookiesToJsonOutput" class="testBrowserOutput"></div>
         </div>
     </div>
@@ -142,7 +143,7 @@
       <div class="categoryShowHideDiv">SCRAPING BROWSERS</div>
         <div class="categoryContent" style="display: flex;">
           <div id="fullScrapingDivsContainer"></div>
-          <button id="addNewProcessButton">+</button>
+          <button id="addNewProcessButton"><i class="fas fa-plus"></i></button> <!-- HTML plus -->
         </div>
     </div>
 
