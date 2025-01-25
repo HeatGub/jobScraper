@@ -322,18 +322,11 @@ if __name__ == "__main__":
 
 
 ###########################################  TODO
-# settings file - # add time randomizers and different win size for different portals?
-# use grossToNetMultiplier just to recalculate before displaying?? explaing that as well in readme
-# execute query endpoint?
-# console errors in brave?? Seems to be brave's issue
-# napisać o nested query w readme
-# NEED TO FIND 'OFFER NOT FOUND MSG AND CHECK WHICH DIVS DOES IT HAVE (jj.it)
-# close all browsers on main script end?
-# terminate test browser instance at some point (check ifBrowserOpen on any add/delete process click?)
+# readme - nested query
+# grossToNet converted at the scraping - explain that in readme?
 # requirements.txt
-# slow down or do more reps (include in settings?) in fetchAllOffersUrls() for justjoin?
-# pause scraping when too many Nones after analysis (dont scrap to db) and paint the message (add alert too?)
+# terminate test browser instance at some point (check ifBrowserOpen on any add/delete process click?)
 
-# ((a OR (b AND c)))
-
-# table hover tool?
+# 3 related
+# settings file - # add time randomizers and different win size for different portals?
+# pause scraping when too many Nones after analysis (dont scrap to db) and print the message (alert too?)

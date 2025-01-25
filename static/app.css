@@ -19,12 +19,65 @@ body {
   background-color: var(--color-background-primary);
 }
 
+#headerContainer{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: -0.9rem; /* move up to hide the header top */
+  /* margin-bottom: -0.2rem; */
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  width: 100%;
+  min-width: 45rem; /* same as mainContainer */
+  font-size: 2.8rem;
+  text-shadow: 0rem 0rem 0.5rem var(--color-primary);
+  cursor:default;
+  /* make text unselectable */
+  user-select: none; /* Modern browsers */
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* Older IE/Edge */
+}
+
+#headerContainer:hover{
+  text-shadow: 0rem 0rem 1rem var(--color-secondary);
+}
+
+.headerTextContainer {
+  font-size: 1rem;
+  width: 19rem;
+  font-weight: 600;
+  text-shadow: none;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  /* justify-content: center; */
+  justify-content: space-between; /* Disperse elements to the edges */
+  white-space: nowrap;
+  margin-top: -0.5rem;
+}
+
+
+#headerText1 {
+  color: var(--color-primary);
+}
+#headerText2 {
+  font-size: 1rem;
+  color: var(--color-secondary);
+  justify-content: center;
+}
+#headerText3 {
+  font-size: 1rem;
+  color: var(--color-primary);
+}
+
 input {
+  text-align: center;
   font-size: 0.8rem;
   font-family: "Anonymous Pro", serif;
-  color: var(--color-text-primary);
+  color: var(--color-text-secondary);
   background-color: var(--color-background-secondary);
-  border: 0.05rem solid var(--color-background-quaternary);
+  border: var(--border-width-tertiary) solid var(--color-background-quaternary);
   border-radius: var(--border-radius-tertiary);
 }
 
@@ -33,24 +86,49 @@ input:hover {
   box-shadow: 0rem 0rem 0.3rem var(--color-primary);
 }
 
+input:focus {
+  outline: 0.1rem solid var(--color-tertiary); /* Remove default outline */
+}
+
+input:disabled {
+  color: var(--color-text-primary);
+  background-color: var(--color-background-tertiary);
+  box-shadow: 0rem 0rem 0.5rem var(--color-primary);
+  text-shadow: 0rem 0rem 0.2rem var(--color-background-tertiary);
+}
+
 button, #sendFormAndFetchBokehButton {
-  color: var(--color-button-text);
-  background-color: var(--color-button-background);
-  border: 0.1rem solid var(--color-button-border);
+  color: var(--color-tertiary);
+  border: var(--border-width-secondary) solid var(--color-quaternary);
+  background-color: var(--color-background-quinary);
   border-radius: var(--border-radius-primary);
   font-size: 1.1rem;
   padding-left: 0.4rem;
   padding-right: 0.4rem;
-  text-shadow: 0.1rem 0.1rem 0.1rem var(--color-background-tertiary);
-  box-shadow: 0rem 0rem 0.3rem var(--color-primary);
+  text-shadow: 0rem 0rem 0.1rem var(--color-background-tertiary);
+  /* box-shadow: 0rem 0rem 0.3rem var(--color-primary); */
   font-weight: 600;
   cursor: pointer;
   font-family: 'Anta';
+  /* box-shadow: 0rem 0rem 0.2rem var(--color-secondary); */
 }
 
 button:hover, #sendFormAndFetchBokehButton:hover {
-  border: 0.1rem solid var(--color-primary);
-  box-shadow: 0rem 0rem 0.5rem var(--color-primary);
+  border: var(--border-width-secondary) solid var(--color-tertiary);
+  box-shadow: 0rem 0rem 0.4rem var(--color-quaternary);
+  color: var(--color-tertiary);
+  text-shadow: 0rem 0rem 0.2rem var(--color-quaternary);
+}
+
+/* BUTTON PAUSED STATE */
+.button-paused-state{
+  /* border: var(--border-width-secondary) solid var(--color-text-warning); */
+  color: var(--color-text-warning);
+}
+.button-paused-state:hover{
+  color: var(--color-text-warning);
+  box-shadow: 0rem 0rem 0.4rem var(--color-quaternary);
+  text-shadow: 0rem 0rem 0.2rem var(--color-text-warning);
 }
 
 #sendFormAndFetchBokehButton {
@@ -68,12 +146,11 @@ span {
 
 .testBrowserOutput {
   font-size: 1.2rem;
-  margin: 0.2rem;
 }
 
 #mainContainer{
   height: 100%;
-  min-width: 20rem;
+  min-width: 45rem;
   width: 95%;
 }
 
@@ -87,32 +164,50 @@ span {
 }
 
 .categoryShowHideDiv {
-  z-index: 1;
+  color: var(--color-text-secondary);
   padding: 0.1rem;
   font-size: 1.3rem;
   font-weight: 400;
   display: flex;
   align-items: center;
   justify-content: center;
-  outline: 0.15rem solid var(--color-primary);
+  outline: var(--outline-width-primary) solid var(--color-primary);
   /* background-color: var(--color-background-tertiary); */
   cursor: pointer;
-  border: 0.1rem solid var(--color-secondary);
+  border: var(--border-width-secondary) solid var(--color-secondary);
   border-radius: var(--border-radius-primary); /* has to match categoryContainer border-radius*/
+
+  /* DISABLE TEXT SELECTION */
+  user-select: none; /* Prevents text selection */
+  -webkit-user-select: none; /* For Safari and older versions of Chrome */
+  -moz-user-select: none; /* For older versions of Firefox */
+  -ms-user-select: none; /* For older versions of Internet Explorer/Edge */
 }
 
 .categoryShowHideDiv:hover {
-  background-color: var(--color-background-tertiary);
+  /* color: var(--color-secondary); */
   text-shadow: 0rem 0rem 0.3rem var(--color-secondary);
+  background-color: var(--color-background-tertiary);
 }
 
 .categoryContainer {
-  border: 0.05rem solid var(--color-primary);
+  border: var(--border-width-tertiary) solid var(--color-primary);
 }
 
-.categoryContent {
-  padding: 0.7rem;
-  display: flex; /* JS still sees no display??? */
+/* TEST BROWSER CATEGORY SPACING */
+#testBrowsercategoryContent{
+  padding-top: 0.6rem;
+  padding-bottom: 0.4rem;
+}
+
+#testBrowsercategoryContent > * {
+  margin: 0.3rem;
+}
+
+
+/* QUERY SPACING */
+.categoryContent > span {
+  margin: 1rem 3rem;
 }
 
 .categoryContent{
@@ -127,11 +222,16 @@ span {
   gap: 3rem;
 }
 
+/* QUERY TOOL CONTENT SPACING */
+#categoryContentQueryTool{
+  padding-top: 1.1rem;
+  padding-bottom: 0.7rem;
+}
+
 .categoryContentBokeh > *{
   width: 100%;
   margin: 0;
   padding: 0;
-  z-index: 0;
 }
 
 /*////////////////////////////////////////////// DOWNLOAD & RESULTS //////////////////////////////////////////////*/
@@ -143,21 +243,23 @@ span {
 
 #downloadCsvContainer {
   display: none; /* JUST FOR THE FIRST RENDER */
-  border: 0.2rem solid var(--color-primary);
+  border: var(--border-width-primary) solid var(--color-primary);
   border-radius: var(--border-radius-primary);
   /* background-color: var(--color-background-tertiary); */
   padding: 0.5rem;
   cursor: pointer;
+  margin: 1rem 0;
 }
 
 #downloadCsvContainer:hover {
-  border: 0.2rem solid var(--color-primary);
+  border: var(--border-width-primary) solid var(--color-primary);
   box-shadow: 0rem 0rem 0.5rem var(--color-primary);
+  text-shadow: 0rem 0rem 0.5rem var(--color-tertiary);
 }
 
 /* Apply styles to all elements inside #downloadCsv */
 #downloadCsvContainer > * {
-  color: var(--color-secondary);
+  color: var(--color-tertiary);
   margin: 0;
   padding: 0.1rem;
   display: flex;
@@ -180,19 +282,15 @@ span {
 
 #fullScrapingDivsContainer {
   width: 95%;
-  padding: 0.2rem;
 }
 
+/* SPACING BETWEEN PROCESSES */
 #fullScrapingDivsContainer > .fullScrapingDiv {
-  /* width: 95%; */
-  margin-top: 0.3rem;
-  margin-bottom: 0.6rem;
-  margin-left: 1rem;
-  margin-right: 1rem;
+  margin-top: 0.9rem;
 }
 
 .fullScrapingDiv {
-  border: 0.05rem solid var(--color-quaternary);
+  border: var(--border-width-tertiary) solid var(--color-background-quinary);
   border-radius: var(--border-radius-primary);
   display: flex;
   align-items: center;
@@ -201,17 +299,18 @@ span {
   background-color: var(--color-background-tertiary);
 }
 
-.fullScrapingDiv > * { /* any level nesting */
-  margin-bottom: 0.1rem;
+/* SPACES BETWEEN ALL INSIDE ELEMENTS*/
+.fullScrapingDiv > * {
+  margin-bottom: 0.3rem;
 }
 
 .fullScrapingDiv > input {
-  margin-top: -0.1rem; /*makes it always hidden*/
-  margin-bottom: 0.4rem;
-  border: 0.1rem solid var(--color-tertiary);
+  margin-top: -0.1rem; /* makes it always look on top of outer div */
+  margin-bottom: 0.5rem;
+  border: var(--border-width-secondary) solid var(--color-primary);
   font-size: 1rem;
   width: 100%;
-  max-width: 120rem;
+  /* max-width: 120rem; */
   text-align: center;
 }
 
@@ -235,7 +334,8 @@ span {
 }
 
 #addNewProcessButton{
-  margin: 0.1rem;
+  /* margin-bottom: 0.9rem; */
+  margin: 0.9rem 0;
   font-size: 2.3rem;
 
   display: flex;
@@ -251,20 +351,29 @@ span {
 /*////////////////////////////////////////////// TABLE RELATED //////////////////////////////////////////////*/
 
 form {
-  width: 99%; /* SHRINKS TABLE AS IT'S INSIDE FORM */
+  /* margin-top: 0.5rem; */
+  width: 95%; /* SHRINKS TABLE AS IT'S INSIDE FORM */
+  /* margin-left: 5rem; */
   text-align: center; /* CENTERS SEARCH BUTTON xD */
 }
 table {
   width: 100%; /* Let the table span the full width */
   border-collapse: collapse;
-  table-layout: fixed; /* Enforce fixed layout for predictable column sizing */
+  /*table-layout: fixed;*/ /* Enforce fixed layout for predictable column sizing */
   font-size: 0.8rem;
   /* text-align: center; */
 }
 
-/* #plotDiv {
-  margin-top: 0.2rem;
-} */
+/* SPACING FOR PLOT - otherwise overlapped a little + it looks better*/
+#plotDiv > div {
+  margin-top: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
+/* ROWS SHADOW EFECT */
+tr {
+  box-shadow: 0rem 0.4rem 0.3rem -0.5rem var(--color-background-quaternary);
+}
 
 th {
   font-size: 1rem;
@@ -290,33 +399,44 @@ td > input {
 th.constantWidthColumnParameters { 
   width: 10rem; /* Fixed width */
 }
-th.constantWidthColumnShow { 
-  width: 4rem; /* Fixed width */
+th.constantWidthColumnShow {
+  width: 6rem; /* Fixed width */
 }
 th.constantWidthColumnAboveAndBelow { 
   width: 10.5rem; /* Fixed width */
 }
 /* Flexible columns take up the remaining space */
 th.flexibleWidthColumn {
-  min-width: 3rem;
+  min-width: 1rem;
   width: auto; /* Distributes remaining space */
 }
 
 #checkUncheckAll {
-  margin: 0;
-  padding: 0;
-  font-size: 1.5rem;
+  /* margin: 0; */
   cursor: pointer;
   color: var(--color-primary);
+  font-size: 1.5rem;
+  margin-top: -0.3rem;
 }
 
 #checkUncheckAll:hover {
   text-shadow: 0rem 0rem 0.3rem var(--color-secondary);
 }
 
+#checkUncheckTableHeaderSpan {
+  /* margin: 0;
+  padding: 0rem; */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
 input[type="checkbox"] {
   max-width: 0.4rem;
   cursor: pointer;
+  outline: none;
   /* -webkit-appearance: none;
   appearance: none; */
 }

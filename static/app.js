@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const buttonMessageStart = 'START'
 const buttonMessagePause = 'PAUSE'
+const checkAllText = '✓'
+const uncheckAllText = '✗'
 const sliceMessageToThisAmountOfCharacters = 250
 
 fetchProcesses() // HAS TO STAY AT THE TOP TO FETCH PROCESSES FIRST
@@ -208,6 +210,7 @@ function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, output
                             output.innerText = data.message.slice(0,sliceMessageToThisAmountOfCharacters)
                             button.innerHTML = buttonMessageStart
                             button.disabled = false
+                            button.classList.remove('button-paused-state')
                             inputUrlDiv.disabled = false
                             return // EXIT FETCHING
                         }
@@ -238,11 +241,11 @@ function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, output
 document.getElementById("sendFormAndFetchBokehButton").addEventListener("click", sendFormAndFetchBokeh)
 
 function sendFormAndFetchBokeh(e) {
-    document.getElementById('sendFormAndFetchBokehOutput').innerHTML = '' //reset output
+    document.getElementById('sendFormAndFetchBokehOutput').innerHTML = 'loading...' //reset output
     e.preventDefault() //prevent sending form default request
 
     if (atLeastOneCheckboxChecked() === false) {
-        document.getElementById('sendFormAndFetchBokehOutput').innerHTML = 'select at least one column to display'
+        document.getElementById('sendFormAndFetchBokehOutput').innerHTML = 'select at least one parameter to show'
         return //exit
     }
 
@@ -277,12 +280,14 @@ function sendFormAndFetchBokeh(e) {
         })
         .then(function (items) { // when response 200 and JSON items list received
             const queryDiv = document.getElementById('queryDiv')
-            queryDiv.innerHTML.display = 'flex'
+            queryDiv.display = 'flex'
             queryDiv.innerHTML = items.query.replace(/\n/g, "<br>") //replace python newline with html <br>
             queryDiv.style = 'color: var(--color-text-primary);'
+            // queryDiv.style.display = 'none'
             if (items.error === true){
                 // queryDiv.style.display = 'flex'
                 queryDiv.style = 'color: var(--color-text-warning);'
+                document.getElementById('sendFormAndFetchBokehOutput').innerHTML = 'query error - check description'
             }
 
             if (items.resultsAmount === 0) {
@@ -291,7 +296,10 @@ function sendFormAndFetchBokeh(e) {
                 document.getElementById('downloadCsvContainer').style.display = 'none'
                 document.getElementById('downloadCsvIcon').innerHTML = ''
                 document.getElementById('downloadCsvText').innerHTML = ''
-                document.getElementById('resultsAmount').innerHTML = 'no results ¯\\_(ツ)_/¯'
+                document.getElementById('resultsAmount').innerHTML = '' //'no results ¯\\_(ツ)_/¯'
+                if (items.error != true) {
+                    document.getElementById('sendFormAndFetchBokehOutput').innerHTML = 'no results ¯\\_(ツ)_/¯'
+                }
                 return
             }
             // if all went good and results are not empty replace the divs with bokeh stuff
@@ -306,9 +314,11 @@ function sendFormAndFetchBokeh(e) {
 
                 if (items.resultsAmount === 1) { //if 1 result
                     document.getElementById('resultsAmount').innerHTML = '1 result'
+                    document.getElementById('sendFormAndFetchBokehOutput').innerHTML = '1 result'
                 }
                 else if (items.resultsAmount > 1) { // if >1 results
                     document.getElementById('resultsAmount').innerHTML = items.resultsAmount + ' results'
+                    document.getElementById('sendFormAndFetchBokehOutput').innerHTML = items.resultsAmount + ' results'
                 }
             }
         })
@@ -319,9 +329,11 @@ function buttonSwapInnerHtmlStartStop(button) { //because JS requires to return 
     // console.log('\tbuttonSwapInnerHtmlStartStop')
     if (button.innerHTML === buttonMessageStart) {
         button.innerHTML = buttonMessagePause
+        button.className = 'button-paused-state'
     }
     else {
         button.innerHTML = buttonMessageStart
+        button.classList.remove('button-paused-state')
     }
 }
 
@@ -351,14 +363,14 @@ function atLeastOneCheckboxChecked () {
 document.getElementById('checkUncheckAll').addEventListener('click', () => {
     const checkUncheckAll = document.getElementById('checkUncheckAll')
     // The HTML entity &check; is converted into the Unicode character ✓ by the browser when the page is rendered
-    if (checkUncheckAll.textContent == '✗') {
+    if (checkUncheckAll.textContent == uncheckAllText) {
         document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = false })
-        checkUncheckAll.textContent = '✓'
-        checkUncheckAll.style = 'color: var(--color-secondary);' // root variable
+        checkUncheckAll.textContent = checkAllText
+        checkUncheckAll.style = 'color: var(--color-tertiary);' // root variable
     }
-    else if (checkUncheckAll.textContent == '✓') {
+    else if (checkUncheckAll.textContent == checkAllText) {
         document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = true })
-        checkUncheckAll.textContent = '✗'
+        checkUncheckAll.textContent = uncheckAllText
         checkUncheckAll.style = 'color: var(--color-primary);'
     }
 })
@@ -391,50 +403,45 @@ document.querySelectorAll('.categoryShowHideDiv').forEach(hideShowDiv => {
 
 
 
-function printAllRootVariables() {
-    function getAllCSSVariableNames(styleSheets = document.styleSheets){
-        var cssVars = [];
-        // loop each stylesheet
-        for(var i = 0; i < styleSheets.length; i++){
-        // loop stylesheet's cssRules
-        try{ // try/catch used because 'hasOwnProperty' doesn't work
-            for( var j = 0; j < styleSheets[i].cssRules.length; j++){
-                try{
-                    // loop stylesheet's cssRules' style (property names)
-                    for(var k = 0; k < styleSheets[i].cssRules[j].style.length; k++){
-                    let name = styleSheets[i].cssRules[j].style[k];
-                    // test name for css variable signiture and uniqueness
-                    if(name.startsWith('--') && cssVars.indexOf(name) == -1){
-                        cssVars.push(name);
-                    }
-                    }
-                } catch (error) {}
-            }
-        } catch (error) {}
-        }
-        return cssVars;
-    }
+// function printAllRootVariables() {
+//     function getAllCSSVariableNames(styleSheets = document.styleSheets){
+//         var cssVars = [];
+//         // loop each stylesheet
+//         for(var i = 0; i < styleSheets.length; i++){
+//         // loop stylesheet's cssRules
+//         try{ // try/catch used because 'hasOwnProperty' doesn't work
+//             for( var j = 0; j < styleSheets[i].cssRules.length; j++){
+//                 try{
+//                     // loop stylesheet's cssRules' style (property names)
+//                     for(var k = 0; k < styleSheets[i].cssRules[j].style.length; k++){
+//                     let name = styleSheets[i].cssRules[j].style[k];
+//                     // test name for css variable signiture and uniqueness
+//                     if(name.startsWith('--') && cssVars.indexOf(name) == -1){
+//                         cssVars.push(name);
+//                     }
+//                     }
+//                 } catch (error) {}
+//             }
+//         } catch (error) {}
+//         }
+//         return cssVars;
+//     }
     
-    function getElementCSSVariables (allCSSVars, element = document.body, pseudo){
-        var elStyles = window.getComputedStyle(element, pseudo);
-        var cssVars = {};
-        for(var i = 0; i < allCSSVars.length; i++){
-        let key = allCSSVars[i];
-        let value = elStyles.getPropertyValue(key)
-        if(value){cssVars[key] = value;}
-        }
-        return cssVars;
-    }
+//     function getElementCSSVariables (allCSSVars, element = document.body, pseudo){
+//         var elStyles = window.getComputedStyle(element, pseudo);
+//         var cssVars = {};
+//         for(var i = 0; i < allCSSVars.length; i++){
+//         let key = allCSSVars[i];
+//         let value = elStyles.getPropertyValue(key)
+//         if(value){cssVars[key] = value;}
+//         }
+//         return cssVars;
+//     }
     
-    var cssVars = getAllCSSVariableNames();
-    console.log(':root variables', getElementCSSVariables(cssVars, document.documentElement));
-}
-printAllRootVariables()
+//     var cssVars = getAllCSSVariableNames();
+//     console.log(':root variables', getElementCSSVariables(cssVars, document.documentElement));
+// }
+// printAllRootVariables()
 
-
-// // HIDE ALL CONTENT AT THE BEGINNING
-// document.querySelectorAll('.categoryContent').forEach(categoryContent => {
-//     categoryContent.style.display = 'none'
-// })
 
 }) //onDOMContentLoaded ends here

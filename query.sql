@@ -41,11 +41,19 @@
 -- SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;
 
 
-SELECT * 
-FROM test6
-WHERE techstackOptional = '';
 
-DELETE FROM test6 WHERE salaryMax IS NULL; --removes all
+SELECT (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) FROM test6
+ORDER BY (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 * 60 DESC;
+
+
+
+-- SELECT * 
+-- FROM test6
+-- WHERE techstackOptional = '';
+
+-- DELETE FROM test6 WHERE salaryMax IS NULL; --removes all
+
+
 
 -- SELECT * FROM test4;
 -- DROP TABLE IF EXISTS test5;

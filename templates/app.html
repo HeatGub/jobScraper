@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Plot and Table</title>
+  <title>job scraper</title>
   <!-- DEFINE CSS VARIABLES FROM SETTINGS.PY IN :ROOT TO ACCESS THEM ANYWHERE -->
   {{ cssRoot|safe }}
   <!-- MAIN CSS FILE -->
@@ -19,20 +19,31 @@
 </head>
 
 <body>
+  <!-- <div id="headerContainer">j o b &nbsp&nbsp&nbsp s c r a p e r -->
+  <div id="headerContainer">job scraper
+    <div class="headerTextContainer">
+      <span id="headerText1">so many offers</span>
+      <span id="headerText2">so much s<span id="headerText3">crap</span>
+      </span>
+    </div>
+  </div>
 
   <div id="mainContainer">
     
     <!-- FORM -->
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">QUERY TOOL</div>
-        <div class="categoryContent" style="display: flex;"> <!--style="display: flex;"-->
+        <div class="categoryContent" id="categoryContentQueryTool" style="display: flex;"> <!--style="display: flex;"-->
 
           <form id="mainForm">
             <table>
               <thead>
                 <tr>
                   <th scope="col" class="constantWidthColumnParameters">hover for description</th>
-                  <th scope="col" class="constantWidthColumnShow">show?<p id="checkUncheckAll">&cross;</p>
+                  <th scope="col" class="constantWidthColumnShow">
+                    <span id="checkUncheckTableHeaderSpan">show?
+                      <div id="checkUncheckAll">&cross;</div>
+                    </span>
                   </th>
                   <th scope="col" class="flexibleWidthColumn">necessary</th>
                   <th scope="col" class="flexibleWidthColumn">forbidden</th>
@@ -59,46 +70,14 @@
                 <td><input type="number" placeholder="1000000" name={{columnDict.dbColumnName}}Below></td>
                 {% endif %}
               </tr>
-
-              <!-- <tr>
-                <td title="{{columnDict.description}}">{{columnDict.displayName}}</td>
-                <td><input type="checkbox" class="ckeckBox" checked="checked" name={{columnDict.dbColumnName}}Show></td>
-                {% if columnDict.dbColumnName != "salaryMin" and columnDict.dbColumnName != "salaryMax" %}
-                <td><input type="text" placeholder="(a OR b OR c) AND (d OR e)" name={{columnDict.dbColumnName}}Necessary></td>
-                <td><input type="text" placeholder="((a AND b AND c) OR (d OR e) OR (f AND g))" name={{columnDict.dbColumnName}}Forbidden></td>
-                {% elif columnDict.dbColumnName == "salaryMin" or columnDict.dbColumnName == "salaryMax" %}
-                <td></td>
-                <td></td>
-                {% endif %}
-                {% if columnDict.dbColumnName == "datetimeFirst" or columnDict.dbColumnName == "datetimeLast" %}
-                <td><input type="datetime-local" name={{columnDict.dbColumnName}}Above></td>
-                <td><input type="datetime-local" name={{columnDict.dbColumnName}}Below></td>
-                {% elif columnDict.dbColumnName == "salaryMin" or columnDict.dbColumnName == "salaryMax" %}
-                <td><input type="number" placeholder="4200" name={{columnDict.dbColumnName}}Above></td>
-                <td><input type="number" placeholder="100000" name={{columnDict.dbColumnName}}Below></td>
-                {% endif %}
-              </tr> -->
-
               {% endfor %}
             </table>
             <!-- <div class="fetchDiv"> -->
               <input type="submit" value="SEARCH" id="sendFormAndFetchBokehButton">
-              <div id="sendFormAndFetchBokehOutput"></div>
+              <div id="sendFormAndFetchBokehOutput">search to display offers (if already scraped)</div>
             <!-- </div> -->
           </form>
 
-        </div>
-    </div>
-
-    <!-- RESULTS & DOWNLOAD CSV -->
-    <div class="categoryContainer">
-      <div class="categoryShowHideDiv">DOWNLOAD</div>
-        <div id="categoryContentResultsAndDownload" class="categoryContent" style="display: flex;">
-          <h1 id="resultsAmount"></h1>
-          <div id="downloadCsvContainer">
-            <div id="downloadCsvIcon"></div>
-            <div id="downloadCsvText"></div>
-          </div>
         </div>
     </div>
 
@@ -106,7 +85,7 @@
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">QUERY</div>
         <div class="categoryContent" style="display: flex;">
-          <span contenteditable="true" id="queryDiv" spellcheck="false"></span>
+          <span contenteditable="true" id="queryDiv" spellcheck="false" style="display: none;"></span>
         </div>
     </div>
 
@@ -126,13 +105,25 @@
         </div>
     </div>
 
+    <!-- DOWNLOAD CSV -->
+    <div class="categoryContainer">
+      <div class="categoryShowHideDiv">DOWNLOAD</div>
+        <div id="categoryContentResultsAndDownload" class="categoryContent" style="display: flex;">
+          <h1 id="resultsAmount"></h1>
+          <div id="downloadCsvContainer">
+            <div id="downloadCsvIcon"></div>
+            <div id="downloadCsvText"></div>
+          </div>
+        </div>
+    </div>
+
     <!-- TEST BROWSER -->
     <div class="categoryContainer">
       <div class="categoryShowHideDiv">TEST BROWSER</div>
       <!-- style="display: flex;" OTHERWISE JS CANT RECOGNIZE STYLE.DISPLAY -->
-      <div class="categoryContent" style="display: flex;">
-          <button id="openBrowserButton">OPEN</button>
-          <div id="openBrowserOutput" class="testBrowserOutput">open the browser to update cookies.json</div>
+      <div class="categoryContent" id="testBrowsercategoryContent" style="display: flex;">
+          <button id="openBrowserButton">OPEN BROWSER</button>
+          <div id="openBrowserOutput" class="testBrowserOutput">open a browser to update cookies.json</div>
           <button id="saveCookiesToJsonButton" >UPDATE COOKIES</button>
           <div id="saveCookiesToJsonOutput" class="testBrowserOutput"></div>
         </div>

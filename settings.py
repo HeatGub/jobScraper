@@ -8,41 +8,51 @@ GROSS_TO_NET_MULTIPLIER = 0.77 # values like 0.77 which is equal to 23% tax. It 
 
 BOKEH_PLOT_HEIGHT = 300 # integer [pixels]
 BOKEH_TABLE_MAX_HEIGHT = 700 # integer [pixels]
-BOKEH_TABLE_ROW_HEIGHT = 100 # integer [pixels]
+BOKEH_TABLE_ROW_HEIGHT = 200 # integer [pixels]
 
 # primary, secondary, tertiary, quaternary, quinary, senary, septenary, octonary, nonary, and denary.
 CSS_VARIABLES = {
-    "color-primary": "rgba(60,140,200,1)",
-    "color-secondary": "rgba(140,60,170,1)",
-    "color-tertiary": "rgba(60,100,200,0.8)",
-    "color-quaternary": "rgba(60,100,200,0.6)",
+    # "color-primary": "rgba(60,120,180,0.9)",
+    # "color-secondary": "rgba(235, 125, 241, 0.7)",
+    # "color-primary": "rgba(60, 30, 190, 1)",
+    # "color-secondary": "rgba(120, 60, 110, 1)",
+    "color-primary": "rgba(80, 40, 210, 0.85)",
+    "color-secondary": "rgba(120, 70, 130, 1)",
+    "color-tertiary": "rgba(177, 255, 0, 0.8)",
+    "color-quaternary": "rgba(0, 180, 0, 0.8)",
 
-    "color-background-primary": "rgba(10,10,10,1)",
+    "color-background-primary": "rgba(15,15,15,1)",
     "color-background-secondary": "rgba(25,25,25,1)",
     "color-background-tertiary": "rgba(35,35,35,1)",
     "color-background-quaternary": "rgba(60,60,60,1)",
+    "color-background-quinary": "rgba(90,90,90,1)",
 
-    "color-text-primary":"rgba(180,180,180,1)",
-    "color-text-secondary":"rgba(200,200,200,1)",
-    "color-text-tertiary":"rgba(220,220,220,1)",
-    "color-text-warning":"rgba(200,0,40,1)",
+    "color-text-primary": "rgba(180,180,180,1)",
+    "color-text-secondary": "rgba(200,200,200,1)",
+    "color-text-tertiary": "rgba(220,220,220,1)",
+    "color-text-warning": "rgba(255, 40, 40, 0.8)",
 
-    # "color-button-text":"rgba(120,200,40,1)",
-    "color-button-text":"rgba(100,180,40,1)",
-    "color-button-background":"rgba(100,100,100,1)",
-    "color-button-border":"rgba(158,158,158,1)",
+    # "color-button-text": "rgba(100,180,40,1)",
+    # "color-button-background": "rgba(100,100,100,1)",
+    # "color-button-border": "rgba(158,158,158,1)",
 
-    "color-plot-salary-specified":"rgba(60,60,160,1)",
-    "color-plot-salary-unspecified":"rgba(60,60,160, 0.6)",
-    "color-plot-salary-days-active":"rgba(30,150,3, 0.5)",
-    "color-plot-error-bars":"rgba(20,20,20, 0.4)",
-    "color-plot-grid-line":"rgba(100,100,100,0.9)",
-    "color-plot-minor-grid-line":"rgba(80,80,80,0.3)",
+    "color-plot-salary-specified": "rgba(60, 30, 190, 1)",
+    "color-plot-salary-unspecified": "rgba(90, 30, 190, 0.6)",
+    "color-plot-salary-days-active": "rgba(0, 180, 0, 0.2)",
+    "color-plot-error-bars": "rgba(20,20,20, 0.4)",
+    "color-plot-grid-line": "rgba(100,100,100,0.9)",
+    "color-plot-minor-grid-line": "rgba(80,80,80,0.3)",
 
     "color-table-selection": "rgba(60,140,200,0.2)",
     "color-table-url-unvisited": "rgba(120, 120, 240, 1)",
     "color-table-url-visited": "rgba(80, 80, 180, 1)",
     
+    "border-width-primary": "0.2rem",
+    "border-width-secondary": "0.1rem",
+    "border-width-tertiary": "0.07rem",
+
+    "outline-width-primary": "0.15rem",
+
     "border-radius-primary":"0.4rem",
     "border-radius-secondary":"0.2rem",
     "border-radius-tertiary":"0.1rem",
@@ -54,11 +64,13 @@ BOKEH_TABLE_CSS = """
     font-size: 0.7rem;
     font-family: "Anonymous Pro", serif;
     font-weight: 100;
-    background-color: var(--color-background-primary);
+    background-color: var(--color-background-secondary);
+    color: var(--color-text-secondary);
 }
 
 /* HEADER */
 .slick-header * {
+    color: var(--color-text-primary);
     font-size: 0.8rem;
     font-weight: 600;
     background-color: var(--color-background-secondary) !important; /* header color */
@@ -112,17 +124,54 @@ BOKEH_TABLE_CSS = """
     color: var(--color-table-url-visited) !important;
 }
 
-                    
-/* DISABLE MAIN TABLE SCROLLBARS VISIBILITY*/
-.slick-viewport::-webkit-scrollbar {
-    display: none !important; /* For Chrome/Safari */
+.slick-cell { /* CENTER CONTENT INSIDE CELL */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
 }
-.slick-viewport {
-    background-color: rgba(0, 0, 0, 0.7); /* colors vertical lines on both sides */
-    overflow: scroll !important;        /* Enable scrolling, but no visible scrollbar */
-    -ms-overflow-style: none !important; /* For Internet Explorer (IE) */
-    scrollbar-width: none !important;    /* For Firefox */
+
+/****************************** SCROLLBAR STYLING ******************************/
+
+/* WEBKIT SCROLLBAR STYLING */
+::-webkit-scrollbar {
+    width: 0.95rem;
 }
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    /*border-radius: 20%;*/
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-secondary);
+}
+::-webkit-scrollbar-track {
+    background: var(--color-background-secondary);
+}
+
+/* Firefox Scrollbar Styling */
+html {
+    scrollbar-color: #555 #f0f0f0;
+    scrollbar-width: thin;
+}
+
+/* Legacy Scrollbar Styling for IE/Edge */
+html {
+    scrollbar-face-color: #555;
+    scrollbar-track-color: #f0f0f0;
+    scrollbar-arrow-color: #888;
+    scrollbar-highlight-color: #eee;
+    scrollbar-shadow-color: #ccc;
+    scrollbar-3dlight-color: #ddd;
+    scrollbar-darkshadow-color: #333;
+}
+
+
+
+
+
+
+
+
 
 
 /* DISABLE CELLS SCROLLBARS VISIBILITY (overflow: auto set in bokeh python file) */
@@ -134,7 +183,24 @@ BOKEH_TABLE_CSS = """
     scrollbar-width: none !important;    /* For Firefox */
 }
 
+/* SORTING INDICATOR - remove background */
+.slick-sort-indicator {
+    background-color: rgba(0, 0, 0, 0) !important;
+}
+
+
 """
+
+# /* DISABLE MAIN TABLE SCROLLBARS VISIBILITY*/
+# .slick-viewport::-webkit-scrollbar {
+#     display: none !important; /* For Chrome/Safari */
+# }
+# .slick-viewport {
+#     background-color: rgba(0, 0, 0, 0.7); /* colors vertical lines on both sides */
+#     overflow: scroll !important;        /* Enable scrolling, but no visible scrollbar */
+#     -ms-overflow-style: none !important; /* For Internet Explorer (IE) */
+#     scrollbar-width: none !important;    /* For Firefox */
+# }
 
 ######################################################## DATABASE ########################################################
 
