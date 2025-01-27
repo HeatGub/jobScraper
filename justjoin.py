@@ -3,7 +3,7 @@ import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 import time, json, random, re, datetime
 from databaseFunctions import Database
-from settings import DATABASE_COLUMNS, GROSS_TO_NET_MULTIPLIER
+from settings import DATABASE_COLUMNS, GROSS_TO_NET_MULTIPLIER, WAIT_URLS_JUSTJOIN, WAIT_OFFER_PARAMS_JUSTJOIN, NO_NEW_RESULTS_COUNTER_LIMIT_JUSTJOIN
 
 def anyOffersOnTheList(SeleniumBrowser):
     try:
@@ -59,21 +59,21 @@ def scrapAllOffersUrls(SeleniumBrowser):
         # SeleniumBrowser.DRIVER.execute_script("window.scrollTo(0, 0);") # scroll to the very top
 
         # CHECK IF READY TO TERMINATE
-        if SeleniumBrowser.noNewResultsCounter >= 5: # or int(SeleniumBrowser.lastSeenIndex) >= 10: # END IF NO NEW RESULTS FEW TIMES
+        if SeleniumBrowser.noNewResultsCounter >= NO_NEW_RESULTS_COUNTER_LIMIT_JUSTJOIN: # or int(SeleniumBrowser.lastSeenIndex) >= 10: # END IF NO NEW RESULTS FEW TIMES
             # print('first and last OFFERS_URLS: ', SeleniumBrowser.OFFERS_URLS[0]['index'], SeleniumBrowser.OFFERS_URLS[-1]['index'])
             return {'success':True, 'functionDone':True, 'message': 'URLs scraping done. Scraped ' + str(len(SeleniumBrowser.OFFERS_URLS))+' offer urls in total'}
         
-        time.sleep(0.5)
         scrapCurrentlyVisibleOffersUrls(SeleniumBrowser) # updates OFFERS_URLS
 
         if len(SeleniumBrowser.OFFERS_URLS) == 0: # should have results already from the above function execution
+            time.sleep(0.2) # give it some more time to load
             SeleniumBrowser.noNewResultsCounter += 1
             return {'success':True, 'functionDone':False, 'message': 'scraping in progress. ' + str(len(SeleniumBrowser.OFFERS_URLS)) + ' urls fetched'}
         elif len(SeleniumBrowser.OFFERS_URLS) > 0:
             # no new offer index found
             if (SeleniumBrowser.lastSeenIndex == SeleniumBrowser.OFFERS_URLS[-1]['index']):
                 SeleniumBrowser.DRIVER.execute_script("window.scrollBy(0, -2*innerHeight);") # for some reason scrolling up helps this fucking site to load the bottom
-                time.sleep(1)
+                time.sleep(random.uniform(WAIT_URLS_JUSTJOIN[0], WAIT_URLS_JUSTJOIN[1]))
                 SeleniumBrowser.DRIVER.execute_script("window.scrollBy(0, 3*innerHeight);") # scroll to the bottom
                 SeleniumBrowser.noNewResultsCounter += 1
                 # print(OFFERS_URLS[0]['index'], OFFERS_URLS[-1]['index'])
@@ -84,11 +84,12 @@ def scrapAllOffersUrls(SeleniumBrowser):
             return {'success':True, 'functionDone':False, 'message': 'scraping in progress. ' + str(len(SeleniumBrowser.OFFERS_URLS)) + ' urls fetched'}
         
     except Exception as exception:
+        SeleniumBrowser.noNewResultsCounter += 1
         return {'success':False, 'functionDone':False, 'message':str(exception)}
 
     finally: # UPDATE LAST INDEX ANYWAY (finally block is always executed)
         if(len(SeleniumBrowser.OFFERS_URLS)) > 0:
-            time.sleep(0.5)
+            # time.sleep(0.1)
             SeleniumBrowser.lastSeenIndex = SeleniumBrowser.OFFERS_URLS[-1]['index']
             SeleniumBrowser.DRIVER.execute_script("window.scrollBy(0, innerHeight);")  # scroll to the bottom
 
@@ -296,11 +297,9 @@ def scrapToDatabase(SeleniumBrowser):
     try:
         # FINISH CONDITIONS
         if len(SeleniumBrowser.OFFERS_URLS) == 0:
-            return {'success':True, 'functionDone':True, 'message':'no offers to analyse', 'killProcess': True}
+            return {'success':True, 'functionDone':True, 'message':"no offers to analyse. justjoin requires active/headless browser window if that's the case", 'killProcess': True}
         elif int(SeleniumBrowser.currentlyScrapedOfferIndex +1) > int(len(SeleniumBrowser.OFFERS_URLS)):
                 print(str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates')
-                # for offer in SeleniumBrowser.OFFERS_URLS:
-                #     print(offer['url'], offer['index'])
                 return {'success':True, 'functionDone':True, 'message': 'scraping done. ' + str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates', 'killProcess': True}
         # IF NOT FINISHED
         else:
@@ -311,7 +310,6 @@ def scrapToDatabase(SeleniumBrowser):
                 # a dictionary containing only the keys appearing in both dictionaries
                 commonKeysDict = {key: offerDetailsDict[key] for key in [item["dbColumnName"] for item in DATABASE_COLUMNS] if key in offerDetailsDict}
 
-                # # before = time.time()
                 if Database.recordFound(SeleniumBrowser.DRIVER.current_url):
                     Database.updateDatetimeLast(SeleniumBrowser.DRIVER.current_url)
                     SeleniumBrowser.databaseUpdates += 1
@@ -319,6 +317,7 @@ def scrapToDatabase(SeleniumBrowser):
                     Database.insertRecord(commonKeysDict) # insert into database
                     SeleniumBrowser.databaseInserts += 1
                 SeleniumBrowser.currentlyScrapedOfferIndex += 1 # increment if successfully analysed
+                time.sleep(random.uniform(WAIT_OFFER_PARAMS_JUSTJOIN[0], WAIT_OFFER_PARAMS_JUSTJOIN[1]))
                 return {'success':True, 'functionDone':False, 'message': str(SeleniumBrowser.currentlyScrapedOfferIndex) + '/' + str(len(SeleniumBrowser.OFFERS_URLS)) + ' offers scraped'}
             elif offerNotFound(SeleniumBrowser):
                 # print('OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url)

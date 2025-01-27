@@ -42,8 +42,11 @@
 
 
 
-SELECT (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) FROM test6
-ORDER BY (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 * 60 DESC;
+-- SELECT (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) FROM test6
+-- ORDER BY (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 * 60 DESC;
+
+ALTER TABLE test4
+ADD COLUMN fullDescription TEXT DEFAULT NULL;
 
 
 

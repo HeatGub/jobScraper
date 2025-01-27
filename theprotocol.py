@@ -3,18 +3,30 @@ import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 import time, json, random, re, datetime
 from databaseFunctions import Database
-from settings import DATABASE_COLUMNS, GROSS_TO_NET_MULTIPLIER
+from settings import DATABASE_COLUMNS, GROSS_TO_NET_MULTIPLIER, WAIT_URLS_THEPROTOCOL, WAIT_OFFER_PARAMS_THEPROTOCOL
 
 # theprotocol is being scraped well even when browser minimized
 
 ########################################################################### Scrap offer URLs from all the pages ###########################################################################
 
+# def foundOffersListOnThePage(SeleniumBrowser): # SITE UPDATED 27.01
+#     try:
+#         SeleniumBrowser.DRIVER.find_element("xpath", '//*[@id="main-offers-listing"]/div[1]/div')
+#         return True #if offer specific div found
+#     except:
+#         return False
+
 def foundOffersListOnThePage(SeleniumBrowser):
     try:
-        SeleniumBrowser.DRIVER.find_element("xpath", '//*[@id="main-offers-listing"]/div[1]/div')
-        return True #if offer specific div found
+        SeleniumBrowser.DRIVER.find_element("xpath", "//div[@data-test='text-emptyList']")
+        return False # empty list div found
     except:
-        return False
+        try:
+            SeleniumBrowser.DRIVER.find_element("xpath", "//*[@id='main-offers-listing']")
+            return True # empty list div not found and offers list found
+        except Exception as exception:
+            print(exception)
+            return False
 
 def scrapOffersUrlsFromSinglePage(SeleniumBrowser):
     try:
@@ -36,7 +48,7 @@ def scrapUrlsFromAllThePages(SeleniumBrowser):
         elif not foundOffersListOnThePage(SeleniumBrowser):
             return {'success':True, 'functionDone':True, 'message': 'URLs scraping done. Scraped ' + str(len(SeleniumBrowser.OFFERS_URLS))+' offer urls in total'}
         elif foundOffersListOnThePage(SeleniumBrowser):
-            time.sleep(random.uniform(0.5, 1)) #humanize
+            time.sleep(random.uniform(WAIT_URLS_THEPROTOCOL[0], WAIT_URLS_THEPROTOCOL[1])) # humanize request frequency
             if scrapOffersUrlsFromSinglePage(SeleniumBrowser)['success'] == True:
                 SeleniumBrowser.currentlyScrapedPageIndex += 1
                 return {'success':True, 'functionDone':False, 'message': 'page ' + str(SeleniumBrowser.currentlyScrapedPageIndex -1) + ' urls fetched'} # -1 because starting from 1 and incremented just above
@@ -120,7 +132,6 @@ def getOfferDetails(SeleniumBrowser):
                     try: #to find and click 'more locations' button then fetch what's inside
                         moreLocations = SeleniumBrowser.DRIVER.find_element("xpath", '//*[@data-test="button-locationPicker"]')
                         moreLocations.click()
-                        # time.sleep(0.05) #probably necessary
                         locations = moreLocations.find_element("xpath", '//*[@data-test="modal-locations"]')
                         location = locations.text
                     except:
@@ -206,14 +217,13 @@ def scrapToDatabase(SeleniumBrowser):
         # IF NOT FINISHED
         else:
             SeleniumBrowser.DRIVER.get(SeleniumBrowser.OFFERS_URLS[SeleniumBrowser.currentlyScrapedOfferIndex]['url'])
+            # 'offer not found' div not found
             if not offerNotFound(SeleniumBrowser):
                 # LOOK FOR COMMON KEYS AS getOfferDetails() can return more keys than custom shortened DB has columns
                 offerDetailsDict = getOfferDetails(SeleniumBrowser)
                 # a dictionary containing only the keys appearing in both dictionaries
                 commonKeysDict = {key: offerDetailsDict[key] for key in [item["dbColumnName"] for item in DATABASE_COLUMNS] if key in offerDetailsDict}
-                # commonKeysDict = {key: offerDetailsDict[key] for key in DATABASE_COLUMNS['dbColumnName'] if key in offerDetailsDict}
 
-                # # before = time.time()
                 if Database.recordFound(SeleniumBrowser.DRIVER.current_url):
                     Database.updateDatetimeLast(SeleniumBrowser.DRIVER.current_url)
                     SeleniumBrowser.databaseUpdates += 1
@@ -221,12 +231,23 @@ def scrapToDatabase(SeleniumBrowser):
                     Database.insertRecord(commonKeysDict) # insert into database
                     SeleniumBrowser.databaseInserts += 1
                 SeleniumBrowser.currentlyScrapedOfferIndex += 1 # increment if successfully analysed
-                time.sleep(0.5) # move to settings
+                time.sleep(random.uniform(WAIT_OFFER_PARAMS_THEPROTOCOL[0], WAIT_OFFER_PARAMS_THEPROTOCOL[1])) # move to settings
                 return {'success':True, 'functionDone':False, 'message': str(SeleniumBrowser.currentlyScrapedOfferIndex) + '/' + str(len(SeleniumBrowser.OFFERS_URLS)) + ' offers scraped'}
             elif offerNotFound(SeleniumBrowser):
                 # print('OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url)
                 SeleniumBrowser.currentlyScrapedOfferIndex += 1 # increment even if offer not found not to get stuck
-                time.sleep(0.5) # move to settings
+                time.sleep(random.uniform(WAIT_OFFER_PARAMS_THEPROTOCOL[0], WAIT_OFFER_PARAMS_THEPROTOCOL[1])) # move to settings
                 return {'success':False, 'functionDone':False, 'message': 'OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url}
     except Exception as exception:
         return {'success':False, 'functionDone':False, 'message':str(exception)}
+    
+
+    
+                # #################################################
+                # # AMOUNT OF NONES CHECK (if too many fields not scraped - bot check, site update, etc)
+                # doNotCountTheseColumns = ['datetimeLast', 'datetimeFirst', 'url'] # these are never Nones
+                # alwaysNotNonesAmount = sum(1 for key in commonKeysDict.keys() if key in doNotCountTheseColumns)
+                # nonesCount = sum(1 for value in commonKeysDict.values() if value is None)
+                # if nonesCount >= int(len(commonKeysDict)-alwaysNotNonesAmount): # PAUSE on too many nones
+                #     return {'success':False, 'functionDone':False, 'message': 'too many fields unrecognized on scraping attempt. Pehraps bot check has beed triggered?', 'pauseProcess':True}
+                # #################################################

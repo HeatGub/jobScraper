@@ -18,10 +18,10 @@
   <link href='https://fonts.googleapis.com/css?family=Anta' rel='stylesheet'>
 </head>
 
-<body>
-  <!-- <div id="headerContainer">j o b &nbsp&nbsp&nbsp s c r a p e r -->
-  <div id="headerContainer">job scraper
-    <div class="headerTextContainer">
+<body class="flexCentered flexDirectionColumn">
+  <!-- HEADER -->
+  <div id="headerContainer" class="flexCentered flexDirectionColumn disabledTextSelection">job scraper 
+    <div class="headerTextContainer flexCentered flexDirectionRow">
       <span id="headerText1">so many offers</span>
       <span id="headerText2">so much s<span id="headerText3">crap</span>
       </span>
@@ -30,25 +30,29 @@
 
   <div id="mainContainer">
     
-    <!-- FORM -->
+    <!-- QUERY TOOL -->
     <div class="categoryContainer">
-      <div class="categoryShowHideDiv">QUERY TOOL</div>
-        <div class="categoryContent" id="categoryContentQueryTool" style="display: flex;"> <!--style="display: flex;"-->
+      <div class="categoryShowHideDiv flexCentered disabledTextSelection" >QUERY TOOL</div>
+        <div class="categoryContent flexCentered flexDirectionColumn" id="categoryContentQueryTool" style="display: flex;"> <!--style="display: flex;"-->
 
           <form id="mainForm">
             <table>
               <thead>
-                <tr>
-                  <th scope="col" class="constantWidthColumnParameters">hover for description</th>
+                <tr> 
+                  <th scope="col" class="constantWidthColumnParameters">
+                    <div id="parametersHeader" class="flexCentered flexDirectionColumn disabledTextSelection" title="hover over the parameter for description">
+                      <i id="messageIcon" class="fa-regular fa-comment-dots"></i>
+                      <i id="handPointerIcon" class="fa-solid fa-hand-pointer"></i>
+                    </div></th>
                   <th scope="col" class="constantWidthColumnShow">
-                    <span id="checkUncheckTableHeaderSpan">show?
+                    <span id="checkUncheckTableHeaderSpan" class="flexCentered flexDirectionRow" title="show parameter in results table">show
                       <div id="checkUncheckAll">&cross;</div>
                     </span>
                   </th>
-                  <th scope="col" class="flexibleWidthColumn">necessary</th>
-                  <th scope="col" class="flexibleWidthColumn">forbidden</th>
-                  <th scope="col" class="constantWidthColumnAboveAndBelow">above</th>
-                  <th scope="col" class="constantWidthColumnAboveAndBelow">below</th>
+                  <th scope="col" class="flexibleWidthColumn" title="necessary keywords and/or NULL values">necessary</th>
+                  <th scope="col" class="flexibleWidthColumn" title="forbidden keywords and/or NULL values">forbidden </th>
+                  <th scope="col" class="constantWidthColumnAboveAndBelow" title="only offers above this value" >above</th>
+                  <th scope="col" class="constantWidthColumnAboveAndBelow" title="only offers below this value">below</th>
                 </tr>
               </thead>
               {% for columnDict in databaseColumns %}
@@ -73,7 +77,7 @@
               {% endfor %}
             </table>
             <!-- <div class="fetchDiv"> -->
-              <input type="submit" value="SEARCH" id="sendFormAndFetchBokehButton">
+              <input type="submit" value="SEARCH" id="sendFormAndFetchBokehButton" class="disabledTextSelection">
               <div id="sendFormAndFetchBokehOutput">search to display offers (if already scraped)</div>
             <!-- </div> -->
           </form>
@@ -83,15 +87,15 @@
 
     <!-- QUERY -->
     <div class="categoryContainer">
-      <div class="categoryShowHideDiv">QUERY</div>
-        <div class="categoryContent" style="display: flex;">
+      <div class="categoryShowHideDiv flexCentered disabledTextSelection">QUERY</div>
+        <div class="categoryContent flexCentered flexDirectionColumn" style="display: flex;">
           <span contenteditable="true" id="queryDiv" spellcheck="false" style="display: none;"></span>
         </div>
     </div>
 
     <!-- PLOT -->
     <div class="categoryContainer">
-      <div class="categoryShowHideDiv">PLOT</div>
+      <div class="categoryShowHideDiv flexCentered disabledTextSelection">PLOT</div>
         <div class="categoryContentBokeh" style="display: block;">
           <div id="plotDiv"></div>
         </div>
@@ -99,7 +103,7 @@
 
     <!-- TABLE -->
     <div class="categoryContainer">
-      <div class="categoryShowHideDiv">TABLE</div>
+      <div class="categoryShowHideDiv flexCentered disabledTextSelection">TABLE</div>
         <div class="categoryContentBokeh" style="display: block;">
           <div id="tableDiv"></div>
         </div>
@@ -107,34 +111,34 @@
 
     <!-- DOWNLOAD CSV -->
     <div class="categoryContainer">
-      <div class="categoryShowHideDiv">DOWNLOAD</div>
-        <div id="categoryContentResultsAndDownload" class="categoryContent" style="display: flex;">
+      <div class="categoryShowHideDiv flexCentered disabledTextSelection">DOWNLOAD</div>
+        <div id="categoryContentResultsAndDownload" class="categoryContent flexCentered flexDirectionRow" style="display: flex;">
           <h1 id="resultsAmount"></h1>
-          <div id="downloadCsvContainer">
-            <div id="downloadCsvIcon"></div>
-            <div id="downloadCsvText"></div>
+          <div id="downloadCsvContainer" class="disabledTextSelection">
+            <div id="downloadCsvIcon" class="flexCentered flexDirectionColumn"></div>
+            <div id="downloadCsvText" class="flexCentered flexDirectionColumn"></div>
           </div>
         </div>
     </div>
 
     <!-- TEST BROWSER -->
     <div class="categoryContainer">
-      <div class="categoryShowHideDiv">TEST BROWSER</div>
+      <div class="categoryShowHideDiv flexCentered disabledTextSelection">TEST BROWSER</div>
       <!-- style="display: flex;" OTHERWISE JS CANT RECOGNIZE STYLE.DISPLAY -->
-      <div class="categoryContent" id="testBrowsercategoryContent" style="display: flex;">
-          <button id="openBrowserButton">OPEN BROWSER</button>
+      <div class="categoryContent flexCentered flexDirectionColumn" id="testBrowsercategoryContent" style="display: flex;">
+          <button id="openBrowserButton" class="disabledTextSelection">OPEN BROWSER</button>
           <div id="openBrowserOutput" class="testBrowserOutput">open a browser to update cookies.json</div>
-          <button id="saveCookiesToJsonButton" >UPDATE COOKIES</button>
+          <button id="saveCookiesToJsonButton" class="disabledTextSelection">UPDATE COOKIES</button>
           <div id="saveCookiesToJsonOutput" class="testBrowserOutput"></div>
         </div>
     </div>
 
     <!-- SCRAPING CONTAINER  -->
     <div class="categoryContainer">
-      <div class="categoryShowHideDiv">SCRAPING BROWSERS</div>
-        <div class="categoryContent" style="display: flex;">
+      <div class="categoryShowHideDiv flexCentered disabledTextSelection">SCRAPING BROWSERS</div>
+        <div class="categoryContent flexCentered flexDirectionColumn" style="display: flex;">
           <div id="fullScrapingDivsContainer"></div>
-          <button id="addNewProcessButton"><i class="fas fa-plus"></i></button> <!-- HTML plus -->
+          <button id="addNewProcessButton" class="flexCentered flexDirectionColumn disabledTextSelection"><i class="fas fa-plus"></i></button> <!-- HTML plus -->
         </div>
     </div>
 

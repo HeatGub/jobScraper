@@ -7,7 +7,7 @@ import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 import json, re
 import theprotocol, justjoin
-from settings import BROWSER_WINDOW_WIDTH, BROWSER_WINDOW_HEIGHT, testBrowserUrlPlaceholder, makeBrowserInvisible
+from settings import MAKE_BROWSER_INVISIBLE, BROWSER_WINDOW_WIDTH_THEPROTOCOL, BROWSER_WINDOW_HEIGHT_THEPROTOCOL, BROWSER_WINDOW_WIDTH_JUSTJOIN, BROWSER_WINDOW_HEIGHT_JUSTJOIN, testBrowserUrlPlaceholder
 
 ##############################################################################
 #                                                                            #
@@ -22,15 +22,18 @@ class SeleniumBrowser:
         self.DRIVER = None
         self.BASE_URL = baseUrl # passed to worker # self.BASE_URL = "https://theprotocol.it/filtry/ai-ml;sp/"
         
-        # CHECK DOMAIN TO ASSIGN PROPER FUNCTIONS
-        #all of the below functions must return dictionary like          {'success':True, 'functionDone':False, 'message':'working'}
-        # self.domainCorrect = True # as __init__ can only return None
+        # CHECK DOMAIN TO ASSIGN PROPER FUNCTIONS AND VARIABLES
+        # all of the below functions must return dictionary like          {'success':True, 'functionDone':False, 'message':'working'}
         if "theprotocol.it" in str(self.BASE_URL):
             self.scrapingFunctionsInOrder = [self.openBrowserIfNeeded, self.setCookiesFromJson, theprotocol.scrapUrlsFromAllThePages, theprotocol.scrapToDatabase]
+            self.BROWSER_WINDOW_WIDTH = BROWSER_WINDOW_WIDTH_THEPROTOCOL
+            self.BROWSER_WINDOW_HEIGHT = BROWSER_WINDOW_HEIGHT_THEPROTOCOL
         elif "justjoin.it" in str(self.BASE_URL): 
             self.scrapingFunctionsInOrder = [self.openBrowserIfNeeded, self.setCookiesFromJson, justjoin.scrapAllOffersUrls, justjoin.scrapToDatabase]
+            self.BROWSER_WINDOW_WIDTH = BROWSER_WINDOW_WIDTH_JUSTJOIN
+            self.BROWSER_WINDOW_HEIGHT = BROWSER_WINDOW_HEIGHT_JUSTJOIN
         else:
-            self.scrapingFunctionsInOrder = [self.returnIncorrectDomainDictionary]
+            self.scrapingFunctionsInOrder = [self.returnIncorrectDomainDictionary] # looks strange but __init__ can only return None
 
         self.currentFunctionIndex = 0
         
@@ -75,14 +78,14 @@ class SeleniumBrowser:
             service = Service(executable_path="chromedriver.exe")
             chromeOptions = Options()
             chromeOptions.add_argument("--disable-search-engine-choice-screen")
-            chromeOptions.add_argument("window-size="+str(BROWSER_WINDOW_WIDTH)+","+str(BROWSER_WINDOW_HEIGHT))
+            chromeOptions.add_argument("window-size="+str(self.BROWSER_WINDOW_WIDTH)+","+str(self.BROWSER_WINDOW_HEIGHT))
             chromeOptions.add_experimental_option('excludeSwitches', ['enable-logging']) #disable error logging
             # MAKE BROWSER INVISIBLE
-            if self.BASE_URL != testBrowserUrlPlaceholder and makeBrowserInvisible == True:
+            if self.BASE_URL != testBrowserUrlPlaceholder and MAKE_BROWSER_INVISIBLE == True:
                 chromeOptions.add_argument('--headless')
             # chromeOptions.add_experimental_option("detach", True) # to keep browser open after python script execution ended. Not needed anymore?
             self.DRIVER = webdriver.Chrome(service=service, options=chromeOptions) #Selenium opens a new browser window whenever it initializes a WebDriver instance
-            self.DRIVER.get("https://google.com")
+            self.DRIVER.get("https://theprotocol.it")
             return {'success':True, 'functionDone':True, 'message':'opened a selenium browser'}
         except Exception as exception:
             return {'success':False, 'functionDone':False, 'message':str(exception)}

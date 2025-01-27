@@ -10,6 +10,7 @@ from databaseFunctions import Database
 from SeleniumBrowser import SeleniumBrowser
 from makeBokehFigures import makeBokehPlot, makeBokehTable
 from settings import DATABASE_TABLE_NAME, DATABASE_COLUMNS, CSS_VARIABLES, testBrowserUrlPlaceholder
+# import importlib, settings # to reload CSS
 
 ########################################################################## FLASK ENDPOINTS ###########################################################################
 
@@ -18,6 +19,10 @@ app = Flask(__name__)
 @app.route('/', methods=['GET', 'POST'])
 def root():
     if request.method == 'GET':
+        # reload settings if changed
+        # importlib.reload(settings)
+        # from settings import CSS_VARIABLES
+
         # PREPARE TEMPLATE FOR CSS ROOT VARIABLES
         variablesString = ''
         for key, value in CSS_VARIABLES.items():
@@ -194,13 +199,13 @@ def fullScrapingEndpoint():
 @app.route('/killProcessIfExists', methods=['POST'])
 def killProcessIfExistsEndpoint():
     try:
-        print('\t\tkillProcessIfExistsEndpoint')
+        # print('\t\tkillProcessIfExistsEndpoint')
         requestData = request.get_json('url') # arguments
         url = requestData.get('url')
         divIndex = requestData.get('divIndex')
 
         if returnProcessIfBothMatchOrNone(url, divIndex) == None:
-            print('NO PROCESS TO KILL')
+            # print('NO PROCESS TO KILL')
             return json.dumps({'success':True, 'message':'no process to kill'})
 
         killProcessAndCloseBrowser(url) # PRINTS
@@ -322,11 +327,9 @@ if __name__ == "__main__":
 
 
 ###########################################  TODO
-# readme - nested query
-# grossToNet converted at the scraping - explain that in readme?
-# requirements.txt
-# terminate test browser instance at some point (check ifBrowserOpen on any add/delete process click?)
+# readme - nested query + grossToNet converted at the scraping
+# generate requirements.txt
 
-# 3 related
-# settings file - # add time randomizers and different win size for different portals?
+# find offer not found msg for justjoin
+# terminate test browser instance at some point (check ifBrowserOpen on any add/delete process click?)
 # pause scraping when too many Nones after analysis (dont scrap to db) and print the message (alert too?)

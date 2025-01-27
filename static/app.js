@@ -95,9 +95,9 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
     }
     
     // DECLARE ELEMENTS
-    const fullScrapingDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDiv_'+index, className: 'fullScrapingDiv'})
-    const button = Object.assign(document.createElement('button'), {id: 'fullScrapingButton_'+index, innerHTML:buttonMessageStart})
-    const input = Object.assign(document.createElement('input'), {id: 'fullScrapingInputUrl_'+index, type:'text', value:url, placeholder:'url'})
+    const fullScrapingDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDiv_'+index, className: 'fullScrapingDiv flexCentered flexDirectionColumn'})
+    const button = Object.assign(document.createElement('button'), {id: 'fullScrapingButton_'+index, className:'disabledTextSelection', innerHTML:buttonMessageStart})
+    const input = Object.assign(document.createElement('input'), {id: 'fullScrapingInputUrl_'+index, type:'text', value:url, placeholder:'https://theprotocol.it/filtry/python;t/...'})
     const output = Object.assign(document.createElement('div'), {id: 'fullScrapingOutput_'+index, className: 'fullScrapingDivOutput', innerHTML:lastMessage.slice(0,sliceMessageToThisAmountOfCharacters)})
     const deleteDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDeleteDiv_'+index, className: 'fullScrapingDeleteDiv', innerHTML:'<i class="fa fa-trash-o"></i>'})
     // const indexDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingIndexDiv_'+index, innerHTML: 'index: '+index})
@@ -113,8 +113,6 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
     // DECLARE INSIDE TO USE OUTER FUNCITON'S VARIABLES
     function fetchKillProcessIfExistsEndpoint() {
         const url = input.value
-        console.log('fetchKillProcessIfExistsEndpoint')
-        console.log(url)
         try {
             fetch(window.origin.toString() + '/killProcessIfExists', {
                 method: "POST",
@@ -126,11 +124,11 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
                 .then(function (response) {
                     // console.log('RESPONSE RECEIVED')
                     if (response.status !== 200) {
-                        console.log('fetchKillProcessIfExistsEndpoint response status not 200: ' + response.status)
+                        // console.log('fetchKillProcessIfExistsEndpoint response status not 200: ' + response.status)
                         return //EXIT on error
                     }
                     response.json().then(function (data) {
-                        console.log(data.message)
+                        // console.log(data.message)
                         if (data.success === true) {
                             fullScrapingDiv.remove()
                             // PROCESS KILLED
@@ -144,7 +142,7 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
                 })
         }
         catch (error) {
-            console.log('JS ERROR CATCHED ' + error)
+            // console.log('JS ERROR CATCHED ' + error)
             return //EXIT on error
         }
     }
@@ -159,7 +157,7 @@ addNewProcessButton.addEventListener("click", () => { createNewFullScrapingDiv()
 
 // CHECK BUTTON STATE AND FETCH FULL SCRAPING ENDPOINT RECURSIVELY
 function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, outputDiv, inputUrl) {
-    console.log('<<< BUTTON CLICKED >>> ')
+    // console.log('<<< BUTTON CLICKED >>> ')
     const output = document.getElementById(outputDiv)
     const inputUrlDiv = document.getElementById(inputUrl)
     const url =  inputUrlDiv.value
@@ -200,18 +198,29 @@ function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, output
                 .then(function (response) {
                     // console.log('RESPONSE RECEIVED')
                     if (response.status !== 200) {
-                        console.log('response status not 200: ' + response.status)
+                        // console.log('response status not 200: ' + response.status)
                         return //EXIT on error
                     }
                     response.json().then(function (data) {
-                        // if (data.message.includes('SCRAPING DONE. ') | data.message.includes('process for that URL already exists')) {
+                        output.style = 'color: var(--color-text-primary);' // usual color, could change on pause
+                        // EXIT RECURRENCE PATH
                         if (data.killProcess === true) {
-                            // EXIT RECURRENCE PATH
+                            // KILL PROCESS
                             output.innerText = data.message.slice(0,sliceMessageToThisAmountOfCharacters)
                             button.innerHTML = buttonMessageStart
                             button.disabled = false
-                            button.classList.remove('button-paused-state')
+                            button.classList.remove('button-working-state')
                             inputUrlDiv.disabled = false
+                            return // EXIT FETCHING
+                        }
+                        else if (data.pauseProcess === true) {
+                            // PAUSE PROCESS - USUALLY BOT CHECK TRIGGERED
+                            output.innerText = data.message.slice(0,sliceMessageToThisAmountOfCharacters)
+                            output.style = 'color: var(--color-text-warning);'
+                            button.innerHTML = buttonMessageStart
+                            button.disabled = false
+                            button.classList.remove('button-working-state')
+                            // alert(data.message.slice(0,sliceMessageToThisAmountOfCharacters))
                             return // EXIT FETCHING
                         }
                         else {
@@ -231,7 +240,7 @@ function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, output
                 })
         }
         catch (error) {
-            console.log('JS error catched ' + error) // never happened yet
+            // console.log('JS error catched ' + error) // never happened yet
             return //EXIT on error
         }
     }
@@ -271,7 +280,7 @@ function sendFormAndFetchBokeh(e) {
     }) // FETCH RETURNS ASYNC PROMISE AND AWAITS RESPONSE
         .then(function (response) {
             if (response.status !== 200) {
-                console.log('Error fetching. Response code: ' + response.status)
+                // console.log('Error fetching. Response code: ' + response.status)
                 return
             }
             else if (response.status == 200) {
@@ -329,11 +338,11 @@ function buttonSwapInnerHtmlStartStop(button) { //because JS requires to return 
     // console.log('\tbuttonSwapInnerHtmlStartStop')
     if (button.innerHTML === buttonMessageStart) {
         button.innerHTML = buttonMessagePause
-        button.className = 'button-paused-state'
+        button.className = 'button-working-state'
     }
     else {
         button.innerHTML = buttonMessageStart
-        button.classList.remove('button-paused-state')
+        button.classList.remove('button-working-state')
     }
 }
 
@@ -366,7 +375,7 @@ document.getElementById('checkUncheckAll').addEventListener('click', () => {
     if (checkUncheckAll.textContent == uncheckAllText) {
         document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = false })
         checkUncheckAll.textContent = checkAllText
-        checkUncheckAll.style = 'color: var(--color-tertiary);' // root variable
+        checkUncheckAll.style = 'color: var(--color-secondary);' // root variable
     }
     else if (checkUncheckAll.textContent == checkAllText) {
         document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = true })
@@ -386,7 +395,6 @@ document.querySelectorAll('.categoryShowHideDiv').forEach(hideShowDiv => {
     hideShowDiv.addEventListener('click', () => {
         // Find the associated categoryContent sibling
         const content = hideShowDiv.nextElementSibling
-        console.log()
         // Toggle the display property
         if (content.style.display === 'flex' || content.style.display === 'block') {
             content.style.display = 'none'
