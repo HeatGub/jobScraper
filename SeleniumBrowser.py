@@ -88,7 +88,8 @@ class SeleniumBrowser:
             self.DRIVER.get("https://theprotocol.it")
             return {'success':True, 'functionDone':True, 'message':'opened a selenium browser'}
         except Exception as exception:
-            return {'success':False, 'functionDone':False, 'message':str(exception)}
+            # usually triggered when driver and browser versions don't match 
+            return {'success':False, 'functionDone':False, 'message':str(exception), 'pauseProcess':True}
     
     def closeBrowser(self):
         try:

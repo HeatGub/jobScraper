@@ -53,6 +53,21 @@ input {
   border-radius: var(--border-radius-tertiary);
 }
 
+/* INPUT AUTOFILL COLORS */
+input[type="text"]:-webkit-autofill {
+  /* font-family: 'Anonymous Pro' !important; - does not work */
+  color: var(--color-text-secondary) !important; /* Ensure text color is consistent */
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: var(--color-text-secondary);
+  background-color: var(--color-background-secondary) !important; /* Prevent autofill background color change */
+  -webkit-box-shadow: 0 0 0px 50rem var(--color-background-secondary) inset !important; /* Reset shadow added by autofill */
+  box-shadow: 0 0 0px 50rem var(--color-background-secondary) inset !important; /* For modern browsers */
+}
+input[type="text"]:-moz-autofill {
+  background-color: var(--color-background-secondary) !important; /* Same for Firefox */
+  color: var(--color-text-secondary) !important;
+}
+
 input:hover {
   /* box-shadow: 0rem 0rem 0.3rem var(--color-background-quaternary); */
   box-shadow: 0rem 0rem 0.3rem var(--color-primary);
@@ -67,6 +82,16 @@ input:disabled {
   background-color: var(--color-background-tertiary);
   box-shadow: 0rem 0rem 0.5rem var(--color-primary);
   text-shadow: 0rem 0rem 0.2rem var(--color-background-tertiary);
+}
+
+/* TEXT SELECTION COLOR */
+::selection {
+  background-color: var(--color-tertiary);  /* Blue background for selected text */
+  color: var(--color-background-secondary);
+}
+::-moz-selection {
+  background-color: var(--color-tertiary);  /* Blue background for selected text */
+  color: var(--color-background-secondary);
 }
 
 button, #sendFormAndFetchBokehButton {

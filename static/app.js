@@ -4,7 +4,7 @@ const buttonMessageStart = 'START'
 const buttonMessagePause = 'PAUSE'
 const checkAllText = '✓'
 const uncheckAllText = '✗'
-const sliceMessageToThisAmountOfCharacters = 250
+const sliceMessageToThisAmountOfCharacters = 300
 
 fetchProcesses() // HAS TO STAY AT THE TOP TO FETCH PROCESSES FIRST
 
@@ -97,7 +97,7 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
     // DECLARE ELEMENTS
     const fullScrapingDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDiv_'+index, className: 'fullScrapingDiv flexCentered flexDirectionColumn'})
     const button = Object.assign(document.createElement('button'), {id: 'fullScrapingButton_'+index, className:'disabledTextSelection', innerHTML:buttonMessageStart})
-    const input = Object.assign(document.createElement('input'), {id: 'fullScrapingInputUrl_'+index, type:'text', value:url, placeholder:'https://theprotocol.it/filtry/python;t/...'})
+    const input = Object.assign(document.createElement('input'), {id: 'fullScrapingInputUrl_'+index, spellcheck:false, type:'text', value:url, placeholder:'https://theprotocol.it/filtry/python;t/...'})
     const output = Object.assign(document.createElement('div'), {id: 'fullScrapingOutput_'+index, className: 'fullScrapingDivOutput', innerHTML:lastMessage.slice(0,sliceMessageToThisAmountOfCharacters)})
     const deleteDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingDeleteDiv_'+index, className: 'fullScrapingDeleteDiv', innerHTML:'<i class="fa fa-trash-o"></i>'})
     // const indexDiv = Object.assign(document.createElement('div'), {id: 'fullScrapingIndexDiv_'+index, innerHTML: 'index: '+index})
@@ -215,8 +215,8 @@ function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, output
                         }
                         else if (data.pauseProcess === true) {
                             // PAUSE PROCESS - USUALLY BOT CHECK TRIGGERED
-                            output.innerText = data.message.slice(0,sliceMessageToThisAmountOfCharacters)
                             output.style = 'color: var(--color-text-warning);'
+                            output.innerText = data.message.slice(0,sliceMessageToThisAmountOfCharacters)
                             button.innerHTML = buttonMessageStart
                             button.disabled = false
                             button.classList.remove('button-working-state')

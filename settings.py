@@ -4,7 +4,7 @@
 
 ######################################################## SELENIUM SETTINGS ########################################################
 
-MAKE_BROWSER_INVISIBLE = False # justjoin HAS TO HAVE INVISIBLE (headless) OR ACTIVE (not minimized) window to fetch some params
+MAKE_BROWSER_INVISIBLE = False # justjoin HAS TO HAVE INVISIBLE (headless) OR ACTIVE (not minimized) window to fetch URLs list and/or some params
 
 # changing window size might affect scraping speed due to changing page loading time
 BROWSER_WINDOW_WIDTH_THEPROTOCOL = 600 # integer [pixels]
@@ -12,19 +12,18 @@ BROWSER_WINDOW_HEIGHT_THEPROTOCOL = 800 # integer [pixels]
 BROWSER_WINDOW_WIDTH_JUSTJOIN = 800 # integer [pixels]
 BROWSER_WINDOW_HEIGHT_JUSTJOIN = 900 # integer [pixels]
 
+NO_NEW_RESULTS_COUNTER_LIMIT_JUSTJOIN = 2 # integer. SUGGESTING AT LEAST 3. How many times to retry scrolling if offers list has the same length as after the last try
 # AVOID BOT CHECK BY WAITING FOR SOME SECONDS - how long to wait before scraping next offer/URLs page
 # [a,b] means wait between a and b SECONDS - sleep(random.uniform(a,b)). Integers/floats but always 2 values
-WAIT_URLS_THEPROTOCOL = [0.3, 0.5] # [0,0] worked well for a few pages
-WAIT_OFFER_PARAMS_THEPROTOCOL = [0, 0] # [0,0] sometimes triggers bot check
-
 WAIT_URLS_JUSTJOIN = [0.5, 1] # rather not [0,0] as this site usually loads offers list really slowly
 WAIT_OFFER_PARAMS_JUSTJOIN = [0, 0] # [0,0] worked well for me as this site also loads offers slowly xD so even at max speed bot check was never triggered
-NO_NEW_RESULTS_COUNTER_LIMIT_JUSTJOIN = 5 # integer. How many times to retry scrolling if offers list has the same length as after the last try. SUGGESTING AT LEAST 3
+
+WAIT_URLS_THEPROTOCOL = [0.3, 0.5] # [0,0] worked well for a few pages
+WAIT_OFFER_PARAMS_THEPROTOCOL = [0, 0] # [0,0] sometimes triggers bot check
 
 ######################################################## PLOT AND TABLE SIZING ########################################################
 
 BOKEH_PLOT_HEIGHT = 300 # integer [pixels]
-
 BOKEH_TABLE_MAX_HEIGHT = 700 # integer [pixels]
 BOKEH_TABLE_ROW_HEIGHT = 200 # integer [pixels]
 
@@ -37,13 +36,14 @@ CSS_VARIABLES = {
     # "color-secondary": "rgba(175, 0, 126, 0.8)",
     # "color-tertiary": "rgba(177, 255, 0, 0.8)",
     # "color-quaternary": "rgba(0, 142, 66, 0.8)",
+    # "color-table-selection": "rgba(60,140,200,0.2)",
 
     # AQUAMARINE THEME
     "color-primary": "rgba(0, 203, 182, 0.7)",
     "color-secondary": "rgba(174, 0, 242, 0.7)",
     "color-tertiary": "rgba(255, 199, 0, 0.8)",
     "color-quaternary": "rgba(0, 145, 134, 0.8)",
-
+    "color-table-selection": "rgba(0, 203, 182,0.15)",
 
     # DARK BACKGROUNDS
     "color-background-primary": "rgba(15,15,15,1)",
@@ -62,7 +62,7 @@ CSS_VARIABLES = {
     "color-plot-grid-line": "rgba(100,100,100,0.9)",
     "color-plot-minor-grid-line": "rgba(80,80,80,0.3)",
 
-    "color-table-selection": "rgba(60,140,200,0.2)",
+    # "color-table-selection": "rgba(60,140,200,0.2)",
     "color-table-url-unvisited": "rgba(120, 120, 240, 1)",
     "color-table-url-visited": "rgba(80, 80, 180, 1)",
     
@@ -107,6 +107,8 @@ DATABASE_COLUMNS = [
     {"dbColumnName": "optionalRequirements", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "optional requirements", "description":"'optionalRequirements' - employer's optional requirements"},
     {"dbColumnName": "fullDescription", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "full description", "description":"'fullDescription' - full description of a job offer, useful when more specific fields couldn't be scraped"},
 ]
+
+doNotCountTheseColumnsOnNonesCheck = ['datetimeLast', 'datetimeFirst', 'url'] # check scrapToDatabase() functions for flow - these columns are never Nones because they don't rely on page elements
 
 ######################################################## MISC ########################################################
 

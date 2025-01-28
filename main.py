@@ -245,7 +245,7 @@ def listProcessesExceptTestBrowser():
     # print('\t\tactive_processes len = ' + str(len(processes)))
     # print(processes)
     # print('\n')
-    print(processes)
+    # print(processes)
     return processes
 
 # check typeof(process) and if it already did start() - check is_alive() / exitcode 

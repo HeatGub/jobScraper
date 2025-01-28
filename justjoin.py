@@ -3,7 +3,7 @@ import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 import time, json, random, re, datetime
 from databaseFunctions import Database
-from settings import DATABASE_COLUMNS, GROSS_TO_NET_MULTIPLIER, WAIT_URLS_JUSTJOIN, WAIT_OFFER_PARAMS_JUSTJOIN, NO_NEW_RESULTS_COUNTER_LIMIT_JUSTJOIN
+from settings import DATABASE_COLUMNS, GROSS_TO_NET_MULTIPLIER, WAIT_URLS_JUSTJOIN, WAIT_OFFER_PARAMS_JUSTJOIN, NO_NEW_RESULTS_COUNTER_LIMIT_JUSTJOIN, doNotCountTheseColumnsOnNonesCheck
 
 def anyOffersOnTheList(SeleniumBrowser):
     try:
@@ -46,7 +46,7 @@ def scrapCurrentlyVisibleOffersUrls(SeleniumBrowser): # just the ones currently 
         #     print(int(OFFERS_URLS[-1]['index']) - int(OFFERS_URLS[0]['index']) + 1, len(OFFERS_URLS))
         #     print('first and last OFFERS_URLS: ', OFFERS_URLS[0]['index'], OFFERS_URLS[-1]['index'])
     except Exception as exception:
-        print('scrapCurrentlyVisibleOffersUrls ' + str(exception))
+        # print('scrapCurrentlyVisibleOffersUrls ' + str(exception)) # StaleElementReferenceException
         return# {'success':False, 'functionDone':False, 'message':str(exception)}
 
 
@@ -99,13 +99,17 @@ def scrapAllOffersUrls(SeleniumBrowser):
 
 def offerNotFound(SeleniumBrowser):
     try:
-        offerContent = SeleniumBrowser.DRIVER.find_element(By.CSS_SELECTOR, '.MuiBox-root.css-tnvghs')
-        topContainer = offerContent.find_element(By.CSS_SELECTOR, 'div') # 1st div
-        # NEED TO FIND 'OFFER NOT FOUND MSG AND CHECK WHICH DIVS DOES IT HAVE
-        # topDiv = topContainer.find_element(By.XPATH, ".//*[contains(@class, 'css-10x887j')]")
-        return False # if topDiv found, offer is there
+        # Sorry, we cannot display this page. It is possible that its address has changed or it has been removed.
+        notFoundMsg = 'we cannot display this page'
+        notFoundMsgDivs = SeleniumBrowser.DRIVER.find_elements(By.CLASS_NAME, "css-czlivx") # only 1 element of that class found tho
+        for div in notFoundMsgDivs:
+            # Case-insensitive check
+            if notFoundMsg.lower() in div.text.lower():
+                # print(div.text)
+                return True
+        return False
     except:
-        return True
+        return False
 
 def getOfferDetails(SeleniumBrowser):
     # BASIC PARAMETERS WHICH SHOULD ALWAYS BE NOT EMPTY ON THE SITE
@@ -115,7 +119,9 @@ def getOfferDetails(SeleniumBrowser):
         topDiv = topContainer.find_element(By.XPATH, ".//*[contains(@class, 'css-10x887j')]") # .// = as deep as necessary
     except Exception as exception:
         # print(exception)
-        return # no point of continuing
+        # no point of continuing, but has to return a dictionary of nones
+        return {'datetimeLast':None, 'datetimeFirst':None, 'url':None, 'title':None, 'salaryAndContract':None, 'salaryMin':None, 'salaryMax':None, 'employer':None, 'workModes':None, 'positionLevels':None, 'location':None, 'techstackExpected':None, 'techstackOptional':None, 'responsibilities':None, 'requirements':None, 'optionalRequirements':None, 'fullDescription':None}
+
     try:
         jobTitle = topDiv.find_element(By.CSS_SELECTOR, 'h1').text
         # print(jobTitle)
@@ -284,7 +290,7 @@ def getOfferDetails(SeleniumBrowser):
                             responsibilities += paragraph
 
     except Exception as exception:
-        print(exception)
+        # print(exception)
         pass
 
     # print('\n\n'+ responsibilities +'\n\n'+ requirements +'\n\n'+ optionalRequirements)
@@ -299,16 +305,25 @@ def scrapToDatabase(SeleniumBrowser):
         if len(SeleniumBrowser.OFFERS_URLS) == 0:
             return {'success':True, 'functionDone':True, 'message':"no offers to analyse. justjoin requires active/headless browser window if that's the case", 'killProcess': True}
         elif int(SeleniumBrowser.currentlyScrapedOfferIndex +1) > int(len(SeleniumBrowser.OFFERS_URLS)):
-                print(str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates')
-                return {'success':True, 'functionDone':True, 'message': 'scraping done. ' + str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates', 'killProcess': True}
+            print(str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates')
+            return {'success':True, 'functionDone':True, 'message': 'scraping done. ' + str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates', 'killProcess': True}
         # IF NOT FINISHED
         else:
             SeleniumBrowser.DRIVER.get(SeleniumBrowser.OFFERS_URLS[SeleniumBrowser.currentlyScrapedOfferIndex]['url'])
+            # 'offer not found' div not found - it's offer / botcheck / invalid url by some chance
             if not offerNotFound(SeleniumBrowser):
                 # LOOK FOR COMMON KEYS AS getOfferDetails() can return more keys than custom shortened DB has columns
                 offerDetailsDict = getOfferDetails(SeleniumBrowser)
                 # a dictionary containing only the keys appearing in both dictionaries
                 commonKeysDict = {key: offerDetailsDict[key] for key in [item["dbColumnName"] for item in DATABASE_COLUMNS] if key in offerDetailsDict}
+                # AMOUNT OF NONES CHECK (if too many fields not scraped - bot check, site update, etc)
+                alwaysNotNonesAmount = sum(1 for key in commonKeysDict.keys() if key in doNotCountTheseColumnsOnNonesCheck)
+                nonesCount = sum(1 for value in commonKeysDict.values() if value is None)
+
+                if nonesCount >= int(len(commonKeysDict)-alwaysNotNonesAmount):
+                    # PAUSE on too many nones (allColumns - alwaysNotNonesAmount) at the moment
+                    print('PAUSING ' + str(SeleniumBrowser.BASE_URL))
+                    return {'success':False, 'functionDone':False, 'message': 'too many fields unrecognized on scraping attempt. See if bot check triggered. If not, the site has been updated', 'pauseProcess':True}
 
                 if Database.recordFound(SeleniumBrowser.DRIVER.current_url):
                     Database.updateDatetimeLast(SeleniumBrowser.DRIVER.current_url)
@@ -322,8 +337,9 @@ def scrapToDatabase(SeleniumBrowser):
             elif offerNotFound(SeleniumBrowser):
                 # print('OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url)
                 SeleniumBrowser.currentlyScrapedOfferIndex += 1 # increment even if offer not found not to get stuck
+                time.sleep(random.uniform(WAIT_OFFER_PARAMS_JUSTJOIN[0], WAIT_OFFER_PARAMS_JUSTJOIN[1])) # move to settings
                 return {'success':False, 'functionDone':False, 'message': 'OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url}
     except Exception as exception:
+        print('EKSEPSZON KURWA')
+        print(exception)
         return {'success':False, 'functionDone':False, 'message':str(exception)}
-    # finally:
-    #     print(str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates')

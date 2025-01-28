@@ -3,7 +3,7 @@ import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 import time, json, random, re, datetime
 from databaseFunctions import Database
-from settings import DATABASE_COLUMNS, GROSS_TO_NET_MULTIPLIER, WAIT_URLS_THEPROTOCOL, WAIT_OFFER_PARAMS_THEPROTOCOL
+from settings import DATABASE_COLUMNS, GROSS_TO_NET_MULTIPLIER, WAIT_URLS_THEPROTOCOL, WAIT_OFFER_PARAMS_THEPROTOCOL, doNotCountTheseColumnsOnNonesCheck
 
 # theprotocol is being scraped well even when browser minimized
 
@@ -212,17 +212,25 @@ def scrapToDatabase(SeleniumBrowser):
         if len(SeleniumBrowser.OFFERS_URLS) == 0:
             return {'success':True, 'functionDone':True, 'message':'no offers to analyse', 'killProcess': True}
         elif int(SeleniumBrowser.currentlyScrapedOfferIndex +1) > int(len(SeleniumBrowser.OFFERS_URLS)):
-                print(str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates')
-                return {'success':True, 'functionDone':True, 'message': 'scraping done. ' + str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates', 'killProcess': True}
+            print(str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates')
+            return {'success':True, 'functionDone':True, 'message': 'scraping done. ' + str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates', 'killProcess': True}
         # IF NOT FINISHED
         else:
             SeleniumBrowser.DRIVER.get(SeleniumBrowser.OFFERS_URLS[SeleniumBrowser.currentlyScrapedOfferIndex]['url'])
-            # 'offer not found' div not found
+            # 'offer not found' div not found - it's offer / botcheck / invalid url by some chance
             if not offerNotFound(SeleniumBrowser):
                 # LOOK FOR COMMON KEYS AS getOfferDetails() can return more keys than custom shortened DB has columns
                 offerDetailsDict = getOfferDetails(SeleniumBrowser)
                 # a dictionary containing only the keys appearing in both dictionaries
                 commonKeysDict = {key: offerDetailsDict[key] for key in [item["dbColumnName"] for item in DATABASE_COLUMNS] if key in offerDetailsDict}
+                
+                # AMOUNT OF NONES CHECK (if too many fields not scraped - bot check, site update, etc)
+                alwaysNotNonesAmount = sum(1 for key in commonKeysDict.keys() if key in doNotCountTheseColumnsOnNonesCheck)
+                nonesCount = sum(1 for value in commonKeysDict.values() if value is None)
+                if nonesCount >= int(len(commonKeysDict)-alwaysNotNonesAmount):
+                    # PAUSE on too many nones (allColumns - alwaysNotNonesAmount) at the moment
+                    print('PAUSING ' + str(SeleniumBrowser.BASE_URL))
+                    return {'success':False, 'functionDone':False, 'message': 'too many fields unrecognized on scraping attempt. See if bot check triggered. If not, the site has been updated', 'pauseProcess':True}
 
                 if Database.recordFound(SeleniumBrowser.DRIVER.current_url):
                     Database.updateDatetimeLast(SeleniumBrowser.DRIVER.current_url)
@@ -240,14 +248,3 @@ def scrapToDatabase(SeleniumBrowser):
                 return {'success':False, 'functionDone':False, 'message': 'OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url}
     except Exception as exception:
         return {'success':False, 'functionDone':False, 'message':str(exception)}
-    
-
-    
-                # #################################################
-                # # AMOUNT OF NONES CHECK (if too many fields not scraped - bot check, site update, etc)
-                # doNotCountTheseColumns = ['datetimeLast', 'datetimeFirst', 'url'] # these are never Nones
-                # alwaysNotNonesAmount = sum(1 for key in commonKeysDict.keys() if key in doNotCountTheseColumns)
-                # nonesCount = sum(1 for value in commonKeysDict.values() if value is None)
-                # if nonesCount >= int(len(commonKeysDict)-alwaysNotNonesAmount): # PAUSE on too many nones
-                #     return {'success':False, 'functionDone':False, 'message': 'too many fields unrecognized on scraping attempt. Pehraps bot check has beed triggered?', 'pauseProcess':True}
-                # #################################################
