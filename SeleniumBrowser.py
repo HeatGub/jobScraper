@@ -6,6 +6,7 @@ from selenium.common.exceptions import WebDriverException
 import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 import json, re
+from pathlib import Path
 import theprotocol, justjoin
 from settings import MAKE_BROWSER_INVISIBLE, BROWSER_WINDOW_WIDTH_THEPROTOCOL, BROWSER_WINDOW_HEIGHT_THEPROTOCOL, BROWSER_WINDOW_WIDTH_JUSTJOIN, BROWSER_WINDOW_HEIGHT_JUSTJOIN, testBrowserUrlPlaceholder
 
@@ -31,6 +32,9 @@ class SeleniumBrowser:
         elif "justjoin.it" in str(self.BASE_URL): 
             self.scrapingFunctionsInOrder = [self.openBrowserIfNeeded, self.setCookiesFromJson, justjoin.scrapAllOffersUrls, justjoin.scrapToDatabase]
             self.BROWSER_WINDOW_WIDTH = BROWSER_WINDOW_WIDTH_JUSTJOIN
+            self.BROWSER_WINDOW_HEIGHT = BROWSER_WINDOW_HEIGHT_JUSTJOIN
+        elif testBrowserUrlPlaceholder in str(self.BASE_URL):
+            self.BROWSER_WINDOW_WIDTH = BROWSER_WINDOW_WIDTH_JUSTJOIN # this one for example
             self.BROWSER_WINDOW_HEIGHT = BROWSER_WINDOW_HEIGHT_JUSTJOIN
         else:
             self.scrapingFunctionsInOrder = [self.returnIncorrectDomainDictionary] # looks strange but __init__ can only return None
@@ -124,7 +128,13 @@ class SeleniumBrowser:
             # print(seleniumCookiesDomain)
             updatedCookiesList = []
 
-            with open("cookies.json", "r") as cookiesFile:
+            # Create cookies.json file if it doesn't exist
+            filePath = Path("cookies.json")
+            if not filePath.exists():
+                filePath.write_text("{}")  # Writes an empty JSON object
+
+            # Read the file
+            with filePath.open("r") as cookiesFile:
                 try:
                     cookiesFileData = json.load(cookiesFile) # will load if JSON is valid
                 except:

@@ -104,12 +104,67 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
     plot.vbar('x', top = 'activeFor', y_range_name="y2", source = sourceSalarySpecified, width=0.90, color=CSS_VARIABLES["color-tertiary"], alpha=0.05) # Active for
     plot.segment(x0='x', y0='salaryMin', x1='x', y1='salaryMax', source=sourceSalarySpecified, line_width=1.5, color=CSS_VARIABLES["color-plot-error-bars"], alpha=0.9) #Error bar
     
+    # @parameter = accessing ColumnDataSource parameter
+    # {0.} = no decimals
+    hoverTooltipSalarySpecified = """
+    <strong> @title </strong>
+    <style type="text/css">:host { 
+        padding: 0.3rem; 
+        border: none; 
+        text-align: center; 
+        background-color: var(--color-background-secondary);
+        color: var(--color-text-primary);
+    }</style> 
+
+    <div style="
+        margin: 0 !important;
+        padding: 0.4rem;
+        outline: none;
+        background-color: var(--color-background-tertiary);
+        color: var(--color-text-secondary); 
+        font-family: Anta;
+        font-size: 0.7rem;
+    ">
+        <strong>min/avg/max:</strong> @salaryMin{0.}/@salaryAvg{0.}/@salaryMax{0.} <br>
+        <strong>active for:</strong> @activeFor days <br>
+        <strong>offer index:</strong> @x <br>
+    </div>"""
+
+    hoverTooltipSalaryUnpecified = """
+    <strong> @title </strong>
+    <style type="text/css">:host { 
+        padding: 0.3rem; 
+        border: none; 
+        text-align: center; 
+        background-color: var(--color-background-secondary);
+        color: var(--color-text-primary);
+    }</style> 
+
+    <div style="
+        margin: 0 !important;
+        padding: 0.4rem;
+        border: none; 
+        outline: none; 
+        background-color: var(--color-background-secondary);
+        color: var(--color-text-secondary); 
+        font-family: Anta;
+        font-size: 0.7rem;
+    ">
+        <strong>salary:</strong> unspecified <br>
+        <strong>active for:</strong> @activeFor days <br>
+        <strong>offer index:</strong> @x <br>
+    </div>"""
+    
+    # this approach has no colors customization
+    # hoverSalarySpecified = HoverTool(tooltips=[("Offer index:", "@x"), ("Job title:", "@title"), ("Min/Avg/Max:", "@salaryMin{0.}/@salaryAvg{0.}/@salaryMax{0.}"), ("Active for:", "@activeFor days")]) #{0} = no decimals
+    
+    hoverSalarySpecified = HoverTool(tooltips=hoverTooltipSalarySpecified)
+    hoverSalaryUnpecified = HoverTool(tooltips=hoverTooltipSalaryUnpecified)
+    hoverSalaryUnpecified.renderers = [plot.renderers[0]]# hover tool only on the salary bars
+    hoverSalarySpecified.renderers = [plot.renderers[2]]# hover tool only on the salary bars
+
     taptool = TapTool() #highlight on tap
     wheelZoom = WheelZoomTool()
-    hoverSalaryUnpecified = HoverTool(tooltips=[("Offer index:", "@x"), ("Job title:", "@title"), ("Salary:", "Unspecified"), ("Active for:", "@activeFor days")])
-    hoverSalaryUnpecified.renderers = [plot.renderers[0]]# hover tool only on the salary bars
-    hoverSalarySpecified = HoverTool(tooltips=[("Offer index:", "@x"), ("Job title:", "@title"), ("Min/Avg/Max:", "@salaryMin{0.}/@salaryAvg{0.}/@salaryMax{0.}"), ("Active for:", "@activeFor days")]) #{0} = no decimals
-    hoverSalarySpecified.renderers = [plot.renderers[2]]# hover tool only on the salary bars
     plot.add_tools(hoverSalarySpecified, hoverSalaryUnpecified, taptool, wheelZoom) #wheelZoom removed for now
     plot.toolbar.active_scroll = wheelZoom
     
@@ -151,6 +206,7 @@ def makeBokehTable(dataframe):
     # A LOT OF INLINE STYLING BECAUSE TABLES DON'T SUPPORT PYTHON STYLING LIKE PLOTS DO
     BOKEH_TABLE_CSS = """
     /* GENERAL DIV */
+
     .bk-data-table * {
         font-size: 0.7rem;
         font-family: "Anonymous Pro", serif;

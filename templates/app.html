@@ -16,12 +16,15 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Trirong">
   <link rel='stylesheet' href='https://fonts.googleapis.com/css?family=Anonymous Pro'>
   <link href='https://fonts.googleapis.com/css?family=Anta' rel='stylesheet'>
+  <!-- Include Flatpickr CSS & JS for calendar tool styling-->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
 
 <body class="flexCentered flexDirectionColumn">
   <!-- HEADER -->
   <div id="headerContainer" class="flexCentered flexDirectionColumn disabledTextSelection">job scraper 
-    <div class="headerTextContainer flexCentered flexDirectionRow">
+    <div class="headerBottomTextContainer flexCentered flexDirectionRow">
       <span id="headerText1">so many offers</span>
       <span id="headerText2">so much s<span id="headerText3">crap</span>
       </span>
@@ -67,8 +70,8 @@
                 <td><input type="text" placeholder="NULL OR 0" name={{columnDict.dbColumnName}}Forbidden></td>
                 {% endif %}
                 {% if columnDict.dbColumnName == "datetimeFirst" or columnDict.dbColumnName == "datetimeLast" %}
-                <td><input type="datetime-local" name={{columnDict.dbColumnName}}Above></td>
-                <td><input type="datetime-local" name={{columnDict.dbColumnName}}Below></td>
+                <td><input type="datetime-local" name={{columnDict.dbColumnName}}Above placeholder="2024-04-20 00:00" autocomplete="off"></td>
+                <td><input type="datetime-local" name={{columnDict.dbColumnName}}Below placeholder="2077-07-27 23:59" autocomplete="off"></td>
                 {% elif columnDict.dbColumnName == "salaryMin" or columnDict.dbColumnName == "salaryMax" %}
                 <td><input type="number" placeholder="1337" name={{columnDict.dbColumnName}}Above></td>
                 <td><input type="number" placeholder="1000000" name={{columnDict.dbColumnName}}Below></td>

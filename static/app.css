@@ -28,6 +28,7 @@
 
 html {
   font-size: 16px; /* SETTING REM UNIT TO SCALE EVERYTHING (rem = root element's FONT SIZE) */
+  background-color: var(--color-background-primary);
 }
 
 body {
@@ -54,7 +55,7 @@ input {
 }
 
 /* INPUT AUTOFILL COLORS */
-input[type="text"]:-webkit-autofill {
+input:-webkit-autofill {
   /* font-family: 'Anonymous Pro' !important; - does not work */
   color: var(--color-text-secondary) !important; /* Ensure text color is consistent */
   -webkit-background-clip: text;
@@ -63,7 +64,7 @@ input[type="text"]:-webkit-autofill {
   -webkit-box-shadow: 0 0 0px 50rem var(--color-background-secondary) inset !important; /* Reset shadow added by autofill */
   box-shadow: 0 0 0px 50rem var(--color-background-secondary) inset !important; /* For modern browsers */
 }
-input[type="text"]:-moz-autofill {
+input:-moz-autofill {
   background-color: var(--color-background-secondary) !important; /* Same for Firefox */
   color: var(--color-text-secondary) !important;
 }
@@ -157,21 +158,32 @@ span {
   color: var(--color-text-secondary);
   font-weight: 500;
   width: 100%;
-  min-width: 45rem; /* same as mainContainer */
+  /*min-width: 45rem;  same as mainContainer */
   font-size: 2.8rem;
-  text-shadow: 0rem 0rem 0.5rem var(--color-primary);
+  /* text-shadow: 0rem 0rem 0.5rem var(--color-primary); */
   cursor:default;
 }
 
-#headerContainer:hover{
+/* 'job scraper' on hover */
+#headerContainer:hover {
   text-shadow: 0rem 0rem 1rem var(--color-secondary);
 }
 
-.headerTextContainer {
+/* whole bottom span on hover */
+#headerContainer:hover .headerBottomTextContainer span {
+  text-shadow: 0rem 0rem 0.1rem var(--color-secondary);
+}
+
+/* the last text div on hover */
+#headerContainer:hover #headerText3 {
+  text-shadow: 0rem 0rem 0.2rem var(--color-primary);
+}
+
+.headerBottomTextContainer {
   padding: 0;
   font-size: 1rem;
   width: 19rem;
-  font-weight: 600;
+  font-weight: 700;
   text-shadow: none;
   /* justify-content: center; */
   justify-content: space-between !important; /* Disperse elements to the edges. !important overwrites .flexCentered setting */ 
@@ -182,16 +194,11 @@ span {
 #headerText1 {
   color: var(--color-primary);
 }
-#headerText2 {
+#headerText2, #headerText3 {
   font-size: 1rem;
-  color: var(--color-secondary);
+  color: var(--color-tertiary);
   justify-content: center;
 }
-#headerText3 {
-  font-size: 1rem;
-  color: var(--color-primary);
-}
-
 /*////////////////////////////////////////////// CATEGORIES //////////////////////////////////////////////*/
 
 #mainContainer > .categoryContainer {
@@ -263,7 +270,16 @@ span {
   padding-bottom: 0.6rem;
 }
 
+/* BOKEH POLT AND TABLE */
+
+/* SPACING FOR PLOT - otherwise overlapped a little + it looks better*/
+#plotDiv > div {
+  margin-top: 0.6rem;
+  margin-bottom: 0.3rem;
+}
+
 .categoryContentBokeh > *{
+  border-radius: var(--border-radius-primary); /* same as categoryContainer*/
   width: 100%;
   margin: 0;
   padding: 0;
@@ -371,7 +387,7 @@ span {
   border-radius: 100%;
 }
 
-/*////////////////////////////////////////////// TABLE RELATED //////////////////////////////////////////////*/
+/*////////////////////////////////////////////// QUERY TOOL TABLE RELATED //////////////////////////////////////////////*/
 
 form {
   /* margin-top: 0.5rem; */
@@ -379,18 +395,12 @@ form {
   /* margin-left: 5rem; */
   text-align: center; /* CENTERS SEARCH BUTTON xD */
 }
-table {
+table { /* query tool table*/
   width: 100%; /* Let the table span the full width */
   border-collapse: collapse;
   /*table-layout: fixed;*/ /* Enforce fixed layout for predictable column sizing */
   font-size: 0.8rem;
   /* text-align: center; */
-}
-
-/* SPACING FOR PLOT - otherwise overlapped a little + it looks better*/
-#plotDiv > div {
-  margin-top: 0.6rem;
-  margin-bottom: 0.3rem;
 }
 
 /* ROWS SHADOW EFECT */
@@ -502,4 +512,126 @@ input[type="checkbox"] {
 
 input[type="checkbox"]:hover {
   box-shadow: none;
+}
+
+
+/*////////////////////////////////////////////// CALENDAR TOOL FLATPICKR //////////////////////////////////////////////*/
+
+/* Remove unwanted white borders */
+.flatpickr-calendar {
+  border-radius: var(--border-radius-tertiary);
+  outline: 0.2rem solid var(--color-background-quaternary); /* setting none lefts outline somehow */
+  /* DISABLE TEXT SELECTION */
+  user-select: none; /* Prevents text selection */
+  -webkit-user-select: none; /* For Safari and older versions of Chrome */
+  -moz-user-select: none; /* For older versions of Firefox */
+  -ms-user-select: none; /* For older versions of Internet Explorer/Edge */
+}
+
+/* TEXT SELECTION COLOR */
+.flatpickr-calendar *::selection {
+  background-color: var(--color-primary);  /* Blue background for selected text */
+  color: var(--color-background-secondary);
+}
+.flatpickr-calendar *::-moz-selection {
+  background-color: var(--color-primary);  /* Blue background for selected text */
+  color: var(--color-background-secondary);
+}
+
+.flatpickr-calendar *{
+  font-size: 0.9rem;
+  background-color: var(--color-background-tertiary) !important;
+  color: var(--color-text-primary) !important;
+  padding: none;
+  outline: none;
+  margin: none;
+  border: none;
+}
+
+.flatpickr-time{
+  border-top: 0.1rem solid var(--color-secondary) !important;
+}
+
+/* Fix white border on selected date */
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+  background: #007bff !important;
+  color: white !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Fix white edges on month navigation arrows */
+.flatpickr-prev-month,
+.flatpickr-next-month {
+  border: none !important;
+  background: transparent !important;
+}
+
+/* Remove any unwanted padding causing borders */
+.flatpickr-innerContainer {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Change arrow color and size */
+.flatpickr-prev-month svg,
+.flatpickr-next-month svg {
+  fill: var(--color-primary); /* Change arrow color */
+  width: 1rem;    /* Adjust arrow size */
+  height: 1rem;
+}
+
+
+/* Calendar inner border (header) */
+.flatpickr-months {
+  padding-bottom: 0.3rem;
+  outline: none;
+  margin: none;
+  border-top: none;
+  border-bottom: 0.05rem solid var(--color-primary);
+}
+
+/* center arrows */
+.flatpickr-months > span > svg {
+  display: flex;
+  align-items: center;
+  text-align: center;
+}
+
+.flatpickr-prev-month, .flatpickr-next-month {
+  max-height: 0.6rem;
+  max-width: 0.6rem;
+}
+
+/* Change the background and text color of the selected day */
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+    background: var(--color-primary) !important;
+    color: var(--color-background-secondary) !important;
+    border-radius: 100%; /* Optional: rounded selection */
+}
+
+/* Style the month selection dropdown */
+.flatpickr-monthDropdown-months {
+  border: 0.1rem solid var(--color-background-quaternary) !important;
+}
+
+.flatpickr-monthDropdown-months:hover {
+  box-shadow: 0rem 0rem 0.3rem var(--color-primary);
+}
+
+/* Change color of the selected option */
+.flatpickr-monthDropdown-months option:checked {
+  background: var(--color-primary) !important; /* Blue background */
+  color: var(--color-background-secondary) !important;
+}
+
+/* Change color of the selected option */
+.flatpickr-monthDropdown-months option:hover {
+  background: var(--color-secondary) !important; /* Blue background */
+}
+
+.flatpickr-months * { /* scale font size of month and year*/
+  font-size: 1rem !important;
 }

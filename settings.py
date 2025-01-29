@@ -39,8 +39,8 @@ CSS_VARIABLES = {
     # "color-table-selection": "rgba(60,140,200,0.2)",
 
     # AQUAMARINE THEME
-    "color-primary": "rgba(0, 203, 182, 0.7)",
-    "color-secondary": "rgba(174, 0, 242, 0.7)",
+    "color-primary": "rgba(0, 203, 182, 0.8)",
+    "color-secondary": "rgba(174, 0, 242, 0.8)",
     "color-tertiary": "rgba(255, 199, 0, 0.8)",
     "color-quaternary": "rgba(0, 145, 134, 0.8)",
     "color-table-selection": "rgba(0, 203, 182,0.15)",
@@ -81,7 +81,7 @@ CSS_VARIABLES = {
 
 GROSS_TO_NET_MULTIPLIER = 0.77 # values like 0.77. It converts gross -> net at the time of scraping, not on table display
 
-DATABASE_TABLE_NAME = 'test4' # values like 'table1'. Creates new table if it doesn't exist already
+DATABASE_TABLE_NAME = 'table1' # values like 'table1'. Creates new table if it doesn't exist already
 
 DATABASE_DEFAULT_INT = 'NULL' # '""' represents an empty string. Default value is used when value not provided
 DATABASE_DEFAULT_TEXT = 'NULL' # Default value is used when value not provided

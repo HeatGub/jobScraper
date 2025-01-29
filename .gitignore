@@ -2,10 +2,7 @@ __pycache__/
 .venv/
 venv/
 .vs/
-chromedriver.exe
 chromedriver128.exe
 chromedriver130.exe
+# cookies.json file is generated if doesn't exist 
 cookies.json
-cookiesCopy.json
-results.csv
-results.db

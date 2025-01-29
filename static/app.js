@@ -4,12 +4,22 @@ const buttonMessageStart = 'START'
 const buttonMessagePause = 'PAUSE'
 const checkAllText = '✓'
 const uncheckAllText = '✗'
-const sliceMessageToThisAmountOfCharacters = 300
+const sliceMessageToThisAmountOfCharacters = 350
+
+// CHANGE CALENDAR TOOL FOR FLATPICKR - styling in CSS file
+flatpickr("input[type='datetime-local']", {
+    enableTime: true, // show hh:mm options
+    enableSeconds: true,
+    dateFormat: "Y-m-d H:i:S",
+    allowInput: true, // Allow manual typing in the input field
+    time_24hr: true,
+    minuteIncrement: 1,
+    onOpen: function() { // set curent datetime on open
+        this.setDate(new Date(), true); // Set current date and time
+    }
+});
 
 fetchProcesses() // HAS TO STAY AT THE TOP TO FETCH PROCESSES FIRST
-
-document.getElementById("openBrowserButton").addEventListener("click", () => { fetchEndpointAndAwaitResponse('openBrowser', 'openBrowserOutput') })
-document.getElementById("saveCookiesToJsonButton").addEventListener("click", () => { fetchEndpointAndAwaitResponse('saveCookiesToJson', 'saveCookiesToJsonOutput') })
 
 function fetchProcesses() {
     // const output = document.getElementById(outputDiv)
@@ -18,24 +28,24 @@ function fetchProcesses() {
         fetch( url, {
             cache: "no-cache",
         }) // FETCH RETURNS ASYNC PROMISE AND AWAITS RESPONSE
-            .then(function (response) {
-                if (response.status !== 200) { //response status from flask
-                    output.innerText = 'response status code: ' + response.status + '. Check python console for more info'
+        .then(function (response) {
+            if (response.status !== 200) { //response status from flask
+                output.innerText = 'response status code: ' + response.status + '. Check python console for more info'
+                return
+            }
+            response.json().then(function (processesList) {
+                if (processesList.length === 0) {
+                    createNewFullScrapingDiv()  // no arguments provided, just a div ready to start
                     return
                 }
-                response.json().then(function (processesList) {
-                    if (processesList.length === 0) {
-                        createNewFullScrapingDiv()  // no arguments provided, just a div ready to start
-                        return
-                    }
-                    // console.log(data)
-                    processesList.forEach((process) => {
-                        // console.log(process.divIndex, process.url)
-                        createNewFullScrapingDiv(process.url, process.divIndex, process.lastMessage)
-                    })
-                    return
+                // console.log(data)
+                processesList.forEach((process) => {
+                    // console.log(process.divIndex, process.url)
+                    createNewFullScrapingDiv(process.url, process.divIndex, process.lastMessage)
                 })
+                return
             })
+        })
     }
     catch (error) {
         console.log('JS ERROR CATCHED' + error)
@@ -43,8 +53,12 @@ function fetchProcesses() {
     }
 }
 
+document.getElementById("openBrowserButton").addEventListener("click", () => { fetchEndpointAndAwaitResponse('openBrowser', 'openBrowserOutput') })
+document.getElementById("saveCookiesToJsonButton").addEventListener("click", () => { fetchEndpointAndAwaitResponse('saveCookiesToJson', 'saveCookiesToJsonOutput') })
+
 function fetchEndpointAndAwaitResponse (endpoint, outputDiv) {
     const output = document.getElementById(outputDiv)
+    output.innerText = 'working...'
     try {
         let url = window.origin.toString() + "/" + endpoint.toString()
         fetch( url, {
@@ -112,6 +126,7 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
 
     // DECLARE INSIDE TO USE OUTER FUNCITON'S VARIABLES
     function fetchKillProcessIfExistsEndpoint() {
+        output.innerHTML = 'working...'
         const url = input.value
         try {
             fetch(window.origin.toString() + '/killProcessIfExists', {
@@ -150,7 +165,7 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
     // ADD EVENT LISTENERS
     button.addEventListener("click", () => { checkButtonStateAndFetchFullScrapingEndpointRecursively(button, 'fullScrapingOutput_'+index, 'fullScrapingInputUrl_'+index) })
     deleteDiv.addEventListener("click", () => { fetchKillProcessIfExistsEndpoint() })
-}
+} // createNewFullScrapingDiv ends here
 
 addNewProcessButton = document.getElementById('addNewProcessButton')
 addNewProcessButton.addEventListener("click", () => { createNewFullScrapingDiv()})
@@ -162,6 +177,8 @@ function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, output
     const inputUrlDiv = document.getElementById(inputUrl)
     const url =  inputUrlDiv.value
     const divIndex = Number(inputUrlDiv.id.match(/\d+$/)) // regex for numbers at the end of line
+
+    output.innerText = 'working...'
 
     function isUrlValid(url) {
         try {
@@ -450,6 +467,5 @@ document.querySelectorAll('.categoryShowHideDiv').forEach(hideShowDiv => {
 //     console.log(':root variables', getElementCSSVariables(cssVars, document.documentElement));
 // }
 // printAllRootVariables()
-
 
 }) //onDOMContentLoaded ends here

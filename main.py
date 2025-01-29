@@ -321,7 +321,7 @@ PROCESSES_LIST = [] #[ {'url': url, 'divIndex': divIndex, 'lastMessage':'', 'pro
 if __name__ == "__main__":
     Database.createTableIfNotExists()
     # app.run(debug=False)
-    app.run(debug=True)
+    app.run(host='localhost', port=5000, debug=True) # if debug=True it auto-reloads after detecting code change, but runs additional process
     # print(len(PROCESSES_LIST))
     print("MAIN PROCESS ENDS HERE")
 
@@ -329,7 +329,4 @@ if __name__ == "__main__":
 ###########################################  TODO
 # readme - nested query + grossToNet converted at the scraping
 # generate requirements.txt
-
-# find offer not found msg for justjoin
 # terminate test browser instance at some point (check ifBrowserOpen on any add/delete process click?)
-# pause scraping when too many Nones after analysis (dont scrap to db) and print the message (alert too?)
