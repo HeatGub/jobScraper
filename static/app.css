@@ -528,16 +528,6 @@ input[type="checkbox"]:hover {
   -ms-user-select: none; /* For older versions of Internet Explorer/Edge */
 }
 
-/* TEXT SELECTION COLOR */
-.flatpickr-calendar *::selection {
-  background-color: var(--color-primary);  /* Blue background for selected text */
-  color: var(--color-background-secondary);
-}
-.flatpickr-calendar *::-moz-selection {
-  background-color: var(--color-primary);  /* Blue background for selected text */
-  color: var(--color-background-secondary);
-}
-
 .flatpickr-calendar *{
   font-size: 0.9rem;
   background-color: var(--color-background-tertiary) !important;
@@ -552,13 +542,14 @@ input[type="checkbox"]:hover {
   border-top: 0.1rem solid var(--color-secondary) !important;
 }
 
-/* Fix white border on selected date */
-.flatpickr-day.selected,
-.flatpickr-day.selected:hover {
-  background: #007bff !important;
-  color: white !important;
-  border: none !important;
-  box-shadow: none !important;
+/* TEXT SELECTION COLOR */
+.flatpickr-calendar *::selection {
+  background-color: var(--color-primary);  /* Blue background for selected text */
+  color: var(--color-background-secondary);
+}
+.flatpickr-calendar *::-moz-selection {
+  background-color: var(--color-primary);  /* Blue background for selected text */
+  color: var(--color-background-secondary);
 }
 
 /* Fix white edges on month navigation arrows */
@@ -581,7 +572,6 @@ input[type="checkbox"]:hover {
   width: 1rem;    /* Adjust arrow size */
   height: 1rem;
 }
-
 
 /* Calendar inner border (header) */
 .flatpickr-months {
@@ -623,13 +613,13 @@ input[type="checkbox"]:hover {
 
 /* Change color of the selected option */
 .flatpickr-monthDropdown-months option:checked {
-  background: var(--color-primary) !important; /* Blue background */
+  background: var(--color-primary) !important;
   color: var(--color-background-secondary) !important;
 }
 
 /* Change color of the selected option */
 .flatpickr-monthDropdown-months option:hover {
-  background: var(--color-secondary) !important; /* Blue background */
+  background: var(--color-primary) !important;
 }
 
 .flatpickr-months * { /* scale font size of month and year*/

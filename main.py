@@ -4,11 +4,11 @@ pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/p
 from flask import Flask, render_template, request, send_file #, make_response, jsonify
 from bokeh.resources import CDN
 from bokeh.embed import json_item
-import multiprocessing, io, time
+import multiprocessing, io
 # import numpy as np
-from databaseFunctions import Database
-from SeleniumBrowser import SeleniumBrowser
-from makeBokehFigures import makeBokehPlot, makeBokehTable
+from modules.Database import Database
+from modules.SeleniumBrowser import SeleniumBrowser
+from modules.makeBokehFigures import makeBokehPlot, makeBokehTable
 from settings import DATABASE_TABLE_NAME, DATABASE_COLUMNS, CSS_VARIABLES, testBrowserUrlPlaceholder
 # import importlib, settings # to reload CSS
 
@@ -320,13 +320,26 @@ PROCESSES_LIST = [] #[ {'url': url, 'divIndex': divIndex, 'lastMessage':'', 'pro
 
 if __name__ == "__main__":
     Database.createTableIfNotExists()
-    # app.run(debug=False)
-    app.run(host='localhost', port=5000, debug=True) # if debug=True it auto-reloads after detecting code change, but runs additional process
+    host='localhost'
+    port=5000
+    print(f"\n\tStarting job scraper. Visit http://{host}:{port} and begin.\n")
+    app.run(host=host, port=port, debug=True) # if debug=True it auto-reloads after detecting code change, but runs additional process
     # print(len(PROCESSES_LIST))
-    print("MAIN PROCESS ENDS HERE")
+    print("\n\tJob scraper closed.\n")
 
 
 ###########################################  TODO
 # readme - nested query + grossToNet converted at the scraping
-# generate requirements.txt
 # terminate test browser instance at some point (check ifBrowserOpen on any add/delete process click?)
+
+
+
+
+# moved files with:
+# git mv makeBokehFigures.py modules/makeBokehFigures.py
+# git mv databaseFunctions.py modules/Database.py
+# git mv justjoin.py modules/justjoin.py
+# git mv SeleniumBrowser.py modules/SeleniumBrowser.py
+# git mv theprotocol.py modules/theprotocol.py
+# git mv main.ipynb other/testNotebook.ipynb
+# git mv query.sql other/query.sql

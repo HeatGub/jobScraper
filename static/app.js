@@ -14,10 +14,13 @@ flatpickr("input[type='datetime-local']", {
     allowInput: true, // Allow manual typing in the input field
     time_24hr: true,
     minuteIncrement: 1,
-    onOpen: function() { // set curent datetime on open
-        this.setDate(new Date(), true); // Set current date and time
+
+    onOpen: function(selectedDates, dateStr, instance) { // dateStr empty but required
+        if (selectedDates.length === 0) { // update input if empty
+            instance.setDate(new Date())
+        }
     }
-});
+})
 
 fetchProcesses() // HAS TO STAY AT THE TOP TO FETCH PROCESSES FIRST
 
@@ -86,9 +89,9 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
 
     // HANDLING UNDEFINED ARGUMENTS
     if (url === undefined) { // IF URL ARGUMENT NOT PROVIDED
-        // url = "https://theprotocol.it/filtry/ai-ml;sp/"
-        // url = "https://justjoin.it/job-offers/bialystok"
-        url = "https://justjoin.it/job-offers/bialystok?experience-level=mid&remote=yes&orderBy=DESC&sortBy=published"
+        // url = "https://justjoin.it/job-offers/bialystok?experience-level=mid&remote=yes&orderBy=DESC&sortBy=published"
+        url = "https://theprotocol.it/filtry/python;t/junior;p/zdalna;rw"
+        // url =''
     }
 
     if (index === undefined) { // IF INDEX ARGUMENT NOT PROVIDED

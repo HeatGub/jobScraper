@@ -2,7 +2,5 @@ __pycache__/
 .venv/
 venv/
 .vs/
-chromedriver128.exe
-chromedriver130.exe
 # cookies.json file is generated if doesn't exist 
 cookies.json

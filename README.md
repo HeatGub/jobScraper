@@ -4,12 +4,17 @@ Fullstack application for scraping job portals (currently theprotocol.it and jus
 ## full description coming soon
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/9484d58b-04c1-4704-990d-fb589a5910ff" width=50%>
+  <img src="https://github.com/user-attachments/assets/9484d58b-04c1-4704-990d-fb589a5910ff" width=60%>
 </p>
 
 ## requirements
 - **browser:** I used chrome, currently version 132.0 (check in chrome://settings/help)
 - **matching browser driver:** https://googlechromelabs.github.io/chrome-for-testing/ (same version as browser needed)
 - **packages:** *pip install -r requirements.txt* (executed in the folder where requirements.txt file is). I suggest installing in a virtual environment as there are quite a lot of them
+
+## usage
+Once you have a browser, a driver and installed packages
+- run **main.py**
+- visit **http://localhost:5000** in your browser of choice and start scraping
 
 ### <p align="center">dockerized version expeceted</p> 
