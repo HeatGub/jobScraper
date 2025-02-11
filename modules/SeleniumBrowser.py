@@ -9,7 +9,7 @@ import json, re
 from pathlib import Path
 import modules.theprotocol as theprotocol
 import modules.justjoin as justjoin
-from settings import MAKE_BROWSER_INVISIBLE, BROWSER_WINDOW_WIDTH_THEPROTOCOL, BROWSER_WINDOW_HEIGHT_THEPROTOCOL, BROWSER_WINDOW_WIDTH_JUSTJOIN, BROWSER_WINDOW_HEIGHT_JUSTJOIN, testBrowserUrlPlaceholder
+from settings import MAKE_BROWSER_INVISIBLE, BROWSER_WINDOW_WIDTH_THEPROTOCOL, BROWSER_WINDOW_HEIGHT_THEPROTOCOL, BROWSER_WINDOW_WIDTH_JUSTJOIN, BROWSER_WINDOW_HEIGHT_JUSTJOIN, DOCKERIZE_MODE_ACTIVE, testBrowserUrlPlaceholder
 
 ##############################################################################
 #                                                                            #
@@ -80,16 +80,27 @@ class SeleniumBrowser:
         self.currentFunctionIndex = 0 # doesn't reset each function's progress
         try:
             # SELENIUM CHROME DRIVER SETTINGS
-            service = Service(executable_path="chromedriver.exe")
             chromeOptions = Options()
             chromeOptions.add_argument("--disable-search-engine-choice-screen")
             chromeOptions.add_argument("window-size="+str(self.BROWSER_WINDOW_WIDTH)+","+str(self.BROWSER_WINDOW_HEIGHT))
-            chromeOptions.add_experimental_option('excludeSwitches', ['enable-logging']) #disable error logging
-            # MAKE BROWSER INVISIBLE
+            chromeOptions.add_experimental_option('excludeSwitches', ['enable-logging']) # disable error logging
+            # MAKE BROWSER INVISIBLE (HEADLESS)
             if self.BASE_URL != testBrowserUrlPlaceholder and MAKE_BROWSER_INVISIBLE == True:
                 chromeOptions.add_argument('--headless')
-            # chromeOptions.add_experimental_option("detach", True) # to keep browser open after python script execution ended. Not needed anymore?
-            self.DRIVER = webdriver.Chrome(service=service, options=chromeOptions) #Selenium opens a new browser window whenever it initializes a WebDriver instance
+
+            # DOCKER (UBUNTU) REQUIREMENTS
+            if DOCKERIZE_MODE_ACTIVE == True:
+                chromeOptions.add_argument("--headless")  # Run Chrome in headless mode (remove if you need UI)
+                chromeOptions.add_argument("--no-sandbox")  # Required in Docker
+                chromeOptions.add_argument("--disable-dev-shm-usage")  # Overcome limited resource issues
+                chromeOptions.add_argument("--disable-gpu")  # Disable GPU acceleration
+                chromeOptions.binary_location = "/usr/bin/google-chrome" # linux command: which google-chrome
+                service = Service("/usr/local/bin/chromedriver-linux64/chromedriver") # specified in dockerfile (linux)
+            # WINDOWS REQUIREMENTS
+            else:
+                service = Service(executable_path="chromedriver.exe") 
+
+            self.DRIVER = webdriver.Chrome(service=service, options=chromeOptions) # Selenium opens a new browser window whenever it initializes a WebDriver instance
             self.DRIVER.get("https://theprotocol.it")
             return {'success':True, 'functionDone':True, 'message':'opened a selenium browser'}
         except Exception as exception:

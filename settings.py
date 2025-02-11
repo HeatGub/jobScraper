@@ -6,6 +6,8 @@
 
 MAKE_BROWSER_INVISIBLE = False # justjoin HAS TO HAVE INVISIBLE (headless) OR ACTIVE (not minimized) window to fetch URLs list and/or some params
 
+DOCKERIZE_MODE_ACTIVE = False # KEEP IT FALSE, unless building linux docker image. Changes settings in main.py and SeleniumBrowser.py to fit docker (ubuntu) requirements
+
 # changing window size might affect scraping speed due to changing page loading time
 BROWSER_WINDOW_WIDTH_THEPROTOCOL = 600 # integer [pixels]
 BROWSER_WINDOW_HEIGHT_THEPROTOCOL = 800 # integer [pixels]
