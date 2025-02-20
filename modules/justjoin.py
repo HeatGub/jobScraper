@@ -171,10 +171,10 @@ def getOfferDetails(SeleniumBrowser):
                 # print(salaryMinAndMax)
             if re.findall("godz", lines[1]) or re.findall("hr.", lines[1]): # hr -> month
                 salaryMinAndMax = [(float(elmnt) * hoursPerMonthInFullTimeJob) for elmnt in salaryMinAndMax] #possible input float/str
-
-            salaryMinAndMax = [int(elmnt) for elmnt in salaryMinAndMax] # to ints
+            
             if salaryMinAndMax[1] == None: # some offers provide just 1 extremum
                 salaryMinAndMax[1] = salaryMinAndMax[0]
+            salaryMinAndMax = [int(elmnt) for elmnt in salaryMinAndMax] # to ints
                 
         except Exception as exception:
             pass    # salaryMinAndMax = [None, None]

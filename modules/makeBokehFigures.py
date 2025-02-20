@@ -13,8 +13,8 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
     pd.options.mode.copy_on_write = True #recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
     pd.set_option('future.no_silent_downcasting', True)
 
-    nonNanRowsDf = dataframe[dataframe['salaryMin'].notna()]
-    nanRowsDf = dataframe[dataframe['salaryMin'].isna()]
+    nonNanRowsDf = dataframe[dataframe['salaryMin'].notna() & dataframe['salaryMax'].notna()] # must be numbers or the plot will be screwed
+    nanRowsDf = dataframe[dataframe['salaryMax'].isna()]
 
     # SPECIFY UNSPECIFIED BARS HEIGHT
     if len(nonNanRowsDf) > 0: #otherwise division by 0 possible
