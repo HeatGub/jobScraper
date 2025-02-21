@@ -1,12 +1,14 @@
-##############################################################################
-#       SAVE SETTINGS AND RUN THE APP AGAIN FOR CHANGES TO TAKE EFFECT       #
-##############################################################################
+#############################################################################################
+#                                                                                           #
+#       JUST SAVE SETTINGS.PY FOR CHANGES TO TAKE EFFECT. NO NEED TO STOP RUNNING APP       #
+#                   IF CSS_VARIABLES HAVE BEEN CHANGED REFRESH THE PAGE                     #
+#                                                                                           #
+#############################################################################################
+
 
 ######################################################## SELENIUM SETTINGS ########################################################
 
 MAKE_BROWSER_INVISIBLE = False # justjoin HAS TO HAVE INVISIBLE (headless) OR ACTIVE (not minimized) window to fetch URLs list and/or some params
-
-DOCKERIZE_MODE_ACTIVE = False # KEEP IT FALSE, unless building linux docker image. Changes settings in main.py and SeleniumBrowser.py to fit docker (ubuntu) requirements
 
 # changing window size might affect scraping speed due to changing page loading time
 BROWSER_WINDOW_WIDTH_THEPROTOCOL = 600 # integer [pixels]
@@ -14,14 +16,15 @@ BROWSER_WINDOW_HEIGHT_THEPROTOCOL = 800 # integer [pixels]
 BROWSER_WINDOW_WIDTH_JUSTJOIN = 800 # integer [pixels]
 BROWSER_WINDOW_HEIGHT_JUSTJOIN = 900 # integer [pixels]
 
-NO_NEW_RESULTS_COUNTER_LIMIT_JUSTJOIN = 2 # integer. SUGGESTING AT LEAST 3. How many times to retry scrolling if offers list has the same length as after the last try
+NO_NEW_RESULTS_COUNTER_LIMIT_JUSTJOIN = 4 # integer. SUGGESTING AT LEAST 3. How many times to retry scrolling if offers list has the same length as after the last try
+
 # AVOID BOT CHECK BY WAITING FOR SOME SECONDS - how long to wait before scraping next offer/URLs page
 # [a,b] means wait between a and b SECONDS - sleep(random.uniform(a,b)). Integers/floats but always 2 values
-WAIT_URLS_JUSTJOIN = [0.5, 1] # rather not [0,0] as this site usually loads offers list really slowly
+WAIT_URLS_JUSTJOIN = [0, 0] # rather not [0,0] as this site usually loads offers list really slowly
 WAIT_OFFER_PARAMS_JUSTJOIN = [0, 0] # [0,0] worked well for me as this site also loads offers slowly xD so even at max speed bot check was never triggered
 
-WAIT_URLS_THEPROTOCOL = [0.3, 0.5] # [0,0] worked well for a few pages
-WAIT_OFFER_PARAMS_THEPROTOCOL = [0, 0] # [0,0] sometimes triggers bot check
+WAIT_URLS_THEPROTOCOL = [0, 0] # [0,0] worked well
+WAIT_OFFER_PARAMS_THEPROTOCOL = [0.3, 0.5] # [0,0] sometimes triggers bot check
 
 ######################################################## PLOT AND TABLE SIZING ########################################################
 
@@ -42,8 +45,8 @@ CSS_VARIABLES = {
 
     # AQUAMARINE THEME
     "color-primary": "rgba(0, 203, 182, 0.8)",
-    "color-secondary": "rgba(174, 0, 242, 0.8)",
-    "color-tertiary": "rgba(255, 199, 0, 0.8)",
+    "color-secondary": "rgba(174, 0, 242, 0.85)",
+    "color-tertiary": "rgba(255, 199, 0, 0.7)",
     "color-quaternary": "rgba(0, 145, 134, 0.8)",
     "color-table-selection": "rgba(0, 203, 182,0.15)",
 
@@ -81,15 +84,16 @@ CSS_VARIABLES = {
 
 ######################################################## DATABASE ########################################################
 
-GROSS_TO_NET_MULTIPLIER = 0.77 # values like 0.77. It converts gross -> net at the time of scraping, not on table display
+GROSS_TO_NET_MULTIPLIER = 0.77 # floating point number like 0.77, 0.6 etc. It converts with (salaryNet = salaryGross * GROSS_TO_NET_MULTIPLIER) at the time of scraping, not on table display
 
 DATABASE_TABLE_NAME = 'table1' # values like 'table1'. Creates new table if it doesn't exist already
+# DATABASE_TABLE_NAME = 'test1' # populated test table
 
 DATABASE_DEFAULT_INT = 'NULL' # '""' represents an empty string. Default value is used when value not provided
 DATABASE_DEFAULT_TEXT = 'NULL' # Default value is used when value not provided
 
-# adjust DATABASE_COLUMNS if you'd like different table structure. 
-# CAUTION: it could cause problem on existing tables (running select query on columns which does not exist)
+# adjust DATABASE_COLUMNS if you'd like different table structure. The below variables REQUIRE APP RESTART TO APPLY (as it's rarely modified)
+# ⛔ CAUTION: it can cause problems on existing tables (running select query on columns which does not exist)
 DATABASE_COLUMNS = [
     {"dbColumnName": "datetimeLast", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "last seen", "description":"'datetimeLast' - date and time when an offer was scraped the last time"}, # don't remove this one tho as it's updated if offer url found in DB
     {"dbColumnName": "datetimeFirst", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "first seen", "description":"'datetimeFirst' - date and time when an offer was scraped for the first time"},
@@ -115,3 +119,5 @@ doNotCountTheseColumnsOnNonesCheck = ['datetimeLast', 'datetimeFirst', 'url'] # 
 ######################################################## MISC ########################################################
 
 testBrowserUrlPlaceholder = 'testBrowserUrlPlaceholder' # no need to change it, just a process 'name'
+
+DOCKERIZE_MODE_ACTIVE = False # KEEP IT FALSE, unless building linux docker image. Changes settings in main.py and SeleniumBrowser.py to fit docker (ubuntu) requirements

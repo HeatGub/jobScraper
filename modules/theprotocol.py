@@ -1,11 +1,12 @@
 from selenium.webdriver.common.by import By
 import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-import time, json, random, re, datetime
+import time, random, re, datetime
 from modules.Database import Database
-from settings import DATABASE_COLUMNS, GROSS_TO_NET_MULTIPLIER, WAIT_URLS_THEPROTOCOL, WAIT_OFFER_PARAMS_THEPROTOCOL, doNotCountTheseColumnsOnNonesCheck
+import settings
+import importlib
 
-# theprotocol is being scraped well even when browser minimized
+# theprotocol is being scraped well even when browser is minimized
 
 ########################################################################### Scrap offer URLs from all the pages ###########################################################################
 
@@ -48,7 +49,8 @@ def scrapUrlsFromAllThePages(SeleniumBrowser):
         elif not foundOffersListOnThePage(SeleniumBrowser):
             return {'success':True, 'functionDone':True, 'message': 'URLs scraping done. Scraped ' + str(len(SeleniumBrowser.OFFERS_URLS))+' offer urls in total'}
         elif foundOffersListOnThePage(SeleniumBrowser):
-            time.sleep(random.uniform(WAIT_URLS_THEPROTOCOL[0], WAIT_URLS_THEPROTOCOL[1])) # humanize request frequency
+            importlib.reload(settings) # necessary for reloading lists and other complex data types
+            time.sleep(random.uniform(settings.WAIT_URLS_THEPROTOCOL[0], settings.WAIT_URLS_THEPROTOCOL[1])) # humanize request frequency
             if scrapOffersUrlsFromSinglePage(SeleniumBrowser)['success'] == True:
                 SeleniumBrowser.currentlyScrapedPageIndex += 1
                 return {'success':True, 'functionDone':False, 'message': 'page ' + str(SeleniumBrowser.currentlyScrapedPageIndex -1) + ' urls fetched'} # -1 because starting from 1 and incremented just above
@@ -94,7 +96,7 @@ def getOfferDetails(SeleniumBrowser):
                 # salaryUnit = re.findall(r"[^\d–-]", lines[0]) #[exclude digits and –/-]
                 # salaryUnit = ''.join(salaryUnit) #join list elements
                 if re.findall("brutto", lines[1]) or re.findall("gross", lines[1]): # gross -> net
-                    salaryMinAndMax = [(float(elmnt) * GROSS_TO_NET_MULTIPLIER) for elmnt in salaryMinAndMax]
+                    salaryMinAndMax = [(float(elmnt) * settings.GROSS_TO_NET_MULTIPLIER) for elmnt in salaryMinAndMax]
                     # print(salaryMinAndMax)
                 if re.findall("godz", lines[1]) or re.findall("hr.", lines[1]): # hr -> month
                     salaryMinAndMax = [(float(elmnt) * hoursPerMonthInFullTimeJob) for elmnt in salaryMinAndMax] #possible input float/str
@@ -222,10 +224,10 @@ def scrapToDatabase(SeleniumBrowser):
                 # LOOK FOR COMMON KEYS AS getOfferDetails() can return more keys than custom shortened DB has columns
                 offerDetailsDict = getOfferDetails(SeleniumBrowser)
                 # a dictionary containing only the keys appearing in both dictionaries
-                commonKeysDict = {key: offerDetailsDict[key] for key in [item["dbColumnName"] for item in DATABASE_COLUMNS] if key in offerDetailsDict}
+                commonKeysDict = {key: offerDetailsDict[key] for key in [item["dbColumnName"] for item in settings.DATABASE_COLUMNS] if key in offerDetailsDict}
                 
                 # AMOUNT OF NONES CHECK (if too many fields not scraped - bot check, site update, etc)
-                alwaysNotNonesAmount = sum(1 for key in commonKeysDict.keys() if key in doNotCountTheseColumnsOnNonesCheck)
+                alwaysNotNonesAmount = sum(1 for key in commonKeysDict.keys() if key in settings.doNotCountTheseColumnsOnNonesCheck)
                 nonesCount = sum(1 for value in commonKeysDict.values() if value is None)
                 if nonesCount >= int(len(commonKeysDict)-alwaysNotNonesAmount):
                     # PAUSE on too many nones (allColumns - alwaysNotNonesAmount) at the moment
@@ -239,12 +241,15 @@ def scrapToDatabase(SeleniumBrowser):
                     Database.insertRecord(commonKeysDict) # insert into database
                     SeleniumBrowser.databaseInserts += 1
                 SeleniumBrowser.currentlyScrapedOfferIndex += 1 # increment if successfully analysed
-                time.sleep(random.uniform(WAIT_OFFER_PARAMS_THEPROTOCOL[0], WAIT_OFFER_PARAMS_THEPROTOCOL[1])) # move to settings
+
+                importlib.reload(settings) # necessary for reloading lists and other complex data types
+
+                time.sleep(random.uniform(settings.WAIT_OFFER_PARAMS_THEPROTOCOL[0], settings.WAIT_OFFER_PARAMS_THEPROTOCOL[1])) # move to settings
                 return {'success':True, 'functionDone':False, 'message': str(SeleniumBrowser.currentlyScrapedOfferIndex) + '/' + str(len(SeleniumBrowser.OFFERS_URLS)) + ' offers scraped'}
             elif offerNotFound(SeleniumBrowser):
                 # print('OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url)
                 SeleniumBrowser.currentlyScrapedOfferIndex += 1 # increment even if offer not found not to get stuck
-                time.sleep(random.uniform(WAIT_OFFER_PARAMS_THEPROTOCOL[0], WAIT_OFFER_PARAMS_THEPROTOCOL[1])) # move to settings
+                time.sleep(random.uniform(settings.WAIT_OFFER_PARAMS_THEPROTOCOL[0], settings.WAIT_OFFER_PARAMS_THEPROTOCOL[1])) # move to settings
                 return {'success':False, 'functionDone':False, 'message': 'OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url}
     except Exception as exception:
         return {'success':False, 'functionDone':False, 'message':str(exception)}

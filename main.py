@@ -1,16 +1,16 @@
-import json, random, re, datetime
+import json, re, datetime
 import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
 from flask import Flask, render_template, request, send_file #, make_response, jsonify
 from bokeh.resources import CDN
 from bokeh.embed import json_item
 import multiprocessing, io
-# import numpy as np
 from modules.Database import Database
 from modules.SeleniumBrowser import SeleniumBrowser
 from modules.makeBokehFigures import makeBokehPlot, makeBokehTable
-from settings import DATABASE_TABLE_NAME, DATABASE_COLUMNS, CSS_VARIABLES, DOCKERIZE_MODE_ACTIVE, testBrowserUrlPlaceholder
-# import importlib, settings # to reload CSS
+import importlib, os, sys, time, threading # settings autoreload
+import settings # 'from settings import variable' doesn't work with importlib autoreloading
+
 
 ########################################################################## FLASK ENDPOINTS ###########################################################################
 
@@ -19,23 +19,19 @@ app = Flask(__name__)
 @app.route('/', methods=['GET', 'POST'])
 def root():
     if request.method == 'GET':
-        # reload settings if changed
-        # importlib.reload(settings)
-        # from settings import CSS_VARIABLES
-
         # PREPARE TEMPLATE FOR CSS ROOT VARIABLES
         variablesString = ''
-        for key, value in CSS_VARIABLES.items():
+        for key, value in settings.CSS_VARIABLES.items():
             variablesString += f"--{key}:{value};" # no new line needed as it css has ;
         cssRootTemplate = "<style>:root{"+variablesString+"}</style>"
         # print(cssRootTemplate)
-        return render_template("app.html", cssRoot=cssRootTemplate, databaseColumns=DATABASE_COLUMNS, resources=CDN.render()) # columnsAll=list(DATABASE_COLUMNS_OLD.keys())
+        return render_template("app.html", cssRoot=cssRootTemplate, databaseColumns=settings.DATABASE_COLUMNS, resources=CDN.render()) # columnsAll=list(DATABASE_COLUMNS_OLD.keys())
     
     elif request.method == 'POST':
         def makeFormOutputDictionary():
             formDictFromJson = request.get_json() #get form values from a request
             outputDict = {}
-            for column in [column["dbColumnName"] for column in DATABASE_COLUMNS]:
+            for column in [column["dbColumnName"] for column in settings.DATABASE_COLUMNS]:
                 rowDictionary = {'show': False, 'necessary': None, 'forbidden': None, 'above': None, 'below': None}
                 #show column
                 if formDictFromJson.get(column+'Show', False): #if not found assign False. Found only if form field not empty
@@ -116,11 +112,11 @@ def root():
             queryMainPart += '\nORDER BY (salaryMin+SalaryMax)/2 ASC, (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 * 60 DESC;' #order by
 
             querySelectPart = re.sub(r", $", '', querySelectPart) #remove ", " from the end
-            querySelectPart += " FROM "+DATABASE_TABLE_NAME # 1=1 to append only ANDs
+            querySelectPart += " FROM "+settings.DATABASE_TABLE_NAME # 1=1 to append only ANDs
             queryMainPart = re.sub(r" 1=1\nAND", '', queryMainPart) #remove "1=1\nAND" if at least 1 filter specified
             queryMainPart = re.sub(r"\nWHERE 1=1", '', queryMainPart)# or remove WHERE 1=1 if no filters specified. If specified shouldn't match this regexp
             query = querySelectPart + queryMainPart
-            queryPlot = "SELECT datetimeFirst, datetimeLast, title, salaryMin, salaryMax FROM "+ DATABASE_TABLE_NAME + queryMainPart #2nd query - always select datetimes and salaries for plotting, order by time active and avg salary
+            queryPlot = "SELECT datetimeFirst, datetimeLast, title, salaryMin, salaryMax FROM "+ settings.DATABASE_TABLE_NAME + queryMainPart #2nd query - always select datetimes and salaries for plotting, order by time active and avg salary
             # print('\n'+query+'\n'+queryPlot)
             return query, queryPlot
         
@@ -157,7 +153,7 @@ def downloadCsvEndpoint():
 @app.route('/openBrowser', methods=['GET'])
 def openTestBrowserEndpoint():
     print('\t\topenTestBrowserEndpoint')
-    process = getOrCreateProcess(testBrowserUrlPlaceholder, -1) # JUST SOME STRING AND NEGATIVE INDEX AS IT'S NOT A SCRAPING BROWSER
+    process = getOrCreateProcess(settings.testBrowserUrlPlaceholder, -1) # JUST SOME STRING AND NEGATIVE INDEX AS IT'S NOT A SCRAPING BROWSER
     process['taskQueue'].put((SeleniumBrowser.openBrowserIfNeeded, (), {})) # pass tuple to seleniumFunctions
     # time.sleep(300) # still shows in JS
     res = process['resultQueue'].get()
@@ -166,7 +162,7 @@ def openTestBrowserEndpoint():
 @app.route('/saveCookiesToJson', methods=['GET'])
 def saveCookiesToJsonEndpoint():
     print('\t\tsaveCookiesToJsonEndpoint')
-    process = getOrCreateProcess(testBrowserUrlPlaceholder, -1) # JUST SOME STRING AND NEGATIVE INDEX AS IT'S NOT A SCRAPING BROWSER
+    process = getOrCreateProcess(settings.testBrowserUrlPlaceholder, -1) # JUST SOME STRING AND NEGATIVE INDEX AS IT'S NOT A SCRAPING BROWSER
     process['taskQueue'].put((SeleniumBrowser.saveCookiesToJson, (), {})) # pass tuple to seleniumFunctions
     # time.sleep(random.uniform(1,2))
     res = process['resultQueue'].get()
@@ -218,8 +214,8 @@ def killProcessIfExistsEndpoint():
 def getProcessesEndpoint():
     return json.dumps (listProcessesExceptTestBrowser())
 
-########################################################################### PROCESSES MANAGEMENT ########################################################################### 
 
+########################################################################### PROCESSES MANAGEMENT ########################################################################### 
 
 def workerBrowser(url, task_queue, result_queue):
     browserInstance = SeleniumBrowser(url) # EACH PROCESS (WORKER) HAS ITS OWN BROWSER INSTANCE
@@ -240,7 +236,7 @@ def workerBrowser(url, task_queue, result_queue):
 def listProcessesExceptTestBrowser():
     processes = [{'divIndex':process['divIndex'], 'url':process['url'], 'lastMessage':process['lastMessage'] }
                   for process in PROCESSES_LIST
-                  if process['url'] != testBrowserUrlPlaceholder]
+                  if process['url'] != settings.testBrowserUrlPlaceholder]
     # print('\n')
     # print('\t\tactive_processes len = ' + str(len(processes)))
     # print(processes)
@@ -310,7 +306,7 @@ def killProcessAndCloseBrowser(url):
             processDict["process"].terminate()  # Stop the process
             processDict["process"].join()  # Ensure the process finishes cleanup
             PROCESSES_LIST.remove(processDict)  # remove from the PROCESSES_LIST
-            print(f"killProcessAndCloseBrowser() - TERMINATED PROCESS FOR '{url}'")
+            print(f"TERMINATED PROCESS FOR '{url}'")
             # listProcessesExceptTestBrowser()
             return
             # return jsonify({"message": f"Process for '{url}' terminated successfully!"})
@@ -318,16 +314,38 @@ def killProcessAndCloseBrowser(url):
 
 PROCESSES_LIST = [] #[ {'url': url, 'divIndex': divIndex, 'lastMessage':'', 'process': process, 'taskQueue':taskQueue, 'resultQueue':resultQueue}, {}, ... ]
 
+
+########################################################################### SETTINGS AUTORELOAD ########################################################################### 
+
+# Since python caches imports, when settings.py is reloaded, all modules using 'import settings' will get the updated values automatically
+def reloadSettingsOnChange():
+    settingsPath = settings.__file__
+    modifiedTimeLast = os.path.getmtime(settingsPath)
+    while True:
+        time.sleep(1)  # the thread will look for changes once per second
+        modifiedTimeCurrent = os.path.getmtime(settingsPath)
+        if modifiedTimeCurrent != modifiedTimeLast:
+            modifiedTimeLast = modifiedTimeCurrent
+            
+            importlib.reload(settings) # all modules using 'import settings' will get these reloaded values
+            print("⚡ Settings reloaded ⚡")
+
+
+########################################################################### APP INITIALIZATION ########################################################################### 
+
 if __name__ == "__main__":
     Database.createTableIfNotExists()
-    if DOCKERIZE_MODE_ACTIVE == True:
-        host = '0.0.0.0' # This allows docker app to accept connections from outside the container, like via localhost:5000
+
+    threading.Thread(target=reloadSettingsOnChange, daemon=True).start() # start a thread to detect settings.py changes
+
+    if settings.DOCKERIZE_MODE_ACTIVE == True:
+        host = '0.0.0.0' # host = 0.0.0.0 allows docker app to accept connections from outside the container, like via localhost:5000
     else:
         host = 'localhost'
     port=5000
+
     print(f"\n\tStarting job scraper. Visit http://{host}:{port} and begin.\n")
     app.run(host=host, port=port, debug=False) # if debug=True it auto-reloads after detecting code change, but runs additional process
-    # print(len(PROCESSES_LIST))
     print("\n\tJob scraper closed.\n")
 
 

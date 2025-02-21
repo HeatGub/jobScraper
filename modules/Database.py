@@ -1,6 +1,6 @@
 import sqlite3, re, datetime
 import pandas as pd
-from settings import DATABASE_TABLE_NAME, DATABASE_COLUMNS
+import settings
 DATABASE_FILE_NAME = 'database.db'
 
 # multiple processes can't share same sqlite connection - create and close a new connection everytime (more than enough for that request frequency)
@@ -24,12 +24,12 @@ class Database(): # this class is just for functions encapsulation, no instance 
             connection, cursor = createDatabaseConnectionAndCursor()
             # PREPARE STRING TO CREATE DB FROM
             databaseColumnsCreationString = ''
-            for column in DATABASE_COLUMNS:
+            for column in settings.DATABASE_COLUMNS:
                 databaseColumnsCreationString += f"""{column['dbColumnName']} {column['dataType']} DEFAULT {column['default']}, """ 
             databaseColumnsCreationString = re.sub(r',\s*$', '', databaseColumnsCreationString) # remove the comma and space(s) from the end
             # print(databaseColumnsCreationString)
             # EXECUTE COMMAND
-            cursor.execute("CREATE TABLE IF NOT EXISTS " + DATABASE_TABLE_NAME + "("+ databaseColumnsCreationString +");")
+            cursor.execute("CREATE TABLE IF NOT EXISTS " + settings.DATABASE_TABLE_NAME + "("+ databaseColumnsCreationString +");")
             connection.commit()
         except sqlite3.Error as sqliteError:
             print(f"SQLite Error: {sqliteError}")
@@ -40,7 +40,7 @@ class Database(): # this class is just for functions encapsulation, no instance 
     def selectAll():
         try:
             connection, cursor = createDatabaseConnectionAndCursor() 
-            cursor.execute("SELECT * FROM" + DATABASE_TABLE_NAME +";")
+            cursor.execute("SELECT * FROM" + settings.DATABASE_TABLE_NAME +";")
             connection.commit()
             # print(cursor.fetchall())
         except sqlite3.Error as sqliteError:
@@ -66,7 +66,7 @@ class Database(): # this class is just for functions encapsulation, no instance 
             connection, cursor = createDatabaseConnectionAndCursor() 
             urlPartToCompare = re.split("[?]s=", url)[0] #split on '?s=' because after that it's only session related stuff. If no pattern found url stays unchanged (so it's just a whole URL for justjoin)
             # print(urlPartToCompare)
-            cursor.execute("SELECT datetimeFirst FROM " + DATABASE_TABLE_NAME + " WHERE url LIKE ('%" + urlPartToCompare + "%');") # also matches if urlPartToCompare is a part of another URL. But that's okay since these are usually the same offers
+            cursor.execute("SELECT datetimeFirst FROM " + settings.DATABASE_TABLE_NAME + " WHERE url LIKE ('%" + urlPartToCompare + "%');") # also matches if urlPartToCompare is a part of another URL. But that's okay since these are usually the same offers
             connection.commit()
             result = cursor.fetchall()
             if len(result) >0:
@@ -89,7 +89,7 @@ class Database(): # this class is just for functions encapsulation, no instance 
             columnValuesString = re.sub(r',\s*$', '', columnValuesString) # remove the comma and space(s) from the end
             columnNamesString = re.sub(r':', '', columnValuesString) # just remove every :
             # EXECUTE INSERT
-            cursor.execute("INSERT INTO " + DATABASE_TABLE_NAME + " ("+columnNamesString+") VALUES ("+columnValuesString+")", dictionary)
+            cursor.execute("INSERT INTO " + settings.DATABASE_TABLE_NAME + " ("+columnNamesString+") VALUES ("+columnValuesString+")", dictionary)
             connection.commit()
         except sqlite3.Error as sqliteError:
             print(f"SQLite Error: {sqliteError}")
@@ -101,7 +101,7 @@ class Database(): # this class is just for functions encapsulation, no instance 
         try:
             connection, cursor = createDatabaseConnectionAndCursor() 
             urlPartToCompare = re.split("[?]s=", url)[0] #split on '?s=' because after that it's only session related stuff. If no pattern found url unchanged
-            cursor.execute("UPDATE " + DATABASE_TABLE_NAME + " SET datetimeLast = '" + str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")) + "'  WHERE url LIKE ('%" + urlPartToCompare + "%');")
+            cursor.execute("UPDATE " + settings.DATABASE_TABLE_NAME + " SET datetimeLast = '" + str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")) + "'  WHERE url LIKE ('%" + urlPartToCompare + "%');")
             # cursor.execute("SELECT datetimeLast FROM " + DATABASE_TABLE_NAME + " WHERE url LIKE ('%" + urlPartToCompare + "%');")
             connection.commit()
         except sqlite3.Error as sqliteError:
@@ -113,7 +113,7 @@ class Database(): # this class is just for functions encapsulation, no instance 
     def countAllRecords():
         try:
             connection, cursor = createDatabaseConnectionAndCursor() 
-            cursor.execute("SELECT COUNT (*) FROM " + DATABASE_TABLE_NAME +";")
+            cursor.execute("SELECT COUNT (*) FROM " + settings.DATABASE_TABLE_NAME +";")
             connection.commit()
             resultTuple = cursor.fetchall()[0]
             (count,) = resultTuple #unpacking tuple

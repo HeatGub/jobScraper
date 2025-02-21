@@ -1,9 +1,10 @@
 from selenium.webdriver.common.by import By
 import pandas as pd
 pd.options.mode.copy_on_write = True # recommended - https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-import time, json, random, re, datetime
+import time, random, re, datetime
 from modules.Database import Database
-from settings import DATABASE_COLUMNS, GROSS_TO_NET_MULTIPLIER, WAIT_URLS_JUSTJOIN, WAIT_OFFER_PARAMS_JUSTJOIN, NO_NEW_RESULTS_COUNTER_LIMIT_JUSTJOIN, doNotCountTheseColumnsOnNonesCheck
+import settings
+import importlib
 
 def anyOffersOnTheList(SeleniumBrowser):
     try:
@@ -58,8 +59,9 @@ def scrapAllOffersUrls(SeleniumBrowser):
 
         # SeleniumBrowser.DRIVER.execute_script("window.scrollTo(0, 0);") # scroll to the very top
 
+        importlib.reload(settings) # necessary for reloading lists and other complex data types
         # CHECK IF READY TO TERMINATE
-        if SeleniumBrowser.noNewResultsCounter >= NO_NEW_RESULTS_COUNTER_LIMIT_JUSTJOIN: # or int(SeleniumBrowser.lastSeenIndex) >= 10: # END IF NO NEW RESULTS FEW TIMES
+        if SeleniumBrowser.noNewResultsCounter >= settings.NO_NEW_RESULTS_COUNTER_LIMIT_JUSTJOIN: # or int(SeleniumBrowser.lastSeenIndex) >= 10: # END IF NO NEW RESULTS FEW TIMES
             # print('first and last OFFERS_URLS: ', SeleniumBrowser.OFFERS_URLS[0]['index'], SeleniumBrowser.OFFERS_URLS[-1]['index'])
             return {'success':True, 'functionDone':True, 'message': 'URLs scraping done. Scraped ' + str(len(SeleniumBrowser.OFFERS_URLS))+' offer urls in total'}
         
@@ -73,7 +75,8 @@ def scrapAllOffersUrls(SeleniumBrowser):
             # no new offer index found
             if (SeleniumBrowser.lastSeenIndex == SeleniumBrowser.OFFERS_URLS[-1]['index']):
                 SeleniumBrowser.DRIVER.execute_script("window.scrollBy(0, -2*innerHeight);") # for some reason scrolling up helps this fucking site to load the bottom
-                time.sleep(random.uniform(WAIT_URLS_JUSTJOIN[0], WAIT_URLS_JUSTJOIN[1]))
+                importlib.reload(settings) # necessary for reloading lists and other complex data types
+                time.sleep(random.uniform(settings.WAIT_URLS_JUSTJOIN[0], settings.WAIT_URLS_JUSTJOIN[1]))
                 SeleniumBrowser.DRIVER.execute_script("window.scrollBy(0, 3*innerHeight);") # scroll to the bottom
                 SeleniumBrowser.noNewResultsCounter += 1
                 # print(OFFERS_URLS[0]['index'], OFFERS_URLS[-1]['index'])
@@ -167,7 +170,7 @@ def getOfferDetails(SeleniumBrowser):
                 splitValues[i] = re.sub(r",\d{1,2}", '', splitValues[i]) # removes , and /d{1 to 2 occurrences}  (needed when salary as 123,45)
                 salaryMinAndMax[i] = re.search(r"\d+", splitValues[i]).group() # r = raw, \d+ = at least 1 digit, group() contains results
             if re.findall("brutto", lines[1]) or re.findall("gross", lines[1]): # gross -> net
-                salaryMinAndMax = [(float(elmnt) * GROSS_TO_NET_MULTIPLIER) for elmnt in salaryMinAndMax]
+                salaryMinAndMax = [(float(elmnt) * settings.GROSS_TO_NET_MULTIPLIER) for elmnt in salaryMinAndMax]
                 # print(salaryMinAndMax)
             if re.findall("godz", lines[1]) or re.findall("hr.", lines[1]): # hr -> month
                 salaryMinAndMax = [(float(elmnt) * hoursPerMonthInFullTimeJob) for elmnt in salaryMinAndMax] #possible input float/str
@@ -315,9 +318,9 @@ def scrapToDatabase(SeleniumBrowser):
                 # LOOK FOR COMMON KEYS AS getOfferDetails() can return more keys than custom shortened DB has columns
                 offerDetailsDict = getOfferDetails(SeleniumBrowser)
                 # a dictionary containing only the keys appearing in both dictionaries
-                commonKeysDict = {key: offerDetailsDict[key] for key in [item["dbColumnName"] for item in DATABASE_COLUMNS] if key in offerDetailsDict}
+                commonKeysDict = {key: offerDetailsDict[key] for key in [item["dbColumnName"] for item in settings.DATABASE_COLUMNS] if key in offerDetailsDict}
                 # AMOUNT OF NONES CHECK (if too many fields not scraped - bot check, site update, etc)
-                alwaysNotNonesAmount = sum(1 for key in commonKeysDict.keys() if key in doNotCountTheseColumnsOnNonesCheck)
+                alwaysNotNonesAmount = sum(1 for key in commonKeysDict.keys() if key in settings.doNotCountTheseColumnsOnNonesCheck)
                 nonesCount = sum(1 for value in commonKeysDict.values() if value is None)
 
                 if nonesCount >= int(len(commonKeysDict)-alwaysNotNonesAmount):
@@ -332,12 +335,15 @@ def scrapToDatabase(SeleniumBrowser):
                     Database.insertRecord(commonKeysDict) # insert into database
                     SeleniumBrowser.databaseInserts += 1
                 SeleniumBrowser.currentlyScrapedOfferIndex += 1 # increment if successfully analysed
-                time.sleep(random.uniform(WAIT_OFFER_PARAMS_JUSTJOIN[0], WAIT_OFFER_PARAMS_JUSTJOIN[1]))
+
+                importlib.reload(settings) # necessary for reloading lists and other complex data types
+
+                time.sleep(random.uniform(settings.WAIT_OFFER_PARAMS_JUSTJOIN[0], settings.WAIT_OFFER_PARAMS_JUSTJOIN[1]))
                 return {'success':True, 'functionDone':False, 'message': str(SeleniumBrowser.currentlyScrapedOfferIndex) + '/' + str(len(SeleniumBrowser.OFFERS_URLS)) + ' offers scraped'}
             elif offerNotFound(SeleniumBrowser):
                 # print('OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url)
                 SeleniumBrowser.currentlyScrapedOfferIndex += 1 # increment even if offer not found not to get stuck
-                time.sleep(random.uniform(WAIT_OFFER_PARAMS_JUSTJOIN[0], WAIT_OFFER_PARAMS_JUSTJOIN[1])) # move to settings
+                time.sleep(random.uniform(settings.WAIT_OFFER_PARAMS_JUSTJOIN[0], settings.WAIT_OFFER_PARAMS_JUSTJOIN[1])) # move to settings
                 return {'success':False, 'functionDone':False, 'message': 'OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url}
     except Exception as exception:
         print('EKSEPSZON KURWA')

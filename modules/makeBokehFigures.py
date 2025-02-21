@@ -1,8 +1,7 @@
 from bokeh.plotting import figure
 from bokeh.models.widgets import DataTable, TableColumn
 from bokeh.models import ColumnDataSource, WheelZoomTool, HTMLTemplateFormatter, HoverTool, TapTool, Range1d, LinearAxis, InlineStyleSheet
-from settings import BOKEH_PLOT_HEIGHT, BOKEH_TABLE_MAX_HEIGHT, BOKEH_TABLE_ROW_HEIGHT, CSS_VARIABLES
-from bokeh.themes import Theme
+import settings
 import pandas as pd
 
 ############################################################################# BOKEH FUNCITONS ###############################################################################
@@ -55,33 +54,33 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
     sourceSalaryUnspecified = ColumnDataSource(dataSalaryUnspecified) #2 data sources
     sourceSalarySpecified = ColumnDataSource(dataSalarySpecified) #2 data sources
     tools = "pan,box_select,reset" # otherwise used to add 2 zoom tools
-    plot = figure(title="", x_axis_label='offer index', y_axis_label='salary [pln net/month]', height = BOKEH_PLOT_HEIGHT, sizing_mode='stretch_width', tools=tools)
+    plot = figure(title="", x_axis_label='offer index', y_axis_label='salary [pln net/month]', height = settings.BOKEH_PLOT_HEIGHT, sizing_mode='stretch_width', tools=tools)
     plot.add_layout(LinearAxis(y_range_name="y2", axis_label="days active"), 'right') # Add the second y-axis to the right. DONT MOVE IT - MAY BREAK CSS
     plot.y_range = Range1d(start=0 - 1, end=maxSalary) # * 1.2 to fit the bars
     plot.x_range = Range1d(start=0 - 1, end=int(len(dataframe))) #too much empty space by default
     plot.extra_y_ranges = {"y2": Range1d(start=0, end=maxActiveFor)} #add 1 day
       
     # COLOR SETTINGS
-    plot.border_fill_color = CSS_VARIABLES['color-background-secondary'] # outside the plot area
-    plot.background_fill_color = CSS_VARIABLES['color-background-tertiary'] # plot area
+    plot.border_fill_color = settings.CSS_VARIABLES['color-background-secondary'] # outside the plot area
+    plot.background_fill_color = settings.CSS_VARIABLES['color-background-tertiary'] # plot area
     # plot.background_fill_color = CSS_VARIABLES['primary-color'] # plot area
 
-    plot.xaxis.axis_line_color = CSS_VARIABLES['color-plot-grid-line']
-    plot.xaxis.major_tick_line_color = CSS_VARIABLES['color-plot-grid-line']
-    plot.xaxis.minor_tick_line_color = CSS_VARIABLES['color-plot-grid-line']
-    plot.yaxis.axis_line_color = CSS_VARIABLES['color-plot-grid-line']
-    plot.yaxis.major_tick_line_color = CSS_VARIABLES['color-plot-grid-line']
-    plot.yaxis.minor_tick_line_color = CSS_VARIABLES['color-plot-grid-line']
+    plot.xaxis.axis_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
+    plot.xaxis.major_tick_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
+    plot.xaxis.minor_tick_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
+    plot.yaxis.axis_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
+    plot.yaxis.major_tick_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
+    plot.yaxis.minor_tick_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
 
-    plot.xgrid.grid_line_color = CSS_VARIABLES['color-plot-grid-line']
-    plot.ygrid.grid_line_color = CSS_VARIABLES['color-plot-grid-line']
-    plot.xgrid.minor_grid_line_color = CSS_VARIABLES['color-plot-minor-grid-line']
-    plot.ygrid.minor_grid_line_color = CSS_VARIABLES['color-plot-minor-grid-line']
+    plot.xgrid.grid_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
+    plot.ygrid.grid_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
+    plot.xgrid.minor_grid_line_color = settings.CSS_VARIABLES['color-plot-minor-grid-line']
+    plot.ygrid.minor_grid_line_color = settings.CSS_VARIABLES['color-plot-minor-grid-line']
 
-    plot.xaxis.axis_label_text_color = CSS_VARIABLES['color-text-primary']
-    plot.yaxis.axis_label_text_color = CSS_VARIABLES['color-text-primary']
-    plot.xaxis.major_label_text_color = CSS_VARIABLES['color-text-secondary']
-    plot.yaxis.major_label_text_color = CSS_VARIABLES['color-text-secondary']
+    plot.xaxis.axis_label_text_color = settings.CSS_VARIABLES['color-text-primary']
+    plot.yaxis.axis_label_text_color = settings.CSS_VARIABLES['color-text-primary']
+    plot.xaxis.major_label_text_color = settings.CSS_VARIABLES['color-text-secondary']
+    plot.yaxis.major_label_text_color = settings.CSS_VARIABLES['color-text-secondary']
         
     # FONT SETTINGS
     plot.xaxis.axis_label_text_font = "Anta"
@@ -96,13 +95,13 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
     plot.yaxis.major_label_text_font_size = "0.7rem"
 
     # SALARY UNSPECIFIED BARS
-    plot.vbar('x', top = 'salaryAvg', width = 0.70, source = sourceSalaryUnspecified, color=CSS_VARIABLES["color-secondary"], alpha=0.4) # MAIN BAR
-    plot.vbar('x', top = 'activeFor', y_range_name="y2", source = sourceSalaryUnspecified, width=0.90, color=CSS_VARIABLES["color-tertiary"], alpha=0.05) # Active for
+    plot.vbar('x', top = 'salaryAvg', width = 0.70, source = sourceSalaryUnspecified, color=settings.CSS_VARIABLES["color-secondary"], alpha=0.4) # MAIN BAR
+    plot.vbar('x', top = 'activeFor', y_range_name="y2", source = sourceSalaryUnspecified, width=0.90, color=settings.CSS_VARIABLES["color-tertiary"], alpha=0.05) # Active for
     # plot.segment(x0='x', y0='salaryMin', x1='x', y1='salaryMax', source=sourceSalaryUnspecified, line_width=2, color='black') #Error bar
     # SALARY SPECIFIED BARS
-    plot.vbar('x', top = 'salaryAvg', width = 0.70, source = sourceSalarySpecified, color=CSS_VARIABLES["color-primary"], alpha=0.8) # MAIN BAR
-    plot.vbar('x', top = 'activeFor', y_range_name="y2", source = sourceSalarySpecified, width=0.90, color=CSS_VARIABLES["color-tertiary"], alpha=0.05) # Active for
-    plot.segment(x0='x', y0='salaryMin', x1='x', y1='salaryMax', source=sourceSalarySpecified, line_width=1.5, color=CSS_VARIABLES["color-plot-error-bars"], alpha=0.9) #Error bar
+    plot.vbar('x', top = 'salaryAvg', width = 0.70, source = sourceSalarySpecified, color=settings.CSS_VARIABLES["color-primary"], alpha=0.8) # MAIN BAR
+    plot.vbar('x', top = 'activeFor', y_range_name="y2", source = sourceSalarySpecified, width=0.90, color=settings.CSS_VARIABLES["color-tertiary"], alpha=0.05) # Active for
+    plot.segment(x0='x', y0='salaryMin', x1='x', y1='salaryMax', source=sourceSalarySpecified, line_width=1.5, color=settings.CSS_VARIABLES["color-plot-error-bars"], alpha=0.9) #Error bar
     
     # @parameter = accessing ColumnDataSource parameter
     # {0.} = no decimals
@@ -180,7 +179,7 @@ def makeBokehTable(dataframe):
 
     for col in columnsToFormatNewlines:
         if col in dataframe.columns:
-            dataframe[col] = dataframe[col].apply(lambda cellContent: f"<div style='overflow: auto; max-height: {BOKEH_TABLE_ROW_HEIGHT}px;'>{cellContent}</div>")
+            dataframe[col] = dataframe[col].apply(lambda cellContent: f"<div style='overflow: auto; max-height: {settings.BOKEH_TABLE_ROW_HEIGHT}px;'>{cellContent}</div>")
 
     # dataframe = dataframe.map(lambda cellContent: f"<div style='overflow: auto; max-height: {BOKEH_TABLE_ROW_HEIGHT}px;'>{cellContent}</div>") # surround every cell content with div element to customize it (ENABLE SCROLLING)
 
@@ -196,11 +195,11 @@ def makeBokehTable(dataframe):
     table = DataTable(source=source, columns=columns, sizing_mode="stretch_width", fit_columns=True) # editable=True. fit_columns=True = Ensure columns fit within the width
 
     # calculate table height
-    height = BOKEH_TABLE_ROW_HEIGHT * (len(dataframe)) # would display all without scrolling but it could get too long fast
-    if height > BOKEH_TABLE_MAX_HEIGHT:
-        height = BOKEH_TABLE_MAX_HEIGHT
+    height = settings.BOKEH_TABLE_ROW_HEIGHT * (len(dataframe)) # would display all without scrolling but it could get too long fast
+    if height > settings.BOKEH_TABLE_MAX_HEIGHT:
+        height = settings.BOKEH_TABLE_MAX_HEIGHT
     table.height = height
-    table.row_height = BOKEH_TABLE_ROW_HEIGHT
+    table.row_height = settings.BOKEH_TABLE_ROW_HEIGHT
     # table.index_position = None # turns off indexes
 
     # A LOT OF INLINE STYLING BECAUSE TABLES DON'T SUPPORT PYTHON STYLING LIKE PLOTS DO

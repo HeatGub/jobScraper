@@ -9,7 +9,7 @@ import json, re
 from pathlib import Path
 import modules.theprotocol as theprotocol
 import modules.justjoin as justjoin
-from settings import MAKE_BROWSER_INVISIBLE, BROWSER_WINDOW_WIDTH_THEPROTOCOL, BROWSER_WINDOW_HEIGHT_THEPROTOCOL, BROWSER_WINDOW_WIDTH_JUSTJOIN, BROWSER_WINDOW_HEIGHT_JUSTJOIN, DOCKERIZE_MODE_ACTIVE, testBrowserUrlPlaceholder
+import settings
 
 ##############################################################################
 #                                                                            #
@@ -28,15 +28,15 @@ class SeleniumBrowser:
         # all of the below functions must return dictionary like          {'success':True, 'functionDone':False, 'message':'working'}
         if "theprotocol.it" in str(self.BASE_URL):
             self.scrapingFunctionsInOrder = [self.openBrowserIfNeeded, self.setCookiesFromJson, theprotocol.scrapUrlsFromAllThePages, theprotocol.scrapToDatabase]
-            self.BROWSER_WINDOW_WIDTH = BROWSER_WINDOW_WIDTH_THEPROTOCOL
-            self.BROWSER_WINDOW_HEIGHT = BROWSER_WINDOW_HEIGHT_THEPROTOCOL
+            self.BROWSER_WINDOW_WIDTH = settings.BROWSER_WINDOW_WIDTH_THEPROTOCOL
+            self.BROWSER_WINDOW_HEIGHT = settings.BROWSER_WINDOW_HEIGHT_THEPROTOCOL
         elif "justjoin.it" in str(self.BASE_URL): 
             self.scrapingFunctionsInOrder = [self.openBrowserIfNeeded, self.setCookiesFromJson, justjoin.scrapAllOffersUrls, justjoin.scrapToDatabase]
-            self.BROWSER_WINDOW_WIDTH = BROWSER_WINDOW_WIDTH_JUSTJOIN
-            self.BROWSER_WINDOW_HEIGHT = BROWSER_WINDOW_HEIGHT_JUSTJOIN
-        elif testBrowserUrlPlaceholder in str(self.BASE_URL):
-            self.BROWSER_WINDOW_WIDTH = BROWSER_WINDOW_WIDTH_JUSTJOIN # this one for example
-            self.BROWSER_WINDOW_HEIGHT = BROWSER_WINDOW_HEIGHT_JUSTJOIN
+            self.BROWSER_WINDOW_WIDTH = settings.BROWSER_WINDOW_WIDTH_JUSTJOIN
+            self.BROWSER_WINDOW_HEIGHT = settings.BROWSER_WINDOW_HEIGHT_JUSTJOIN
+        elif settings.testBrowserUrlPlaceholder in str(self.BASE_URL):
+            self.BROWSER_WINDOW_WIDTH = settings.BROWSER_WINDOW_WIDTH_JUSTJOIN # this one for example
+            self.BROWSER_WINDOW_HEIGHT = settings.BROWSER_WINDOW_HEIGHT_JUSTJOIN
         else:
             self.scrapingFunctionsInOrder = [self.returnIncorrectDomainDictionary] # looks strange but __init__ can only return None
 
@@ -85,11 +85,11 @@ class SeleniumBrowser:
             chromeOptions.add_argument("window-size="+str(self.BROWSER_WINDOW_WIDTH)+","+str(self.BROWSER_WINDOW_HEIGHT))
             chromeOptions.add_experimental_option('excludeSwitches', ['enable-logging']) # disable error logging
             # MAKE BROWSER INVISIBLE (HEADLESS)
-            if self.BASE_URL != testBrowserUrlPlaceholder and MAKE_BROWSER_INVISIBLE == True:
+            if self.BASE_URL != settings.testBrowserUrlPlaceholder and settings.MAKE_BROWSER_INVISIBLE == True:
                 chromeOptions.add_argument('--headless')
 
             # DOCKER (UBUNTU) REQUIREMENTS
-            if DOCKERIZE_MODE_ACTIVE == True:
+            if settings.DOCKERIZE_MODE_ACTIVE == True:
                 chromeOptions.add_argument("--headless")  # Run Chrome in headless mode (remove if you need UI)
                 chromeOptions.add_argument("--no-sandbox")  # Required in Docker
                 chromeOptions.add_argument("--disable-dev-shm-usage")  # Overcome limited resource issues
