@@ -171,12 +171,11 @@ span {
 
 /* whole bottom span on hover */
 #headerContainer:hover .headerBottomTextContainer span {
-  text-shadow: 0rem 0rem 0.1rem var(--color-secondary);
+  text-shadow: 0rem 0rem 0.15rem var(--color-secondary);
 }
 
-/* the last text div on hover */
-#headerContainer:hover #headerText3 {
-  text-shadow: 0rem 0rem 0.2rem var(--color-primary);
+#headerContainer:hover {
+  text-shadow: 0rem 0rem 0.15rem var(--color-primary);
 }
 
 .headerBottomTextContainer {
@@ -194,7 +193,7 @@ span {
 #headerText1 {
   color: var(--color-primary);
 }
-#headerText2, #headerText3 {
+#headerText2 {
   font-size: 1rem;
   color: var(--color-tertiary);
   justify-content: center;

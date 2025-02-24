@@ -215,6 +215,17 @@ def makeBokehTable(dataframe):
     }
 
     /* HEADER */
+    
+    /*center column name*/
+    .slick-header-column {
+        text-align: center !important;
+    }
+    .slick-header-column .slick-column-name {
+        display: block;
+        width: 100%;
+        text-align: center;
+    }
+
     .slick-header * {
         color: var(--color-text-primary);
         font-size: 0.8rem;

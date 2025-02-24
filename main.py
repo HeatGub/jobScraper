@@ -350,5 +350,4 @@ if __name__ == "__main__":
 
 
 ###########################################  TODO
-# readme - nested query + grossToNet converted at the scraping
 # terminate test browser instance at some point (check ifBrowserOpen on any add/delete process click?)

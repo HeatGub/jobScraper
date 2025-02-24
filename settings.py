@@ -37,8 +37,8 @@ BOKEH_TABLE_ROW_HEIGHT = 200 # integer [pixels]
 # primary, secondary, tertiary, quaternary, quinary...
 CSS_VARIABLES = {
     # # DARK PURPLE THEME
-    # "color-primary": "rgba(80, 40, 210, 0.85)",
-    # "color-secondary": "rgba(175, 0, 126, 0.8)",
+    # "color-primary": "rgba(99, 40, 210, 0.85)",
+    # "color-secondary": "rgba(192, 9, 140, 0.8)",
     # "color-tertiary": "rgba(177, 255, 0, 0.8)",
     # "color-quaternary": "rgba(0, 142, 66, 0.8)",
     # "color-table-selection": "rgba(60,140,200,0.2)",
@@ -86,8 +86,8 @@ CSS_VARIABLES = {
 
 GROSS_TO_NET_MULTIPLIER = 0.77 # floating point number like 0.77, 0.6 etc. It converts with (salaryNet = salaryGross * GROSS_TO_NET_MULTIPLIER) at the time of scraping, not on table display
 
-DATABASE_TABLE_NAME = 'table1' # values like 'table1'. Creates new table if it doesn't exist already
-# DATABASE_TABLE_NAME = 'test1' # populated test table
+# DATABASE_TABLE_NAME = 'table1' # values like 'table1'. Creates new table if it doesn't exist already
+DATABASE_TABLE_NAME = 'test1' # populated test table
 
 DATABASE_DEFAULT_INT = 'NULL' # '""' represents an empty string. Default value is used when value not provided
 DATABASE_DEFAULT_TEXT = 'NULL' # Default value is used when value not provided
@@ -95,16 +95,16 @@ DATABASE_DEFAULT_TEXT = 'NULL' # Default value is used when value not provided
 # adjust DATABASE_COLUMNS if you'd like different table structure. The below variables REQUIRE APP RESTART TO APPLY (as it's rarely modified)
 # ⛔ CAUTION: it can cause problems on existing tables (running select query on columns which does not exist)
 DATABASE_COLUMNS = [
-    {"dbColumnName": "datetimeLast", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "last seen", "description":"'datetimeLast' - date and time when an offer was scraped the last time"}, # don't remove this one tho as it's updated if offer url found in DB
+    {"dbColumnName": "datetimeLast", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "last seen", "description":"'datetimeLast' - date and time when an offer was scraped for the last time"}, # don't remove this one tho as it's updated if offer url found in DB
     {"dbColumnName": "datetimeFirst", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "first seen", "description":"'datetimeFirst' - date and time when an offer was scraped for the first time"},
     {"dbColumnName": "url", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "URL", "description":"'url' - link to an offer"},
     {"dbColumnName": "title", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "job title", "description":"'title' - job title provided by employer"},
     {"dbColumnName": "salaryAndContract", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "salary & contract", "description":"'salaryAndContract' - salary and contract type"},
     {"dbColumnName": "salaryMin", "dataType": "INT", "default":DATABASE_DEFAULT_INT, "displayName": "salary min", "description":"'salaryMin' - minimal salary converted to [net PLN/month]"},
     {"dbColumnName": "salaryMax", "dataType": "INT", "default":DATABASE_DEFAULT_INT, "displayName": "salary max", "description":"'salaryMax' - maximum salary converted to [net PLN/month]"},
-    {"dbColumnName": "employer", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "employer", "description":"'employer' - employer or juker"},
+    {"dbColumnName": "employer", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "employer", "description":"'employer' - employer (or personal information collector)"},
     {"dbColumnName": "workModes", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "work modes", "description":"'workModes' - work modes (remote, hybrid, home office)"},
-    {"dbColumnName": "positionLevels", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "position", "description":"'positionLevels' - position level(s), so called seniority"},
+    {"dbColumnName": "positionLevels", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "position", "description":"'positionLevels' - position level(s), so called seniority (junior, mid, senior etc.)"},
     {"dbColumnName": "location", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "location", "description":"'location' - location(s) provided by employer"},
     {"dbColumnName": "techstackExpected", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "techstack expected", "description":"'techstackExpected' - expected techstack"},
     {"dbColumnName": "techstackOptional", "dataType": "TEXT", "default":DATABASE_DEFAULT_TEXT, "displayName": "techstack optional", "description":"'techstackOptional' - optional techstack"},

@@ -381,7 +381,7 @@ function buttonStateReadyToFetch(button){
 // AT LEAST 1 CHECKBOX HAS TO BE CHECKED
 function atLeastOneCheckboxChecked () {
     checkboxesChecked = 0
-    document.querySelectorAll('.ckeckBox').forEach(checkbox => {
+    document.querySelectorAll('.checkBox').forEach(checkbox => {
         if (checkbox.checked === true) {checkboxesChecked += 1}
     })
     if (checkboxesChecked > 0) {return true}
@@ -393,12 +393,12 @@ document.getElementById('checkUncheckAll').addEventListener('click', () => {
     const checkUncheckAll = document.getElementById('checkUncheckAll')
     // The HTML entity &check; is converted into the Unicode character ✓ by the browser when the page is rendered
     if (checkUncheckAll.textContent == uncheckAllText) {
-        document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = false })
+        document.querySelectorAll('.checkBox').forEach(checkbox => { checkbox.checked = false })
         checkUncheckAll.textContent = checkAllText
         checkUncheckAll.style = 'color: var(--color-secondary);' // root variable
     }
     else if (checkUncheckAll.textContent == checkAllText) {
-        document.querySelectorAll('.ckeckBox').forEach(checkbox => { checkbox.checked = true })
+        document.querySelectorAll('.checkBox').forEach(checkbox => { checkbox.checked = true })
         checkUncheckAll.textContent = uncheckAllText
         checkUncheckAll.style = 'color: var(--color-primary);'
     }
@@ -429,6 +429,15 @@ document.querySelectorAll('.categoryShowHideDiv').forEach(hideShowDiv => {
     })
 })
 
+// CHANGE HEADER TEXT CONTENT ON MOUSEOVER
+headerContainer = document.getElementById("headerContainer")
+
+headerContainer.addEventListener("mouseover", function() {
+    headerText2.textContent = "so much crap"
+})
+headerContainer.addEventListener("mouseout", function() {
+    headerText2.textContent = "so much scrap";
+})
 
 
 // function printAllRootVariables() {
