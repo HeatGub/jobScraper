@@ -17,7 +17,7 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
 
     # SPECIFY UNSPECIFIED BARS HEIGHT
     if len(nonNanRowsDf) > 0: #otherwise division by 0 possible
-        lookUpToValues = int(len(nonNanRowsDf)/4) #how many values to count average
+        lookUpToValues = int(len(nonNanRowsDf)/4) # HOW MANY VALUES TO COUNT FOR AVERAGE
         if lookUpToValues == 0: # avoid /0
             lookUpToValues = 1
         avgOfNLowestMinSalaries = nonNanRowsDf['salaryMin'].head(lookUpToValues).tolist() #select up to lookUpToValues

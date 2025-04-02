@@ -127,12 +127,19 @@ def getOfferDetails(SeleniumBrowser):
 
     try:
         jobTitle = topDiv.find_element(By.CSS_SELECTOR, 'h1').text
-        # print(jobTitle)
-        employerAndLocationDiv = topDiv.find_element(By.CSS_SELECTOR, '.MuiBox-root.css-yd5zxy') 
-        employer = employerAndLocationDiv.find_element(By.XPATH, './/h2').text # look for h2 as deep as necessary
-        # print(employer) # name="multilocation_button"
     except:
-        jobTitle, employer = None, None
+        jobTitle = None
+    try:
+        employerAndLocationDiv = topDiv.find_element(By.CSS_SELECTOR, '.MuiBox-root.css-yd5zxy')
+        # FOR SOME REASON JUST THIS ONE FIELD OCCASIONALLY HAS STALE ELEMENT ERROR, and it's not due to employerAndLocationDiv as its being used successfully in location scraping
+        # The StaleElementReferenceException happens because the element is no longer attached to the DOM, which can occur if the page is updated, refreshed, or if JavaScript modifies the page
+        employer = employerAndLocationDiv.find_element(By.XPATH, './/h2').text # look for h2 as deep as necessary
+
+        # print('\n' +employer) # name="multilocation_button"
+    except:
+        employer = None
+        # import traceback
+        # traceback.print_exc()
 
     try:
         location = employerAndLocationDiv.find_elements(By.CSS_SELECTOR, '.MuiBox-root.css-mswf74')[1].text # first one is employer
@@ -156,34 +163,39 @@ def getOfferDetails(SeleniumBrowser):
     try:
         salaryAndContract = topContainer.find_element(By.CSS_SELECTOR, '.MuiBox-root.css-1km0bek').text
     except:
-        salaryAndContract= None
+        salaryAndContract = None
 
     salaryMinAndMax = [None, None] # Nones as these are INTs in DB
     if salaryAndContract != None:
         try: #to recalculate salary to [PLN/month net]
+            grossToNetMultiplier = 0.7
             hoursPerMonthInFullTimeJob = 168
-            lines = salaryAndContract.splitlines()[0] # There could be multiple salaries depending on contract type though. It will be in salaryAndContract anyway
-            splitValues = re.split(r'-', lines) # split on dash for min and max
+            minAndMaxLine = salaryAndContract.splitlines()[0] # There could be multiple salaries depending on contract type though. It will be in salaryAndContract anyway
+            secondLine = salaryAndContract.splitlines()[1]
+            splitValues = re.split(r'-', minAndMaxLine) # split on dash for min and max
 
             for i in range(len(splitValues)):
                 splitValues[i] = splitValues[i].replace(" ", "") # remove spaces
                 splitValues[i] = re.sub(r",\d{1,2}", '', splitValues[i]) # removes , and /d{1 to 2 occurrences}  (needed when salary as 123,45)
                 salaryMinAndMax[i] = re.search(r"\d+", splitValues[i]).group() # r = raw, \d+ = at least 1 digit, group() contains results
-            if re.findall("brutto", lines[1]) or re.findall("gross", lines[1]): # gross -> net
-                salaryMinAndMax = [(float(elmnt) * settings.GROSS_TO_NET_MULTIPLIER) for elmnt in salaryMinAndMax]
-                # print(salaryMinAndMax)
-            if re.findall("godz", lines[1]) or re.findall("hr.", lines[1]): # hr -> month
+            # gross -> net
+            if re.findall("brutto", secondLine) or re.findall("gross", secondLine):
+                salaryMinAndMax = [(float(elmnt) * grossToNetMultiplier) for elmnt in salaryMinAndMax]
+            # year -> month
+            if re.findall("year", secondLine) or re.findall("rok", secondLine): 
+                salaryMinAndMax = [(float(elmnt)/12) for elmnt in salaryMinAndMax] #possible input float/str
+            # day -> month
+            if re.findall("day", secondLine) or re.findall("dzień", secondLine): 
+                salaryMinAndMax = [(float(elmnt) * hoursPerMonthInFullTimeJob/8) for elmnt in salaryMinAndMax] #possible input float/str
+            # hr -> month
+            if re.findall("hour", secondLine) or re.findall(r"/h", secondLine) or re.findall("godz", secondLine): 
                 salaryMinAndMax = [(float(elmnt) * hoursPerMonthInFullTimeJob) for elmnt in salaryMinAndMax] #possible input float/str
-            
-            if salaryMinAndMax[1] == None: # some offers provide just 1 extremum
-                salaryMinAndMax[1] = salaryMinAndMax[0]
+
             salaryMinAndMax = [int(elmnt) for elmnt in salaryMinAndMax] # to ints
-                
         except Exception as exception:
             pass    # salaryMinAndMax = [None, None]
     # print(salaryMinAndMax)
-
-    # print(salaryAndContract)
+        
     workModes = None
     positionLevels = None
 
@@ -211,8 +223,10 @@ def getOfferDetails(SeleniumBrowser):
     #TECHSTACK
     techstackExpected, techstackOptional = None, None
     try:
-        techstackDiv = offerContent.find_elements(By.CSS_SELECTOR, '.MuiBox-root.css-qal8sw')[0]
-        techstackDiv = techstackDiv.find_element(By.CSS_SELECTOR, 'div')
+        # techstackDiv = offerContent.find_elements(By.CSS_SELECTOR, '.MuiBox-root.css-qal8sw')[0] # changed 04.2025
+        # techstackDiv = techstackDiv.find_element(By.CSS_SELECTOR, 'div')
+        techstackDiv = offerContent.find_elements(By.CSS_SELECTOR, '.MuiStack-root.css-6r2fzw')[0]
+
         technologies = techstackDiv.find_elements(By.XPATH, './/h4') # look for h4 in all children elements
         levels = techstackDiv.find_elements(By.XPATH, './/span') # look for h4 in all children elements
         for i in range(len(technologies)):
@@ -226,41 +240,52 @@ def getOfferDetails(SeleniumBrowser):
                 if techstackExpected == None:
                     techstackExpected = ''
                 techstackExpected += '\n' + techWithLvl
-
         if techstackOptional != None:
             techstackOptional = re.sub(r"^\n", '', techstackOptional)
         if techstackExpected != None:
             techstackExpected = re.sub(r"^\n", '', techstackExpected)
-
     except Exception as exception:
         print(exception)
         pass # leave empty strs
     # print(techstackExpected + '\n\n' + techstackOptional)
 
-    # ==================== DO THIS NOW ====================
     fullDescription = None
     responsibilities, requirements, optionalRequirements = None, None, None
 
     optionalRequirementsKeywords = ['nice to', 'optional', 'ideal', 'preferr', 'asset', 'appreciat', 'atut', 'dodatk', 'mile widzi']
-    requirementsKeywords = ['require', 'expect', 'skill', 'look', 'qualifications', 'experience', 'must', 'competen', 'wymaga', 'oczek', 'umiejętn', 'aplikuj, jeśli', 'oczekuj', 'potrzeb', 'szukamy', 'kompeten']
+    requirementsKeywords = ['require', 'expect', 'skill', 'look', 'qualifications', 'must', 'competen', 'wymaga', 'oczek', 'umiejętn', 'aplikuj, jeśli', 'potrzeb', 'szukamy', 'kompeten']
     responsibilitiesKeywords = ['responsib', 'task', 'role', 'project', 'obowiązk', 'zadani', 'projek']
-    # whatTheyOfferKeywords = ['offer', 'benefit' 'oferuj', 'oferow']
+    whatTheyOfferKeywords = ['offer', 'benefit' 'oferuj', 'oferow']
 
     allKeywordsDict = {'optionalRequirementsKeywords':optionalRequirementsKeywords, 'requirementsKeywords':requirementsKeywords, 'responsibilitiesKeywords':responsibilitiesKeywords}
 
     try:
-        descriptionDiv = offerContent.find_elements(By.CSS_SELECTOR, '.MuiBox-root.css-qal8sw')[1]
-        descriptionDiv = descriptionDiv.find_elements(By.XPATH, "./div")[1] # second child div
-        fullDescription = descriptionDiv.text
-        # print(r"{}".format(fullDescription))
-        paragraphs = re.split(r"\n{2,}", fullDescription) # split on 2 or more newlines
+        # descriptionDiv = offerContent.find_elements(By.CSS_SELECTOR, '.MuiBox-root.css-qal8sw')[1] # changed 31.03.20205 (not sure when on jj.it)
+        # descriptionDiv = descriptionDiv.find_elements(By.XPATH, "./div")[1] # second child div
+        descriptionDiv = offerContent.find_element(By.CSS_SELECTOR, '.MuiBox-root.css-rcazos')
+        
+        # Remove empty lines (including those with spaces)
+        fullDescription = re.sub(r'^\s*\n', '', descriptionDiv.text, flags=re.MULTILINE)
+        # print(fullDescription)
 
-        # USUALLY THE ABOVE SPLITTING IS ENOUGH, BUT IF NOT TRY FINDING PARAGRAPHS ANOTHER WAY
-        if len(paragraphs) < 3: # 1 is possible minimum
-            # print('LEN TOO SHORT: ' + str(len(paragraphs)))
-            # paragraphs = re.split(r"(^|\n) +", fullDescription) # split on 1 or more spaces at the line beginning
-            paragraphs = re.split(r"((^|\n) +|\n{2,})", fullDescription) # split on 1 or more spaces at the line beginning OR on 2 or more newlines
-        # print(paragraphs)
+        def splitTextByKeywords(text, keywords):
+            lines = text.split("\n")  # Split text into lines
+            keywordIndices = [i for i, line in enumerate(lines) if any(keyword.lower() in line.lower() for keyword in keywords)]
+            # If no keywords found, return the original text as one paragraph
+            if not keywordIndices:
+                return [text]
+            
+            paragraphs = []
+            startIndex = 0
+            for keywordIndex in keywordIndices:
+                # if startIndex != keywordIndex:
+                paragraphs.append("\n".join(lines[startIndex:keywordIndex]).strip())  # Capture paragraph before keyword
+                startIndex = keywordIndex  # Update start for next section
+            paragraphs.append("\n".join(lines[startIndex:]).strip())  # Capture the last paragraph
+            return paragraphs
+        
+        keywords = optionalRequirementsKeywords + requirementsKeywords + responsibilitiesKeywords + whatTheyOfferKeywords # just concat keywords lists as they will be assigned to a category later
+        paragraphs = splitTextByKeywords(fullDescription, keywords)
 
         for paragraph in paragraphs:
             if not paragraph or re.search(r"^\s*$", paragraph): # \s matches Unicode whitespace characters. This includes [ \t\n\r\f\v] and more
@@ -306,7 +331,7 @@ def scrapToDatabase(SeleniumBrowser):
     try:
         # FINISH CONDITIONS
         if len(SeleniumBrowser.OFFERS_URLS) == 0:
-            return {'success':True, 'functionDone':True, 'message':"no offers to analyse. justjoin requires active/headless browser window if that's the case", 'killProcess': True}
+            return {'success':True, 'functionDone':True, 'message':"no offers to analyse. justjoin might require active/headless browser window if that's the case (depends on justjoin update)", 'killProcess': True}
         elif int(SeleniumBrowser.currentlyScrapedOfferIndex +1) > int(len(SeleniumBrowser.OFFERS_URLS)):
             print(str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates')
             return {'success':True, 'functionDone':True, 'message': 'scraping done. ' + str(SeleniumBrowser.databaseInserts) + ' inserts | ' + str(SeleniumBrowser.databaseUpdates) + ' updates', 'killProcess': True}
@@ -326,7 +351,7 @@ def scrapToDatabase(SeleniumBrowser):
                 if nonesCount >= int(len(commonKeysDict)-alwaysNotNonesAmount):
                     # PAUSE on too many nones (allColumns - alwaysNotNonesAmount) at the moment
                     print('PAUSING ' + str(SeleniumBrowser.BASE_URL))
-                    return {'success':False, 'functionDone':False, 'message': 'too many fields unrecognized on scraping attempt. See if bot check triggered. If not, the site has been updated', 'pauseProcess':True}
+                    return {'success':False, 'functionDone':False, 'message': 'too many fields unrecognized on scraping attempt. See if bot check triggered. If not, the site probably has been updated. Press START if no issues spotted.', 'pauseProcess':True}
 
                 if Database.recordFound(SeleniumBrowser.DRIVER.current_url):
                     Database.updateDatetimeLast(SeleniumBrowser.DRIVER.current_url)
@@ -346,6 +371,5 @@ def scrapToDatabase(SeleniumBrowser):
                 time.sleep(random.uniform(settings.WAIT_OFFER_PARAMS_JUSTJOIN[0], settings.WAIT_OFFER_PARAMS_JUSTJOIN[1])) # move to settings
                 return {'success':False, 'functionDone':False, 'message': 'OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url}
     except Exception as exception:
-        print('EKSEPSZON KURWA')
         print(exception)
         return {'success':False, 'functionDone':False, 'message':str(exception)}

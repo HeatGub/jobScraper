@@ -232,7 +232,7 @@ def scrapToDatabase(SeleniumBrowser):
                 if nonesCount >= int(len(commonKeysDict)-alwaysNotNonesAmount):
                     # PAUSE on too many nones (allColumns - alwaysNotNonesAmount) at the moment
                     print('PAUSING ' + str(SeleniumBrowser.BASE_URL))
-                    return {'success':False, 'functionDone':False, 'message': 'too many fields unrecognized on scraping attempt. See if bot check triggered. If not, the site has been updated', 'pauseProcess':True}
+                    return {'success':False, 'functionDone':False, 'message': 'too many fields unrecognized on scraping attempt. See if bot check triggered. If not, the site probably has been updated. Press START if no issues spotted.', 'pauseProcess':True}
 
                 if Database.recordFound(SeleniumBrowser.DRIVER.current_url):
                     Database.updateDatetimeLast(SeleniumBrowser.DRIVER.current_url)

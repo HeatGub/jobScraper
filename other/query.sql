@@ -6,3 +6,7 @@ SELECT name FROM sqlite_master WHERE type='table' ORDER BY name; -- EXISTING TAB
 
 -- SELECT (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) FROM table1
 -- ORDER BY (JULIANDAY(datetimeLast) - JULIANDAY(datetimeFirst)) * 24 * 60 DESC;
+
+-- DELETE FROM test1 WHERE datetimeFirst > '2025-03-30';
+
+-- DELETE FROM test1 WHERE datetimeFirst > '2025-04-02 17:36:00';

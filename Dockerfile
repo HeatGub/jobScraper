@@ -50,6 +50,8 @@ CMD ["python", "main.py"]
 
 #################################################### BUILD AND UPLOAD IMAGE WORKFLOW ####################################################
 
+########  0. DOCKERIZE_MODE_ACTIVE = True (settings.py)
+
 #######################   1. BUILDING AN IMAGE
 # docker build -t job_scraper .
 #######################   2. RUNNING CONTAINER (not yet tagged and uploaded)
@@ -64,6 +66,8 @@ CMD ["python", "main.py"]
 # docker push letmedockerize/job_scraper:latest
 #######################      RUNNING UPLOADED CONTAINER
 # docker run -p 5000:5000 letmedockerize/job_scraper:latest
+
+########   5. DOCKERIZE_MODE_ACTIVE = False (settings.py)
 
 #################################################### BUILD AND UPLOAD IMAGE WORKFLOW ####################################################
 
