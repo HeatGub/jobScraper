@@ -11,8 +11,8 @@
 MAKE_BROWSER_INVISIBLE = False # justjoin HAS TO HAVE INVISIBLE (headless) OR ACTIVE (not minimized) window to fetch URLs list and/or some params
 
 # changing window size might affect scraping speed due to changing page loading time
-BROWSER_WINDOW_WIDTH_THEPROTOCOL = 600 # integer [pixels]
-BROWSER_WINDOW_HEIGHT_THEPROTOCOL = 800 # integer [pixels]
+BROWSER_WINDOW_WIDTH_THEPROTOCOL = 1400 # integer [pixels] - let it wide, as some elements can not display otherwise
+BROWSER_WINDOW_HEIGHT_THEPROTOCOL = 900 # integer [pixels]
 BROWSER_WINDOW_WIDTH_JUSTJOIN = 800 # integer [pixels]
 BROWSER_WINDOW_HEIGHT_JUSTJOIN = 900 # integer [pixels]
 
@@ -29,8 +29,8 @@ WAIT_OFFER_PARAMS_THEPROTOCOL = [0.3, 0.5] # [0,0] sometimes triggers bot check
 ######################################################## PLOT AND TABLE SIZING ########################################################
 
 BOKEH_PLOT_HEIGHT = 300 # integer [pixels]
-BOKEH_TABLE_MAX_HEIGHT = 700 # integer [pixels]
-BOKEH_TABLE_ROW_HEIGHT = 200 # integer [pixels]
+BOKEH_TABLE_MAX_HEIGHT = 800 # integer [pixels]
+BOKEH_TABLE_ROW_HEIGHT = 300 # integer [pixels]
 
 ######################################################## COLOR SETTINGS ########################################################
 # those variables are delared as CSS root variables on flask root endpoint render. And bohek plot uses them in the below python dictionary form
@@ -87,7 +87,7 @@ CSS_VARIABLES = {
 GROSS_TO_NET_MULTIPLIER = 0.77 # floating point number like 0.77, 0.6 etc. It converts with (salaryNet = salaryGross * GROSS_TO_NET_MULTIPLIER) at the time of scraping, not on table display
 
 # DATABASE_TABLE_NAME = 'table1' # values like 'table1'. Creates new table if it doesn't exist already
-DATABASE_TABLE_NAME = 'test1' # populated test table
+DATABASE_TABLE_NAME = 'test1' # 'test1' = populated test table
 
 DATABASE_DEFAULT_INT = 'NULL' # '""' represents an empty string. Default value is used when value not provided
 DATABASE_DEFAULT_TEXT = 'NULL' # Default value is used when value not provided

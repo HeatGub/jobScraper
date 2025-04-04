@@ -79,9 +79,10 @@ def getOfferDetails(SeleniumBrowser):
     try:
         salaryContainer = SeleniumBrowser.DRIVER.find_element(By.XPATH, '//*[@data-test="section-contract"]') # this element should always exist
         salaryAndContract = salaryContainer.text
+        # print(salaryAndContract)
         # print(salaryAndContract  + '\n')
     except:
-        salaryAndContract= None
+        salaryAndContract = None
     
     salaryMinAndMax = [None, None] # Nones as these are INTs in DB
     if salaryAndContract != None:
@@ -110,12 +111,14 @@ def getOfferDetails(SeleniumBrowser):
     # EMPLOYER
     try:
         employerElement = SeleniumBrowser.DRIVER.find_element("xpath", '//*[@data-test="anchor-company-link"]') # this element should always exist
-        employer = employerElement.text# + ' ' + employerElement.get_property("href")
+        employer = employerElement.text # + ' ' + employerElement.get_property("href")
+        employer = re.sub('company: |firma: ', '', employer, flags=re.IGNORECASE).strip()
+
     except:
         employer= None
     # print(employer  + '\n')
     
-    #WORKFROM, EXP, VALIDTO, LOCATION - "PARAMETERS"
+    # WORKFROM, EXP, VALIDTO, LOCATION - "PARAMETERS"
     workModes, positionLevels, location = None, None, None
     try:
         parametersContainer = SeleniumBrowser.DRIVER.find_element(By.CLASS_NAME, "c21kfgf")
@@ -141,6 +144,35 @@ def getOfferDetails(SeleniumBrowser):
         # print(workModes + '\n\n' + positionLevels + '\n\n' + '\n\n' +  location + '\n')
     except:
         pass # leave Nones
+    
+    # IF STILL NOT FOUND, TRY SEARCHING NEW HTML ELEMENTS (04.2025)
+    if location == None: # checking location, as it's the toughest one to gather
+        parametersContainer = SeleniumBrowser.DRIVER.find_element(By.CLASS_NAME, "m1vgkec8")
+        parameters = parametersContainer.find_elements(By.CLASS_NAME, "b12rofz")
+        # print(parameters)
+        for param in parameters:
+            paramType = param.text #element description
+            match paramType:
+                case thisCase if any(keyword in thisCase.lower() for keyword in ("mode", "tryb")):
+                    lines = param.text.splitlines()
+                    workModes = "".join(lines[1:])  # Join all lines except the first one (param description)
+                case thisCase if any(keyword in thisCase.lower() for keyword in ("level", "poziom")):
+                    lines = param.text.splitlines()
+                    positionLevels = "".join(lines[1:])
+                case _: # IF IT'S NOT MODE OR LEVEL, IT MUST BE LOCATION DIV
+                    location = param.text # fine for a single location
+                    # remove description keyword
+                    location = re.sub('location:|lokalizacja:', '', location, flags=re.IGNORECASE).strip()
+                    # TRY CLICKING 'MORE' BUTTON
+                    try: #to find and click 'more locations' button then fetch what's inside
+                        moreLocations = param.find_element("xpath", '//button[@class="m8ercsp"]')
+                        moreLocations.click()
+                        locations = moreLocations.find_element("xpath", '//*[@class="mtlwq3f"]')
+                        location = locations.text # overwrites a single one
+                        location = re.sub('view on map', '', location, flags=re.IGNORECASE).strip()
+                    except:
+                        pass # leave location as it was
+
 
     #TECHSTACK
     techstackExpected, techstackOptional = None, None
@@ -148,15 +180,31 @@ def getOfferDetails(SeleniumBrowser):
         descriptionsContainer = SeleniumBrowser.DRIVER.find_element(By.CSS_SELECTOR, '#TECHNOLOGY_AND_POSITION')
         techstack = descriptionsContainer.find_elements(By.CLASS_NAME, "c1fj2x2p")
         for group in techstack:
-            if group.text[0:8] == 'EXPECTED' or group.text[0:8] == 'WYMAGANE': # eng/pl same word length
-                techstackExpected = group.text[9:]
-            elif group.text[0:8] == 'OPTIONAL':
-                techstackOptional = group.text[9:]
-            elif group.text[0:13] == 'MILE WIDZIANE': # polish version
-                techstackOptional = group.text[14:]
+            if re.search('expected|wymagane', group.text.lower()):
+                lines = group.text.splitlines()
+                techstackExpected = "\n".join(lines[1:]) # join lines except first one
+            if re.search('optional|mile widziane', group.text.lower()):
+                lines = group.text.splitlines()
+                techstackOptional = "\n".join(lines[1:])
         # print(str(techstackExpected) + '\n\n' + str(techstackOptional) + '\n')
     except:
         pass # leave Nones
+    # IF STILL NOT FOUND, TRY SEARCHING NEW HTML ELEMENTS (04.2025)
+    if techstackExpected == None:
+        try:
+            technologiesContainer = SeleniumBrowser.DRIVER.find_element("xpath", '//*[@data-test="section-technologies"]')
+            techstack = technologiesContainer.find_elements("xpath", './div') # divs 1 level down
+            for group in techstack:
+                if re.search('expected|wymagane', group.text.lower()):
+                    lines = group.text.splitlines()
+                    techstackExpected = "\n".join(lines[1:]) # join lines except first one
+                if re.search('optional|mile widziane', group.text.lower()):
+                    lines = group.text.splitlines()
+                    techstackOptional = "\n".join(lines[1:])
+            # print(str(techstackExpected) + '\n\n' + str(techstackOptional) + '\n')
+        except:
+            pass # leave Nones
+
 
     #RESPONSIBILITIES
     try:
@@ -167,6 +215,14 @@ def getOfferDetails(SeleniumBrowser):
     except:
         responsibilities= None
         # print('RESPONSIBILITIES:\n' + str(responsibilities) + '\n' + driver.current_url)
+    # IF STILL NOT FOUND, TRY SEARCHING NEW HTML ELEMENTS (04.2025)
+    if responsibilities == None:
+        try:
+            responsibilities = SeleniumBrowser.DRIVER.find_element("xpath", '//*[@data-test="section-responsibilities"]').text
+            # responsibilities = "\n".join(responsibilities.split('\n')[1:]) # remove 1st line
+        except:
+            responsibilities= None
+            # print('RESPONSIBILITIES:\n' + str(responsibilities))
 
     #REQUIREMENTS
     try:
@@ -177,6 +233,14 @@ def getOfferDetails(SeleniumBrowser):
     except:
         requirements= None
         # print('REQUIREMENTS:\n' + str(requirements) + '\n' + driver.current_url)
+    # IF STILL NOT FOUND, TRY SEARCHING NEW HTML ELEMENTS (04.2025)
+    if requirements == None:
+        try:
+            requirements = SeleniumBrowser.DRIVER.find_element("xpath", '//*[@data-test="section-requirements-expected"]').text
+            # requirements = "\n".join(requirements.split('\n')[1:]) # remove 1st line
+        except:
+            requirements= None
+            # print('REQUIREMENTS:\n' + str(requirements))
 
 
     #OPTIONAL REQUIREMENTS
@@ -194,7 +258,14 @@ def getOfferDetails(SeleniumBrowser):
                 # print('OPTIONAL:\n' + str(optionalRequirements) + '\n' + driver.current_url)        
     except:
         optionalRequirements= None
+    # IF STILL NOT FOUND, TRY SEARCHING NEW HTML ELEMENTS (04.2025)
+    if optionalRequirements == None:
+        try:
+            optionalRequirements = SeleniumBrowser.DRIVER.find_element("xpath", '//*[@data-test="section-requirements-optional"]').text
+        except:
+            optionalRequirements = None
     # print('OPTIONAL:\n' + str(optionalRequirements) + '\n' + driver.current_url)
+
     datetimeNow = str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
     # FULL DESCRIPTION
@@ -202,9 +273,16 @@ def getOfferDetails(SeleniumBrowser):
     try:
         fullDescription = SeleniumBrowser.DRIVER.find_element(By.CSS_SELECTOR, '#TECHNOLOGY_AND_POSITION').text
     except:
-        pass # fullDescription = None
+        fullDescription = None
+    # IF STILL NOT FOUND, TRY SEARCHING NEW HTML ELEMENTS (04.2025)
+    if fullDescription == None:   
+        try:
+            fullDescription = SeleniumBrowser.DRIVER.find_element(By.CSS_SELECTOR, '#REQUIREMENTS').text
+        except:
+            fullDescription = None    
 
     return {'datetimeLast':datetimeNow, 'datetimeFirst':datetimeNow, 'url':SeleniumBrowser.DRIVER.current_url, 'title':jobTitle, 'salaryAndContract':salaryAndContract, 'salaryMin':salaryMinAndMax[0], 'salaryMax':salaryMinAndMax[1], 'employer':employer, 'workModes':workModes, 'positionLevels':positionLevels, 'location':location, 'techstackExpected':techstackExpected, 'techstackOptional':techstackOptional, 'responsibilities':responsibilities, 'requirements':requirements, 'optionalRequirements':optionalRequirements, 'fullDescription':fullDescription}
+
 
 ########################################################################### Scraping to Database ###########################################################################
 

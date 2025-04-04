@@ -9,4 +9,4 @@ SELECT name FROM sqlite_master WHERE type='table' ORDER BY name; -- EXISTING TAB
 
 -- DELETE FROM test1 WHERE datetimeFirst > '2025-03-30';
 
--- DELETE FROM test1 WHERE datetimeFirst > '2025-04-02 17:36:00';
+-- DELETE FROM test1 WHERE datetimeFirst > '2025-04-03' AND (url LIKE ('%theproto%'));

@@ -1,7 +1,12 @@
 # <p align="center">job scraper</p>
 Fullstack application for scraping job portals (currently theprotocol.it and justjoin.it). It can handle multiple scraping processes and a flask server at the same time. All you need to do is provide offer list URL(s) and watch it update the database while you're looking for a dream job.
+<!-- <p align="center">
+  <img src="https://github.com/user-attachments/assets/9484d58b-04c1-4704-990d-fb589a5910ff" width=80%>
+</p> -->
+
+<!-- wanted to drag-drop-upload the gif like above, but it works no more -->
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/9484d58b-04c1-4704-990d-fb589a5910ff" width=70%>
+  <img src="other/job scraper 2025-04-04.gif" width=70%>
 </p>
 
 ## <p align="center"> APPLICATION SECTIONS </p>
@@ -110,7 +115,7 @@ settings:
 ## <p align="center"> INSTALLATION ON WINDOWS </p>
 #### Requirements
 - **browser:** I ve'been using chrome (check browser version at *chrome://settings/help*) but any browser with its selenium driver should do the job
-- **matching browser driver:** Check if chromedriver.exe from the main project's directory works (it's version 133.0). If not, download matching version from https://googlechromelabs.github.io/chrome-for-testing/ and replace **chromedriver.exe (that filename is required**)
+- **matching browser driver:** Check if chromedriver.exe from the main project's directory works (it's version 134.0). If not, download matching version from https://googlechromelabs.github.io/chrome-for-testing/ and replace **chromedriver.exe (that filename is required**)
 - **packages:** run `pip install -r requirements.txt` in the folder where requirements.txt file is. *I suggest installing in a virtual environment as there are quite a lot of them*
 
 #### Once you have a browser, a driver and the packages installed:

@@ -168,7 +168,6 @@ def getOfferDetails(SeleniumBrowser):
     salaryMinAndMax = [None, None] # Nones as these are INTs in DB
     if salaryAndContract != None:
         try: #to recalculate salary to [PLN/month net]
-            grossToNetMultiplier = 0.7
             hoursPerMonthInFullTimeJob = 168
             minAndMaxLine = salaryAndContract.splitlines()[0] # There could be multiple salaries depending on contract type though. It will be in salaryAndContract anyway
             secondLine = salaryAndContract.splitlines()[1]
@@ -180,7 +179,7 @@ def getOfferDetails(SeleniumBrowser):
                 salaryMinAndMax[i] = re.search(r"\d+", splitValues[i]).group() # r = raw, \d+ = at least 1 digit, group() contains results
             # gross -> net
             if re.findall("brutto", secondLine) or re.findall("gross", secondLine):
-                salaryMinAndMax = [(float(elmnt) * grossToNetMultiplier) for elmnt in salaryMinAndMax]
+                salaryMinAndMax = [(float(elmnt) * settings.GROSS_TO_NET_MULTIPLIER) for elmnt in salaryMinAndMax]
             # year -> month
             if re.findall("year", secondLine) or re.findall("rok", secondLine): 
                 salaryMinAndMax = [(float(elmnt)/12) for elmnt in salaryMinAndMax] #possible input float/str
