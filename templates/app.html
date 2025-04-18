@@ -92,7 +92,10 @@
     <div class="categoryContainer">
       <div class="categoryShowHideDiv flexCentered disabledTextSelection">QUERY</div>
         <div class="categoryContent flexCentered flexDirectionColumn" style="display: flex;">
-          <span contenteditable="true" id="queryDiv" spellcheck="false" style="display: none;"></span>
+          <!-- <span contenteditable="true" id="queryEditor" spellcheck="false" style="display: none;"></span> -->
+          <span contenteditable="true" id="queryEditor" spellcheck="false"></span>
+          <button id="executeQueryButton" class="disabledTextSelection">EXECUTE</button>
+          <div id="executeQueryOutput">query output</div>
         </div>
     </div>
 

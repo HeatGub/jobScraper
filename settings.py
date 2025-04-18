@@ -44,8 +44,10 @@ CSS_VARIABLES = {
     # "color-table-selection": "rgba(60,140,200,0.2)",
 
     # AQUAMARINE THEME
-    "color-primary": "rgba(0, 203, 182, 0.8)",
-    "color-secondary": "rgba(174, 0, 242, 0.85)",
+    # "color-primary": "rgba(0, 203, 182, 1)",
+    # "color-secondary": "rgba(200, 0, 220, 0.8)",
+    "color-primary": "rgba(0, 170, 140, 1)",
+    "color-secondary": "rgba(157, 0, 255, 0.8)",
     "color-tertiary": "rgba(255, 199, 0, 0.7)",
     "color-quaternary": "rgba(0, 145, 134, 0.8)",
     "color-table-selection": "rgba(0, 203, 182,0.15)",
@@ -60,7 +62,7 @@ CSS_VARIABLES = {
     "color-text-primary": "rgba(180,180,180,1)",
     "color-text-secondary": "rgba(200,200,200,1)",
     "color-text-tertiary": "rgba(160,160,160,1)",
-    "color-text-warning": "rgba(255, 40, 40, 0.8)",
+    "color-text-warning": "rgba(220, 40, 40, 0.8)",
 
     # plot bars transparency setting (alpha) in makeBokehFigures
     "color-plot-error-bars": "rgba(20,20,20, 0.4)",
@@ -72,7 +74,7 @@ CSS_VARIABLES = {
     "color-table-url-visited": "rgba(80, 80, 180, 1)",
     
     "border-width-primary": "0.2rem",
-    "border-width-secondary": "0.1rem",
+    "border-width-secondary": "0.15rem",
     "border-width-tertiary": "0.07rem",
 
     "outline-width-primary": "0.15rem",

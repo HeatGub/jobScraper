@@ -26,7 +26,7 @@ def foundOffersListOnThePage(SeleniumBrowser):
             SeleniumBrowser.DRIVER.find_element("xpath", "//*[@id='main-offers-listing']")
             return True # empty list div not found and offers list found
         except Exception as exception:
-            print(exception)
+            # print(exception)
             return False
 
 def scrapOffersUrlsFromSinglePage(SeleniumBrowser):
@@ -62,8 +62,12 @@ def scrapUrlsFromAllThePages(SeleniumBrowser):
 
 def offerNotFound(SeleniumBrowser):
     try:
-        SeleniumBrowser.DRIVER.find_element("xpath", '//*[@data-test="text-offerNotFound"]')
-        return True
+    # NEW HTML ELEMENTS (04.2025)
+    # better look for offer list as it always appears when offer not found/achieved (since 04.2025)
+    # DRIVER.find_element("xpath", '//*[@data-test="text-offerNotFound"]') 
+    # DRIVER.find_element("xpath", '//*[@data-test="text-offerArchived"]') # new element, but logic changed to searching offer list
+        if foundOffersListOnThePage(SeleniumBrowser):
+            return True
     except:
         return False
 

@@ -38,7 +38,9 @@ body {
   color: var(--color-text-primary);
   background-color: var(--color-background-primary);
 
-  background-image: linear-gradient(var(--color-secondary) -40rem, var(--color-background-primary) 10rem);
+  /* background-image: linear-gradient(var(--color-secondary) -40rem, var(--color-background-primary) 10rem); */
+  background-image: linear-gradient(var(--color-background-tertiary) 0rem, var(--color-background-primary) 20rem);
+
   background-repeat: no-repeat;
   background-size: 100% 100%;
   background-attachment: fixed; /* Optional, for a fixed effect */
@@ -128,18 +130,56 @@ button:hover, #sendFormAndFetchBokehButton:hover {
   text-shadow: 0rem 0rem 0.2rem var(--color-text-warning);
 }
 
-#sendFormAndFetchBokehButton {
+#sendFormAndFetchBokehButton,  #executeQueryButton{
   margin: 0.5rem;
 }
 
-#queryDiv {
-  padding: 0.5rem 3rem;
-  text-align: center;
+/* QUERY TOOL CONTENT SPACING */
+#categoryContentQueryTool{
+  padding-top: 0.9rem;
+  padding-bottom: 0.6rem;
 }
 
-span {
-  min-height: 0;
-  outline: none;
+#queryEditor {
+  margin-top: 0.7rem;
+  max-width: 95%;
+  padding: 0.5rem 3rem;
+  box-sizing: border-box; /*to include padding in max-width calculations*/
+  text-align: center;
+  border: 0.05rem solid var(--color-background-quinary);
+  border-radius: var(--border-radius-secondary);
+  background-color: var(--color-background-primary);
+}
+
+#executeQueryOutput{
+  margin-top: -0.1rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+  max-width: 85%;
+}
+
+.queryCoreKeyword {
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
+.queryFunctionKeyword {
+  color: var(--color-secondary);
+  font-weight: bold;
+}
+
+.querySpecialCharacter {
+  color: var(--color-secondary);
+  font-weight: bold;
+}
+
+.queryTextString, .queryTextNumber {
+  color: var(--color-tertiary);
+}
+
+.queryTextComment {
+  color: var(--color-background-quinary);
+  font-style: italic;
 }
 
 .testBrowserOutput {
@@ -171,7 +211,7 @@ span {
 
 /* whole bottom span on hover */
 #headerContainer:hover .headerBottomTextContainer span {
-  text-shadow: 0rem 0rem 0.15rem var(--color-secondary);
+  text-shadow: 0rem 0rem 0.5rem var(--color-background-quinary);
 }
 
 #headerContainer:hover {
@@ -253,20 +293,8 @@ span {
   margin: 0.3rem;
 }
 
-
-/* QUERY SPACING */
-.categoryContent > span {
-  margin: 1rem 3rem;
-}
-
 #categoryContentResultsAndDownload{
   gap: 3rem;
-}
-
-/* QUERY TOOL CONTENT SPACING */
-#categoryContentQueryTool{
-  padding-top: 0.9rem;
-  padding-bottom: 0.6rem;
 }
 
 /* BOKEH POLT AND TABLE */

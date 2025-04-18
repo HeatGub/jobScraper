@@ -16,17 +16,19 @@ import settings # 'from settings import variable' doesn't work with importlib au
 
 app = Flask(__name__)
 
+# root's GET is for CSS vars and POST is for query tool
 @app.route('/', methods=['GET', 'POST'])
 def root():
+    # PREPARE TEMPLATE FOR CSS ROOT VARIABLES
     if request.method == 'GET':
-        # PREPARE TEMPLATE FOR CSS ROOT VARIABLES
         variablesString = ''
         for key, value in settings.CSS_VARIABLES.items():
-            variablesString += f"--{key}:{value};" # no new line needed as it css has ;
+            variablesString += f"--{key}:{value};" # no new line needed as it has ; instead
         cssRootTemplate = "<style>:root{"+variablesString+"}</style>"
         # print(cssRootTemplate)
         return render_template("app.html", cssRoot=cssRootTemplate, databaseColumns=settings.DATABASE_COLUMNS, resources=CDN.render()) # columnsAll=list(DATABASE_COLUMNS_OLD.keys())
     
+    # QUERY TOOL
     elif request.method == 'POST':
         def makeFormOutputDictionary():
             formDictFromJson = request.get_json() #get form values from a request
@@ -122,22 +124,81 @@ def root():
         
         global dataframeTable # to make it accessible to download at all times
         dataframeTable, dataframePlot = queryBuilder(makeFormOutputDictionary())
+        queryToDisplay = queryBuilder(makeFormOutputDictionary())[0]
         try:
             dataframeTable = Database.queryToDataframe(dataframeTable)
             dataframePlot = Database.queryToDataframe(dataframePlot)
-            queryToDisplay = queryBuilder(makeFormOutputDictionary())[0]
         except Exception as exception:
             # WRONG QUERY ERROR
-            return json.dumps({'resultsAmount':0, 'query': str(exception), 'error':True}), 200, {'Content-Type': 'application/json'} # return 200 even tho its error (JS check)
+            return json.dumps({'resultsAmount':0, 'query': queryToDisplay, 'error':True, 'errorMessage':str(exception)}), 200, {'Content-Type': 'application/json'} # return 200 even tho its error (JS check)
         # print(queryToDisplay)
 
         if len(dataframePlot) > 0 and len(dataframeTable) > 0: #tho their lengths should be equal
             plot = makeBokehPlot(dataframePlot)
             table = makeBokehTable(dataframeTable)
             # return json.dumps([json_item(plot), json_item(table), int(len(dataframeTable))])
+            # ALL FINE - SEND PLOT AND TABLE
             return json.dumps({'resultsAmount':int(len(dataframeTable)), 'plot': json_item(plot), 'table':json_item(table), 'query': queryToDisplay}), 200, {'Content-Type': 'application/json'}
-
+        # QUERY OK BUT NO RESULTS
         return json.dumps({'resultsAmount':0, 'query': queryToDisplay}), 200, {'Content-Type': 'application/json'} # when no results
+
+
+@app.route('/executeQuery', methods=['POST'])
+def executeQueryEndpoint():
+    query = request.get_json()
+    # print('\texecuteQueryEndpoint')
+    # print(query)
+    def removeComments(text): # splitting into lines, removing what's after -- and joining again
+        lines = text.splitlines()
+        cleaned = [line.split('--')[0].rstrip() for line in lines] # split on first occurrence of -- and remove what's to the right side of that
+        return '\n'.join(cleaned)
+    query = removeComments(query)
+    # print(query)
+
+    # FIRST TRY EXECUTING THE QUERY AS NOT EVERY QUERY RETURNS TABLE OUTPUT
+    queryResults = Database.executeQuery(query)
+    if queryResults['executed'] == False:
+        # BAD QUERY CASE
+        return json.dumps({'resultsAmount':0, 'error':True, 'errorMessage':str(queryResults['message']), 'message':"query execution error"}), 200, {'Content-Type': 'application/json'} # return 200 even tho its error (JS check)
+
+    # QUERY EXECUTED AT THIS POINT
+    # TRY MAKING PLOT QUERY, ALTHOUGH NOT ALWAYS POSSIBLE (no SELECT...FROM part, no columns etc.)
+    try:       
+        dividedQuery = re.search(r'SELECT.*\s+FROM\s+(?:["\[\']?)([\w-]+)(?:["\]\']?)\s*(.*)$', query, flags=re.IGNORECASE|re.DOTALL) # pick a word after the last 'SELECT...FROM ' ($ at the end of regex) and the rest after table name (which can be in [] "" or ''). re.DOTALL to match newline
+        tableName = dividedQuery.group(1) # None if not found
+        queryAfterTableName = dividedQuery.group(2)
+        queryPlot = "SELECT datetimeFirst, datetimeLast, title, salaryMin, salaryMax FROM " + tableName + " " + queryAfterTableName
+        # print(queryPlot)
+    except Exception as exception:
+        # print(exception)
+        queryPlot = None
+            
+    # TRY MAKING TABLE > PLOT (as without the table there's no plot)
+    try:
+        dataframeTable = Database.queryToDataframe(query)
+        table = makeBokehTable(dataframeTable) # table ready
+    except Exception as exception:
+        # NO TABLE AND PLOT, BUT QUERY VALID
+        return json.dumps({'resultsAmount':0, 'message':"query executed - table and plot unavailable"}), 200, {'Content-Type': 'application/json'}
+    
+    if len(dataframeTable) == 0:
+        # QUERY OK BUT NO RESULTS
+        return json.dumps({'resultsAmount':0, 'message':"query executed - no results"}), 200, {'Content-Type': 'application/json'}
+    
+    # TRY MAKING A PLOT
+    try:
+        dataframePlot = Database.queryToDataframe(queryPlot)
+    except Exception as exception:
+        # SEND TABLE ONLY - ERROR ON PLOT GENERATION ('plot': None)
+        return json.dumps({'resultsAmount':int(len(dataframeTable)), 'plot': None, 'table':json_item(table), 'message':"query executed - plot unavailable"}), 200, {'Content-Type': 'application/json'}             
+    
+    # ALL FINE - TRY SENDING PLOT AND TABLE
+    try:
+        plot = makeBokehPlot(dataframePlot) # plot ready
+        return json.dumps({'resultsAmount':int(len(dataframeTable)), 'plot': json_item(plot), 'table':json_item(table), 'message':"query executed"}), 200, {'Content-Type': 'application/json'}
+    except Exception as exception:
+        # plot generating exception - rare or never
+        return json.dumps({'resultsAmount':0, 'error':True, 'errorMessage':str(exception), 'message':"query executed"}), 200, {'Content-Type': 'application/json'}
 
 @app.route('/downloadCsv')
 def downloadCsvEndpoint():
@@ -351,3 +412,4 @@ if __name__ == "__main__":
 
 ###########################################  TODO
 # terminate test browser instance at some point (check ifBrowserOpen on any add/delete process click?)
+# always natural scale on plot y-axis?

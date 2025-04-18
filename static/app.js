@@ -6,23 +6,216 @@ const checkAllText = '✓'
 const uncheckAllText = '✗'
 const sliceMessageToThisAmountOfCharacters = 350
 
-// CHANGE CALENDAR TOOL FOR FLATPICKR - styling in CSS file
-flatpickr("input[type='datetime-local']", {
-    enableTime: true, // show hh:mm options
-    enableSeconds: true,
-    dateFormat: "Y-m-d H:i:S",
-    allowInput: true, // Allow manual typing in the input field
-    time_24hr: true,
-    minuteIncrement: 1,
+fetchProcesses() // FETCH EXISTING PROCESSES FIRST
 
-    onOpen: function(selectedDates, dateStr, instance) { // dateStr empty but required
-        if (selectedDates.length === 0) { // update input if empty
-            instance.setDate(new Date())
+// HIGHLIGHT SQL SYNTAX IN QUERY EDITOR
+const editor = document.getElementById('queryEditor')
+
+const SQL_CORE_KEYWORDS = ['SELECT', 'FROM', 'WHERE', 'INSERT', 'INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'CREATE', 'DROP', 'TABLE', 
+    'VIEW', 'INDEX', 'IF', 'EXISTS', 'DISTINCT', 'ALL', 'IN', 'IS', 'NOT', 'NULL', 'AS', 'AND', 'OR', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 
+    'GROUP', 'BY', 'ORDER', 'HAVING', 'LIMIT', 'OFFSET', 'JOIN', 'INNER', 'LEFT', 'RIGHT', 'FULL', 'OUTER', 'CROSS', 'ON', 'USING', 'UNION', 
+    'INTERSECT', 'EXCEPT', 'INTEGER', 'TEXT', 'BLOB', 'REAL', 'NUMERIC', 'BOOLEAN', 'DATETIME', 'VARCHAR', 'CHAR', 'ASC', 'DESC']
+
+const SQL_FUNCTIONS_KEYWORDS = ['JULIANDAY', 'DATE', 'TIME', 'DATETIME', 'STRFTIME', 'ABS', 'ROUND', 'LENGTH', 'LOWER', 'UPPER', 'TRIM', 'COALESCE', 'IFNULL', 'NULLIF', 
+    'RANDOM', 'RANDOMBLOB', 'TOTAL', 'SUM', 'AVG', 'MIN', 'MAX', 'COUNT']
+    
+// const SQL_SPECIAL_CHARACTERS = ['[', ']', '(', ')', '+', '-', '/', '*']
+const SQL_SPECIAL_CHARACTERS = ['[', ']', '(', ')']
+
+function highlightQuerySyntax(text) {
+    // console.log(text)
+    const escapeHTML = str => str.replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    const tokens = text.match(/"[^"]*"|'[^']*'|\s\d+\s|\w+|\n|\s|--|[^\s]/g) // divide text into 'tokens'
+    let commentModeOn = false
+    // when encountered '--' return comment span until <br> hit (boolean var)
+    const highlighted = tokens.map(token => {
+        // console.log('token: ' + token)
+        if (/^\n$/.test(token)) {
+            commentModeOn = false // turn off comment mode on a newline
+            return '<br>'
+        }
+        // check comment mode status
+        if (commentModeOn === true){
+            return `<span class="queryTextComment">${token}</span>`
+        }
+        // turning on comment mode on '--'
+        else if (/--.*/.test(token)) {
+            commentModeOn = true 
+            return `<span class="queryTextComment">${token}</span>`
+        }
+        else if (SQL_CORE_KEYWORDS.includes(token.toUpperCase())) {
+            return `<span class="queryCoreKeyword">${token}</span>`
+        }
+        else if (SQL_FUNCTIONS_KEYWORDS.includes(token.toUpperCase())) {
+            return `<span class="queryFunctionKeyword">${token}</span>`
+        }
+        else if (SQL_SPECIAL_CHARACTERS.includes(token)) {
+            return `<span class="querySpecialCharacter">${token}</span>`
+        } 
+        else if (/^\'.*?\'$/.test(token) || /^\".*?\"$/.test(token)) {
+            return `<span class="queryTextString">${token}</span>`
+        } 
+        else if (/^\s*\d+\s*$/.test(token)) {
+            return `<span class="queryTextNumber">${token}</span>`
+        }
+        else {
+            return escapeHTML(token);
+        }
+    })
+    .join("")
+    return highlighted
+}
+
+function preserveCaret(callback) { // because highlighting moves caret back to beginning 
+    // function preserveCaret() {
+    const selection = window.getSelection()
+    const range = selection.getRangeAt(0)
+    const preCaretRange = range.cloneRange()
+    preCaretRange.selectNodeContents(editor)
+    preCaretRange.setEnd(range.endContainer, range.endOffset)
+    const caretOffset = preCaretRange.toString().length
+
+    callback() // highlightQuerySyntax() - modifying editor.innerHTML resets caret position
+
+    // Restore caret
+    function setCaret(node, offset) {
+        const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, null)
+        
+        let pos = 0
+        let foundNode = null
+        let foundOffset = 0
+
+        while (walker.nextNode()) {
+            const textNode = walker.currentNode
+            const nextPos = pos + textNode.length
+            // console.log(textNode, nextPos)
+
+            if (nextPos >= offset) {
+                foundNode = textNode
+                // console.log('foundNode')
+                // console.log(foundNode)
+                foundOffset = offset - pos
+                break
+            }
+            pos = nextPos
+        }
+
+        if (foundNode) {
+            const newRange = document.createRange()
+            newRange.setStart(foundNode, foundOffset)
+            newRange.setEnd(foundNode, foundOffset)
+            const sel = window.getSelection()
+            sel.removeAllRanges()
+            sel.addRange(newRange)
         }
     }
+    setCaret(editor, caretOffset)
+}
+
+// Highlight as you type
+editor.addEventListener('input', () => {
+    preserveCaret(() => {
+    const text = editor.innerText
+    editor.innerHTML = highlightQuerySyntax(text)
+    })
 })
 
-fetchProcesses() // HAS TO STAY AT THE TOP TO FETCH PROCESSES FIRST
+// Paste: force plain text
+editor.addEventListener('paste', e => {
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+    document.execCommand('insertText', false, text);
+})
+
+// Initial query editor state
+editor.innerHTML = "-- EXISTING TABLES LIST<br>SELECT name FROM sqlite_master WHERE type='table'<br>ORDER BY name; -- GL&HF"
+editor.innerHTML = highlightQuerySyntax(editor.innerText)
+
+
+// SEND (EXECUTE) QUERY AND FETCH BOKEH
+document.getElementById("executeQueryButton").addEventListener("click", sendQueryAndFetchBokeh)
+
+function sendQueryAndFetchBokeh() {
+    // const queryEditor = document.getElementById('queryEditor')
+    const executeQueryOutput = document.getElementById('executeQueryOutput')
+    executeQueryOutput.style = 'color: var(--color-text-primary);' // normal color
+    executeQueryOutput.innerHTML ='loading...'
+
+    function getCleanTextFromContentEditable() {
+        // clone to avoid messing with original
+        let queryEditorClone = document.getElementById('queryEditor').cloneNode(true)
+        queryEditorClone.querySelectorAll('br').forEach(br => {
+            br.replaceWith("\n") // replace <br> elements with "\n" for python
+        })
+        // queryEditorClone = queryEditorClone.textContent.trim() // queryEditorClone = queryEditorClone.innerText.trim()
+        queryEditorClone = queryEditorClone.innerText.trim()
+        // split into lines, remove excessive whitespaces and join again
+        const queryCleaned = queryEditorClone
+        .split('\n') // Step 1: divide into lines
+        .map(line => line.replace(/\s+/g, ' ')) // Step 2: replace every whitespace character with a regular space 
+        .join('\n'); // Step 3: rejoin lines
+        queryEditorClone = queryCleaned
+        console.log(queryEditorClone)
+        return queryEditorClone
+    }
+    let queryText = JSON.stringify(getCleanTextFromContentEditable())
+    
+    fetch(window.origin.toString() + '/executeQuery', {
+        method: "POST",
+        credentials: "include", // cookies etc
+        body: queryText, // form results
+        cache: "no-cache",
+        headers: new Headers({"content-type": "application/json"})
+    }) // FETCH RETURNS ASYNC PROMISE AND AWAITS RESPONSE
+        .then(function (response) {
+            if (response.status !== 200) {
+                // console.log('Error fetching. Response code: ' + response.status)
+                return
+            }
+            else if (response.status == 200) {
+                return response.json()
+            }
+        })
+        .then(function (items) { // when response 200 and JSON items list received
+            // console.log(items)
+            executeQueryOutput.innerHTML = items.message
+            if (items.error === true){
+                executeQueryOutput.style = 'color: var(--color-text-warning);'
+                executeQueryOutput.innerHTML += '<br>' + items.errorMessage
+            }
+            if (items.resultsAmount === 0) {
+                document.getElementById('plotDiv').innerHTML = ''
+                document.getElementById('tableDiv').innerHTML = ''
+                document.getElementById('downloadCsvContainer').style.display = 'none'
+                document.getElementById('downloadCsvIcon').innerHTML = ''
+                document.getElementById('downloadCsvText').innerHTML = ''
+                document.getElementById('resultsAmount').innerHTML = '' //'no results ¯\\_(ツ)_/¯'
+                if (items.error != true) {
+                    executeQueryOutput.innerHTML += '<br>' + 'no results ¯\\_(ツ)_/¯'
+                }
+                return
+            }
+            // if all went good and results are not empty replace the divs with bokeh stuff
+            else if (items.resultsAmount >= 1) {
+                document.getElementById('plotDiv').innerHTML = '' //make div empty first
+                document.getElementById('tableDiv').innerHTML = ''
+                if (items.plot !== null) {Bokeh.embed.embed_item(items.plot, 'plotDiv')} // not every table has a plot
+                Bokeh.embed.embed_item(items.table, 'tableDiv')
+                document.getElementById('downloadCsvContainer').style.display = 'flex'
+                document.getElementById('downloadCsvIcon').innerHTML = '<i class="fa fa-download" aria-hidden="true"></i>'
+                document.getElementById('downloadCsvText').innerHTML = 'DOWNLOAD CSV'
+
+                if (items.resultsAmount === 1) { //if 1 result
+                    document.getElementById('resultsAmount').innerHTML = '1 result'
+                    executeQueryOutput.innerHTML += '<br>' + '1 result'
+                }
+                else if (items.resultsAmount > 1) { // if >1 results
+                    document.getElementById('resultsAmount').innerHTML = items.resultsAmount + ' results'
+                    executeQueryOutput.innerHTML += '<br>' + items.resultsAmount + ' results'
+                }
+            }
+        })
+}
 
 function fetchProcesses() {
     // const output = document.getElementById(outputDiv)
@@ -90,8 +283,16 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
     // HANDLING UNDEFINED ARGUMENTS
     if (url === undefined) { // IF URL ARGUMENT NOT PROVIDED
         // url = "https://justjoin.it/job-offers/bialystok?experience-level=mid&remote=yes&orderBy=DESC&sortBy=published"
-        url = "https://theprotocol.it/filtry/python;t/junior;p/zdalna;rw"
-        // url =''
+        // url = "https://theprotocol.it/filtry/python;t/junior;p/zdalna;rw"
+        urlsList = [
+            "https://theprotocol.it/praca", 
+            "https://theprotocol.it/filtry/python;t/zdalna;rw", 
+            "https://theprotocol.it/filtry/python;t/trainee,assistant,junior,mid;p/hybrydowa,zdalna;rw", 
+            "https://justjoin.it",
+            "https://justjoin.it/job-offers/all-locations/python",
+            "https://justjoin.it/job-offers/all-locations/javascript"
+        ]
+        url = urlsList[Math.floor(Math.random() * urlsList.length)] // random choice from the list
     }
 
     if (index === undefined) { // IF INDEX ARGUMENT NOT PROVIDED
@@ -270,11 +471,12 @@ function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, output
 document.getElementById("sendFormAndFetchBokehButton").addEventListener("click", sendFormAndFetchBokeh)
 
 function sendFormAndFetchBokeh(e) {
-    document.getElementById('sendFormAndFetchBokehOutput').innerHTML = 'loading...' //reset output
+    const sendFormAndFetchBokehOutput =  document.getElementById('sendFormAndFetchBokehOutput')
+    sendFormAndFetchBokehOutput.innerHTML = 'loading...' //reset output
     e.preventDefault() //prevent sending form default request
 
     if (atLeastOneCheckboxChecked() === false) {
-        document.getElementById('sendFormAndFetchBokehOutput').innerHTML = 'select at least one parameter to show'
+        sendFormAndFetchBokehOutput.innerHTML = 'select at least one parameter to show'
         return //exit
     }
 
@@ -291,7 +493,7 @@ function sendFormAndFetchBokeh(e) {
     })
     let formDataJson = JSON.stringify(Object.fromEntries(formData))
 
-    fetch(window.origin + '/', {
+    fetch(window.origin.toString() + '/', {
         method: "POST",
         credentials: "include", // cookies etc
         body: formDataJson, // form results
@@ -308,26 +510,26 @@ function sendFormAndFetchBokeh(e) {
             }
         })
         .then(function (items) { // when response 200 and JSON items list received
-            const queryDiv = document.getElementById('queryDiv')
-            queryDiv.display = 'flex'
-            queryDiv.innerHTML = items.query.replace(/\n/g, "<br>") //replace python newline with html <br>
-            queryDiv.style = 'color: var(--color-text-primary);'
-            // queryDiv.style.display = 'none'
+            const queryEditor = document.getElementById('queryEditor')
+            const executeQueryOutput = document.getElementById('executeQueryOutput')
+            executeQueryOutput.style = 'color: var(--color-text-primary);' // normal color
+            queryEditor.innerHTML = items.query.replace(/\n/g, "<br>") // replace python newline with html <br>
+            queryEditor.innerHTML = highlightQuerySyntax(queryEditor.innerText)
             if (items.error === true){
-                // queryDiv.style.display = 'flex'
-                queryDiv.style = 'color: var(--color-text-warning);'
-                document.getElementById('sendFormAndFetchBokehOutput').innerHTML = 'query error - check description'
+                executeQueryOutput.style = 'color: var(--color-text-warning);'
+                executeQueryOutput.innerHTML = items.errorMessage
+                sendFormAndFetchBokehOutput.innerHTML = 'query error - check description'
             }
-
             if (items.resultsAmount === 0) {
                 document.getElementById('plotDiv').innerHTML = ''
                 document.getElementById('tableDiv').innerHTML = ''
                 document.getElementById('downloadCsvContainer').style.display = 'none'
                 document.getElementById('downloadCsvIcon').innerHTML = ''
                 document.getElementById('downloadCsvText').innerHTML = ''
-                document.getElementById('resultsAmount').innerHTML = '' //'no results ¯\\_(ツ)_/¯'
+                document.getElementById('resultsAmount').innerHTML = '' // empty to hide download div
                 if (items.error != true) {
-                    document.getElementById('sendFormAndFetchBokehOutput').innerHTML = 'no results ¯\\_(ツ)_/¯'
+                    sendFormAndFetchBokehOutput.innerHTML = 'no results ¯\\_(ツ)_/¯'
+                    executeQueryOutput.innerHTML = 'no results ¯\\_(ツ)_/¯'
                 }
                 return
             }
@@ -343,11 +545,13 @@ function sendFormAndFetchBokeh(e) {
 
                 if (items.resultsAmount === 1) { //if 1 result
                     document.getElementById('resultsAmount').innerHTML = '1 result'
-                    document.getElementById('sendFormAndFetchBokehOutput').innerHTML = '1 result'
+                    sendFormAndFetchBokehOutput.innerHTML = '1 result'
+                    executeQueryOutput.innerHTML = '1 result'
                 }
                 else if (items.resultsAmount > 1) { // if >1 results
                     document.getElementById('resultsAmount').innerHTML = items.resultsAmount + ' results'
-                    document.getElementById('sendFormAndFetchBokehOutput').innerHTML = items.resultsAmount + ' results'
+                    sendFormAndFetchBokehOutput.innerHTML = items.resultsAmount + ' results'
+                    executeQueryOutput.innerHTML = items.resultsAmount + ' results'
                 }
             }
         })
@@ -437,6 +641,22 @@ headerContainer.addEventListener("mouseover", function() {
 })
 headerContainer.addEventListener("mouseout", function() {
     headerText2.textContent = "so much scrap";
+})
+
+// CHANGE CALENDAR TOOL FOR FLATPICKR - styling in CSS file
+flatpickr("input[type='datetime-local']", {
+    enableTime: true, // show hh:mm options
+    enableSeconds: true,
+    dateFormat: "Y-m-d H:i:S",
+    allowInput: true, // Allow manual typing in the input field
+    time_24hr: true,
+    minuteIncrement: 1,
+
+    onOpen: function(selectedDates, dateStr, instance) { // dateStr empty but required
+        if (selectedDates.length === 0) { // update input if empty
+            instance.setDate(new Date())
+        }
+    }
 })
 
 

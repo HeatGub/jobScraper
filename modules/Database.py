@@ -1,5 +1,6 @@
 import sqlite3, re, datetime
 import pandas as pd
+from pandas.io.sql import DatabaseError
 import settings
 DATABASE_FILE_NAME = 'database.db'
 
@@ -53,11 +54,15 @@ class Database(): # this class is just for functions encapsulation, no instance 
         try:
             connection, cursor = createDatabaseConnectionAndCursor() 
             cursor.execute(query)
+            # print(cursor.rowcount) # rowcount works for UPDATE, DELETE, and INSERT.
+            # print(len(cursor.fetchall())) # For SELECT, rowcount is usually -1, not the number of rows. You should use len(cursor.fetchall()) instead 
             connection.commit()
             # print(cursor.fetchall())
+            return {'executed':True, 'message':"query executed successfully"}
         except sqlite3.Error as sqliteError:
-            print(f"SQLite Error: {sqliteError}")
+            # print(f"SQLite Error: {sqliteError}")
             connection.rollback()
+            return {'executed':False, 'message':str(sqliteError)}
         finally:
             closeDatabaseConnectionAndCursor(connection, cursor)
     
@@ -125,6 +130,7 @@ class Database(): # this class is just for functions encapsulation, no instance 
             closeDatabaseConnectionAndCursor(connection, cursor)
 
     def queryToDataframe(fullQuery):
+        # print('queryToDataframe')
         try:
             connection, cursor = createDatabaseConnectionAndCursor() 
             # df = pd.read_sql("SELECT datetimeFirst, datetimeLast FROM " +DATABASE_TABLE_NAME+ ";", con=connection)
@@ -133,8 +139,10 @@ class Database(): # this class is just for functions encapsulation, no instance 
             # print(cursor.fetchall())
             # print('\n'+str(len(cursor.fetchall())) + ' records found')
             return df
-        except sqlite3.Error as sqliteError:
-            print(f"SQLite Error: {sqliteError}")
+        
+        except sqlite3.Error as error:
+            print(f"SQLite Error: {error}")
             connection.rollback()
+
         finally:
             closeDatabaseConnectionAndCursor(connection, cursor)
