@@ -56,6 +56,10 @@ input {
   border-radius: var(--border-radius-tertiary);
 }
 
+input::placeholder {
+  color: var(--color-background-quinary);
+}
+
 /* INPUT AUTOFILL COLORS */
 input:-webkit-autofill {
   /* font-family: 'Anonymous Pro' !important; - does not work */
@@ -149,6 +153,11 @@ button:hover, #sendFormAndFetchBokehButton:hover {
   border: 0.05rem solid var(--color-background-quinary);
   border-radius: var(--border-radius-secondary);
   background-color: var(--color-background-primary);
+  outline: none;
+}
+
+#queryEditor:focus {
+  outline: var(--border-width-secondary) solid var(--color-background-quinary);
 }
 
 #executeQueryOutput{

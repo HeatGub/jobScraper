@@ -48,7 +48,7 @@ CSS_VARIABLES = {
     # "color-secondary": "rgba(200, 0, 220, 0.8)",
     "color-primary": "rgba(0, 170, 140, 1)",
     "color-secondary": "rgba(157, 0, 255, 0.8)",
-    "color-tertiary": "rgba(255, 199, 0, 0.7)",
+    "color-tertiary": "rgba(255, 220, 0, 0.75)",
     "color-quaternary": "rgba(0, 145, 134, 0.8)",
     "color-table-selection": "rgba(0, 203, 182,0.15)",
 
@@ -68,10 +68,6 @@ CSS_VARIABLES = {
     "color-plot-error-bars": "rgba(20,20,20, 0.4)",
     "color-plot-grid-line": "rgba(100,100,100,0.9)",
     "color-plot-minor-grid-line": "rgba(80,80,80,0.3)",
-
-    # "color-table-selection": "rgba(60,140,200,0.2)",
-    "color-table-url-unvisited": "rgba(120, 120, 240, 1)",
-    "color-table-url-visited": "rgba(80, 80, 180, 1)",
     
     "border-width-primary": "0.2rem",
     "border-width-secondary": "0.15rem",

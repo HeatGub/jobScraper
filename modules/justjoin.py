@@ -28,7 +28,8 @@ def scrapCurrentlyVisibleOffersUrls(SeleniumBrowser): # just the ones currently 
         for offer in offers: # ever-loading div among them
             try:
                 index = offer.get_attribute('data-index')
-                href = offer.find_element(By.XPATH, ".//div/div/a").get_property("href")
+                # href = offer.find_element(By.XPATH, ".//div/div/a").get_property("href") # changed ~2025.04.20
+                href = offer.find_element(By.XPATH, "./div/a").get_property("href")
 
                 def foundAmongSavedIndexes():
                     if len(SeleniumBrowser.OFFERS_URLS) == 0:
@@ -101,18 +102,14 @@ def scrapAllOffersUrls(SeleniumBrowser):
 ########################################################################### Analyse offer functions ###########################################################################
 
 def offerNotFound(SeleniumBrowser):
-    try:
-        # Sorry, we cannot display this page. It is possible that its address has changed or it has been removed.
-        notFoundMsg = 'we cannot display this page'
-        notFoundMsgDivs = SeleniumBrowser.DRIVER.find_elements(By.CLASS_NAME, "css-czlivx") # only 1 element of that class found tho
-        for div in notFoundMsgDivs:
-            # Case-insensitive check
-            if notFoundMsg.lower() in div.text.lower():
-                # print(div.text)
-                return True
-        return False
+    try:  # try finding offer specific div (job description/techstack divs)
+        specificDivs = SeleniumBrowser.DRIVER.find_elements(By.CLASS_NAME, 'MuiBox-root.css-16nvqld')
+        if (len(specificDivs)) > 0:
+            return False
+        else:
+            return True
     except:
-        return False
+        return True
 
 def getOfferDetails(SeleniumBrowser):
     # BASIC PARAMETERS WHICH SHOULD ALWAYS BE NOT EMPTY ON THE SITE
@@ -161,39 +158,46 @@ def getOfferDetails(SeleniumBrowser):
 
     #SALARY
     try:
-        salaryAndContract = topContainer.find_element(By.CSS_SELECTOR, '.MuiBox-root.css-1km0bek').text
+        # salaryAndContract = topContainer.find_element(By.CSS_SELECTOR, '.MuiBox-root.css-1km0bek').text # changed ~2025.04.20 due to nested span
+        salaryAndContract = topContainer.find_element(By.CSS_SELECTOR, '.MuiBox-root.css-1km0bek').get_attribute("innerText")
+        salaryAndContractElement = topContainer.find_element(By.CSS_SELECTOR, '.MuiBox-root.css-1km0bek')
     except:
         salaryAndContract = None
 
-    salaryMinAndMax = [None, None] # Nones as these are INTs in DB
+    # print(salaryAndContract)
+    salaryMinAndMax = [None, None]
     if salaryAndContract != None:
         try: #to recalculate salary to [PLN/month net]
             hoursPerMonthInFullTimeJob = 168
-            minAndMaxLine = salaryAndContract.splitlines()[0] # There could be multiple salaries depending on contract type though. It will be in salaryAndContract anyway
-            secondLine = salaryAndContract.splitlines()[1]
-            splitValues = re.split(r'-', minAndMaxLine) # split on dash for min and max
+            # minAndMaxLine = salaryAndContract.splitlines()[0] # There could be multiple salaries depending on contract type though. It will be in salaryAndContract anyway
+            # secondLine = salaryAndContract.splitlines()[1] # changed ~2025.04.20
+            salaryAndContractSpans = salaryAndContractElement.find_elements(By.CSS_SELECTOR, 'span')
+            minAndMaxLine = salaryAndContractSpans[0].get_attribute("innerText")
+            contractLine = salaryAndContractSpans[1].get_attribute("innerText") # could look in whole salaryAndContract but it can have multiple contract types
+            firstContractParameters = minAndMaxLine + ' ' + contractLine
+            splitValues = re.split(r'-', minAndMaxLine) # split on a first dash for min and max
 
             for i in range(len(splitValues)):
                 splitValues[i] = splitValues[i].replace(" ", "") # remove spaces
                 splitValues[i] = re.sub(r",\d{1,2}", '', splitValues[i]) # removes , and /d{1 to 2 occurrences}  (needed when salary as 123,45)
                 salaryMinAndMax[i] = re.search(r"\d+", splitValues[i]).group() # r = raw, \d+ = at least 1 digit, group() contains results
             # gross -> net
-            if re.findall("brutto", secondLine) or re.findall("gross", secondLine):
+            if re.findall("brutto", firstContractParameters) or re.findall("gross", firstContractParameters):
                 salaryMinAndMax = [(float(elmnt) * settings.GROSS_TO_NET_MULTIPLIER) for elmnt in salaryMinAndMax]
             # year -> month
-            if re.findall("year", secondLine) or re.findall("rok", secondLine): 
+            if re.findall("year", firstContractParameters) or re.findall("rok", firstContractParameters): 
                 salaryMinAndMax = [(float(elmnt)/12) for elmnt in salaryMinAndMax] #possible input float/str
             # day -> month
-            if re.findall("day", secondLine) or re.findall("dzień", secondLine): 
+            if re.findall("day", firstContractParameters) or re.findall("dzień", firstContractParameters): 
                 salaryMinAndMax = [(float(elmnt) * hoursPerMonthInFullTimeJob/8) for elmnt in salaryMinAndMax] #possible input float/str
             # hr -> month
-            if re.findall("hour", secondLine) or re.findall(r"/h", secondLine) or re.findall("godz", secondLine): 
+            if re.findall("hour", firstContractParameters) or re.findall(r"/h", firstContractParameters) or re.findall("godz", contractLine): 
                 salaryMinAndMax = [(float(elmnt) * hoursPerMonthInFullTimeJob) for elmnt in salaryMinAndMax] #possible input float/str
 
             salaryMinAndMax = [int(elmnt) for elmnt in salaryMinAndMax] # to ints
         except Exception as exception:
+            # print(exception)
             pass    # salaryMinAndMax = [None, None]
-    # print(salaryMinAndMax)
         
     workModes = None
     positionLevels = None
@@ -214,7 +218,7 @@ def getOfferDetails(SeleniumBrowser):
         positionLevels = fourRectangles[1]
         workModes = fourRectangles[3]
     except Exception as exception:
-        print(exception)
+        # print(exception)
         pass
     # print(salaryAndContract)
     # print(workModes, positionLevels + '\n')
@@ -364,10 +368,10 @@ def scrapToDatabase(SeleniumBrowser):
 
                 time.sleep(random.uniform(settings.WAIT_OFFER_PARAMS_JUSTJOIN[0], settings.WAIT_OFFER_PARAMS_JUSTJOIN[1]))
                 return {'success':True, 'functionDone':False, 'message': str(SeleniumBrowser.currentlyScrapedOfferIndex) + '/' + str(len(SeleniumBrowser.OFFERS_URLS)) + ' offers scraped'}
-            elif offerNotFound(SeleniumBrowser):
+            else: # offer not found
                 # print('OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url)
                 SeleniumBrowser.currentlyScrapedOfferIndex += 1 # increment even if offer not found not to get stuck
-                time.sleep(random.uniform(settings.WAIT_OFFER_PARAMS_JUSTJOIN[0], settings.WAIT_OFFER_PARAMS_JUSTJOIN[1])) # move to settings
+                time.sleep(random.uniform(settings.WAIT_OFFER_PARAMS_JUSTJOIN[0], settings.WAIT_OFFER_PARAMS_JUSTJOIN[1]))
                 return {'success':False, 'functionDone':False, 'message': 'OFFER NOT FOUND: ' +  SeleniumBrowser.DRIVER.current_url}
     except Exception as exception:
         print(exception)

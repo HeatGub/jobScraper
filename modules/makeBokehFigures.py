@@ -1,6 +1,6 @@
 from bokeh.plotting import figure
 from bokeh.models.widgets import DataTable, TableColumn
-from bokeh.models import ColumnDataSource, WheelZoomTool, HTMLTemplateFormatter, HoverTool, TapTool, Range1d, LinearAxis, InlineStyleSheet
+from bokeh.models import ColumnDataSource, WheelZoomTool, HTMLTemplateFormatter, HoverTool, TapTool, Range1d, LinearAxis, InlineStyleSheet, NumeralTickFormatter
 import settings
 import pandas as pd
 
@@ -71,6 +71,8 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
     plot.yaxis.axis_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
     plot.yaxis.major_tick_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
     plot.yaxis.minor_tick_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
+
+    plot.yaxis.formatter = NumeralTickFormatter(format="0a") # '1.000e+4' to '10k'
 
     plot.xgrid.grid_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
     plot.ygrid.grid_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
@@ -276,12 +278,12 @@ def makeBokehTable(dataframe):
 
     /* HREF URL COLOR BEFORE VISIT */
     .slick-cell > a {
-        color: var(--color-table-url-unvisited) !important;
+        color: var(--color-tertiary) !important;
     }
 
     /* VISITED URL COLOR */
     .slick-cell > a:visited {
-        color: var(--color-table-url-visited) !important;
+        color: var(--color-text-tertiary) !important;
     }
 
     .slick-cell { /* CENTER CONTENT INSIDE CELL */
