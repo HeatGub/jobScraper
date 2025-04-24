@@ -20,12 +20,16 @@ const SQL_FUNCTIONS_KEYWORDS = ['JULIANDAY', 'DATE', 'TIME', 'DATETIME', 'STRFTI
     'RANDOM', 'RANDOMBLOB', 'TOTAL', 'SUM', 'AVG', 'MIN', 'MAX', 'COUNT']
     
 // const SQL_SPECIAL_CHARACTERS = ['[', ']', '(', ')', '+', '-', '/', '*']
-const SQL_SPECIAL_CHARACTERS = ['[', ']', '(', ')']
+// const SQL_SPECIAL_CHARACTERS = ['[', ']', '(', ')']
+const SQL_SPECIAL_CHARACTERS = ['(', ')']
+
 
 function highlightQuerySyntax(text) {
     // console.log(text)
     const escapeHTML = str => str.replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    const tokens = text.match(/"[^"]*"|'[^']*'|\s\d+\s|\w+|\n|\s|--|[^\s]/g) // divide text into 'tokens'
+    // const tokens = text.match(/"[^"]*"|'[^']*'|\[.*\]|\s\d+\s|\w+|\n|\s|--|[^\s]/g) // divide text into 'tokens'
+    const tokens = text.match(/"[^"]*"|'[^']*'|\[.*\]|\w+|\d+|\n|\s|--|[^\s]/g) // divide text into 'tokens'
+
     let commentModeOn = false
     // when encountered '--' return comment span until <br> hit (boolean var)
     const highlighted = tokens.map(token => {
@@ -52,10 +56,11 @@ function highlightQuerySyntax(text) {
         else if (SQL_SPECIAL_CHARACTERS.includes(token)) {
             return `<span class="querySpecialCharacter">${token}</span>`
         } 
-        else if (/^\'.*?\'$/.test(token) || /^\".*?\"$/.test(token)) {
+        // else if (/^\'.*?\'$/.test(token) || /^\".*?\"$/.test(token)) {
+        else if (/^\'.*?\'$/.test(token) || /^\".*?\"$/.test(token) || /^\[.*?\]$/.test(token)) {
             return `<span class="queryTextString">${token}</span>`
-        } 
-        else if (/^\s*\d+\s*$/.test(token)) {
+        }
+        else if (/^\d+$/.test(token)) {
             return `<span class="queryTextNumber">${token}</span>`
         }
         else {
@@ -74,8 +79,6 @@ function preserveCaret(callback) { // because highlighting moves caret back to b
     preCaretRange.selectNodeContents(editor)
     preCaretRange.setEnd(range.endContainer, range.endOffset)
     const caretOffset = preCaretRange.toString().length
-
-    callback() // highlightQuerySyntax() - modifying editor.innerHTML resets caret position
 
     // Restore caret
     function setCaret(node, offset) {
@@ -109,6 +112,7 @@ function preserveCaret(callback) { // because highlighting moves caret back to b
             sel.addRange(newRange)
         }
     }
+    callback() // highlightQuerySyntax() - modifying editor.innerHTML resets caret position
     setCaret(editor, caretOffset)
 }
 
@@ -599,12 +603,12 @@ document.getElementById('checkUncheckAll').addEventListener('click', () => {
     if (checkUncheckAll.textContent == uncheckAllText) {
         document.querySelectorAll('.checkBox').forEach(checkbox => { checkbox.checked = false })
         checkUncheckAll.textContent = checkAllText
-        checkUncheckAll.style = 'color: var(--color-secondary);' // root variable
+        checkUncheckAll.style = 'color: var(--color-primary);' // root variable
     }
     else if (checkUncheckAll.textContent == checkAllText) {
         document.querySelectorAll('.checkBox').forEach(checkbox => { checkbox.checked = true })
         checkUncheckAll.textContent = uncheckAllText
-        checkUncheckAll.style = 'color: var(--color-primary);'
+        checkUncheckAll.style = 'color: var(--color-secondary);'
     }
 })
 
@@ -638,9 +642,11 @@ headerContainer = document.getElementById("headerContainer")
 
 headerContainer.addEventListener("mouseover", function() {
     headerText2.textContent = "so much crap"
+    headerText2.style = 'color: var(--color-secondary);'
 })
 headerContainer.addEventListener("mouseout", function() {
     headerText2.textContent = "so much scrap";
+    headerText2.style = 'color: var(--color-tertiary);'
 })
 
 // CHANGE CALENDAR TOOL FOR FLATPICKR - styling in CSS file

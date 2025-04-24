@@ -195,6 +195,9 @@ def getOfferDetails(SeleniumBrowser):
                 salaryMinAndMax = [(float(elmnt) * hoursPerMonthInFullTimeJob) for elmnt in salaryMinAndMax] #possible input float/str
 
             salaryMinAndMax = [int(elmnt) for elmnt in salaryMinAndMax] # to ints
+            # cancel conversion if employer can't properly set units
+            if salaryMinAndMax[0] < 1000 or salaryMinAndMax[0] > 100000:
+                salaryMinAndMax = [None, None]
         except Exception as exception:
             # print(exception)
             pass    # salaryMinAndMax = [None, None]

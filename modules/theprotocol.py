@@ -105,10 +105,13 @@ def getOfferDetails(SeleniumBrowser):
                     # print(salaryMinAndMax)
                 if re.findall("godz", lines[1]) or re.findall("hr.", lines[1]): # hr -> month
                     salaryMinAndMax = [(float(elmnt) * hoursPerMonthInFullTimeJob) for elmnt in salaryMinAndMax] #possible input float/str
-
                 if salaryMinAndMax[1] == None: # some offers provide just 1 extremum
                     salaryMinAndMax[1] = salaryMinAndMax[0]
+                    
                 salaryMinAndMax = [int(elmnt) for elmnt in salaryMinAndMax] # to ints
+                # cancel conversion if employer can't properly set units
+                if salaryMinAndMax[0] < 1000 or salaryMinAndMax[0] > 100000:
+                    salaryMinAndMax = [None, None]
         except:
             pass    # salaryMinAndMax = [None, None]
 
@@ -120,7 +123,7 @@ def getOfferDetails(SeleniumBrowser):
 
     except:
         employer= None
-    # print(employer  + '\n')
+      # print(employer  + '\n')
     
     # WORKFROM, EXP, VALIDTO, LOCATION - "PARAMETERS"
     workModes, positionLevels, location = None, None, None
@@ -151,31 +154,38 @@ def getOfferDetails(SeleniumBrowser):
     
     # IF STILL NOT FOUND, TRY SEARCHING NEW HTML ELEMENTS (04.2025)
     if location == None: # checking location, as it's the toughest one to gather
-        parametersContainer = SeleniumBrowser.DRIVER.find_element(By.CLASS_NAME, "m1vgkec8")
-        parameters = parametersContainer.find_elements(By.CLASS_NAME, "b12rofz")
-        # print(parameters)
-        for param in parameters:
-            paramType = param.text #element description
-            match paramType:
-                case thisCase if any(keyword in thisCase.lower() for keyword in ("mode", "tryb")):
-                    lines = param.text.splitlines()
-                    workModes = "".join(lines[1:])  # Join all lines except the first one (param description)
-                case thisCase if any(keyword in thisCase.lower() for keyword in ("level", "poziom")):
-                    lines = param.text.splitlines()
-                    positionLevels = "".join(lines[1:])
-                case _: # IF IT'S NOT MODE OR LEVEL, IT MUST BE LOCATION DIV
-                    location = param.text # fine for a single location
-                    # remove description keyword
-                    location = re.sub('location:|lokalizacja:', '', location, flags=re.IGNORECASE).strip()
-                    # TRY CLICKING 'MORE' BUTTON
-                    try: #to find and click 'more locations' button then fetch what's inside
-                        moreLocations = param.find_element("xpath", '//button[@class="m8ercsp"]')
-                        moreLocations.click()
-                        locations = moreLocations.find_element("xpath", '//*[@class="mtlwq3f"]')
-                        location = locations.text # overwrites a single one
-                        location = re.sub('view on map', '', location, flags=re.IGNORECASE).strip()
-                    except:
-                        pass # leave location as it was
+        try:
+            # parametersContainer = DRIVER.find_element(By.CLASS_NAME, "m1vgkec8")  # changed 2025.04.23
+            # parameters = parametersContainer.find_elements(By.CLASS_NAME, "b12rofz")  # changed 2025.04.23
+            parametersContainer = SeleniumBrowser.DRIVER.find_element(By.CLASS_NAME, "m10gs8ch")
+            parameters = parametersContainer.find_elements(By.CLASS_NAME, "bm08utg")
+            # print(parameters)
+            for param in parameters:
+                paramType = param.text # element description
+                match paramType:
+                    case thisCase if any(keyword in thisCase.lower() for keyword in ("mode", "tryb")):
+                        lines = param.text.splitlines()
+                        workModes = "".join(lines[1:])  # Join all lines except the first one (param description)
+                    case thisCase if any(keyword in thisCase.lower() for keyword in ("level", "poziom")):
+                        lines = param.text.splitlines()
+                        positionLevels = "".join(lines[1:])
+                    case _: # IF IT'S NOT MODE OR LEVEL, IT MUST BE LOCATION DIV
+                        location = param.text # fine for a single location
+                        # remove description keyword
+                        location = re.sub('location:|lokalizacja:', '', location, flags=re.IGNORECASE).strip()
+                        # TRY CLICKING 'MORE' BUTTON
+                        try: #to find and click 'more locations' button then fetch what's inside
+                            # moreLocations = param.find_element("xpath", '//button[@class="m8ercsp"]') # changed 2025.04.23
+                            moreLocations = param.find_element("xpath", '//button[@class="mrk53q0"]')
+                            moreLocations.click()
+                            locations = moreLocations.find_element("xpath", '//*[@class="m1k6yq1j"]')
+                            location = locations.text # overwrites a single one
+                            location = re.sub(r'view on map|pokaż na mapie', '', location, flags=re.IGNORECASE).strip() # clean up
+                        except Exception as exception:
+                            # print(exception)
+                            pass # leave location as it was
+        except:
+            pass  # leave Nones
 
 
     #TECHSTACK

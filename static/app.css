@@ -220,11 +220,15 @@ button:hover, #sendFormAndFetchBokehButton:hover {
 
 /* whole bottom span on hover */
 #headerContainer:hover .headerBottomTextContainer span {
-  text-shadow: 0rem 0rem 0.5rem var(--color-background-quinary);
+  text-shadow: 0rem 0rem 0.15rem var(--color-background-tertiary);
 }
 
 #headerContainer:hover {
   text-shadow: 0rem 0rem 0.15rem var(--color-primary);
+}
+
+#headerText2 {
+    transition: color 0.6s ease;
 }
 
 .headerBottomTextContainer {
@@ -518,39 +522,6 @@ th.flexibleWidthColumn {
   width: auto; /* Distributes remaining space */
 }
 
-/*////////////////////////////////////////////// CHECKBOX RELATED //////////////////////////////////////////////*/
-
-#checkUncheckAll {
-  /* margin: 0; */
-  cursor: pointer;
-  color: var(--color-primary);
-  font-size: 1.2rem;
-  margin-top: -0.3rem;
-}
-
-#checkUncheckAll:hover {
-  text-shadow: 0rem 0rem 0.3rem var(--color-secondary);
-}
-
-#checkUncheckTableHeaderSpan {
-  /* margin: 0;
-  padding: 0rem; */
-  gap: 0.5rem;
-}
-
-input[type="checkbox"] {
-  max-width: 0.4rem;
-  cursor: pointer;
-  outline: none;
-  /* -webkit-appearance: none;
-  appearance: none; */
-}
-
-input[type="checkbox"]:hover {
-  box-shadow: none;
-}
-
-
 /*////////////////////////////////////////////// CALENDAR TOOL FLATPICKR //////////////////////////////////////////////*/
 
 /* Remove unwanted white borders */
@@ -661,3 +632,70 @@ input[type="checkbox"]:hover {
 .flatpickr-months * { /* scale font size of month and year*/
   font-size: 1rem !important;
 }
+
+/*////////////////////////////////////////////// CHECKBOX RELATED //////////////////////////////////////////////*/
+
+#checkUncheckAll {
+  /* margin: 0; */
+  cursor: pointer;
+  color: var(--color-secondary);
+  font-size: 1.2rem;
+  margin-top: -0.3rem;
+}
+
+#checkUncheckAll:hover {
+  text-shadow: 0rem 0rem 0.3rem var(--color-secondary);
+}
+
+#checkUncheckTableHeaderSpan {
+  /* margin: 0;
+  padding: 0rem; */
+  gap: 0.5rem;
+}
+
+/* Hide default checkbox */
+input[type="checkbox"] {
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+/* Style the span to look like a checkbox */
+.customCheckBox .checkMark {
+  margin-bottom: 0.1rem; /* aligns to the center of table row*/
+  cursor: pointer;
+  display: inline-block;
+  width: 0.75rem;
+  height: 0.75rem;
+  background-color: var(--color-background-secondary);
+  border: 0.05rem solid var(--color-primary);
+  border-radius: 20%;
+  position: relative;
+  vertical-align: middle;
+  margin-right: 0px;
+  transition: background-color 0.4s ease-in-out, box-shadow 0.5s ease-in-out;
+}
+
+/* Checked state */
+.customCheckBox input:checked + .checkMark {
+  background-color: var(--color-primary);
+  border-color: var(--color-background-secondary);
+  box-shadow: 0rem 0rem 0.15rem var(--color-tertiary);
+}
+
+/* Center mark inside checkbox */
+/* .customCheckBox .checkMark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 0.05rem;
+} */
+
+/* Add a check mark */
+/* .customCheckBox input:checked + .checkMark::after {
+  content: "✔";
+  color: var(--color-background-quaternary);
+  font-size: 0.7rem;
+} */

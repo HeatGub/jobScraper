@@ -61,7 +61,13 @@
               {% for columnDict in databaseColumns %}
               <tr>
                 <td title="{{columnDict.description}}">{{columnDict.displayName}}</td>
-                <td><input type="checkbox" class="checkBox" checked="checked" name={{columnDict.dbColumnName}}Show></td>
+                <!-- <td><input type="checkbox" class="checkBox" checked="checked" name={{columnDict.dbColumnName}}Show></td> -->
+                <td>
+                  <label class="customCheckBox">
+                    <input type="checkbox" class="checkBox" checked="checked" name={{columnDict.dbColumnName}}Show>
+                    <span class="checkMark"></span>
+                  </label>
+                </td>
                 {% if columnDict.dbColumnName != "salaryMin" and columnDict.dbColumnName != "salaryMax" %}
                 <td><input type="text" placeholder="(a OR b OR c) AND (d OR e)" name={{columnDict.dbColumnName}}Necessary></td>
                 <td><input type="text" placeholder="((NULL AND a AND b) OR (c OR d) OR (f AND g))" name={{columnDict.dbColumnName}}Forbidden></td>
