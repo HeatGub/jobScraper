@@ -1,13 +1,21 @@
 # <p align="center">job scraper</p>
-Fullstack application for scraping job portals (currently theprotocol.it and justjoin.it). It can handle multiple scraping processes and a flask server at the same time. All you need to do is provide offer list URL(s) and watch it update the database while you're looking for a dream job.
+### Job scraper is a fullstack scraping application (for theprotocol.it and justjoin.it) controlled via web browser. It can handle multiple scraping processes and a flask server at the same time. All you need to do is provide offer list URL(s) and watch it update the database while you're looking for a job.
 <!-- <p align="center">
   <img src="https://github.com/user-attachments/assets/9484d58b-04c1-4704-990d-fb589a5910ff" width=80%>
 </p> -->
 
-<!-- wanted to drag-drop-upload the gif like above, but it works no more -->
+<!-- wanted to drag-drop-upload on git website readme edit like the gif above, but it works no more -->
+## <p align="center"> DEMO </p>
 <p align="center">
-  <img src="other/job scraper 2025-04-04.gif" width=70%>
+  <img src="other/gitAssets/job scraper 2025-04-27.gif" width=70%>
 </p>
+
+## <p align="center"> TECHSTACK </p>
+- **Flask** - backend
+- **SQLite** - database
+- **Selenium** - scraping functionality
+- **JS/CSS/HTML** - frontend
+- **Bokeh** - plots and tables
 
 ## <p align="center"> APPLICATION SECTIONS </p>
 
@@ -20,7 +28,7 @@ or
 
 Special keywords (**case sensitive**) are: `AND`, `OR` and `NULL`
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/23009582-1868-42e8-916d-ba14dd4a4588" width=70%>
+  <img src="other/gitAssets/queryTool.png" width=70%>
 </p>
 
 **Default parameters** (database columns - you can adjust them via settings.py) are:
@@ -61,16 +69,27 @@ Special keywords (**case sensitive**) are: `AND`, `OR` and `NULL`
 </small>
 
 ### <p align="center"> QUERY </p>
-Displays generated query or SQL error (see the image in query tool section).
+Displays generated query, which you can **edit** and **execute** as you wish.
+
+<p align="center">
+  <img src="other/gitAssets/query.png" width=70%>
+</p>
+
+**HOTKEYS** (active while typing):
+- **shift + enter** - execute query (saves query in browser memory)
+- **ctrl + ,** - load previous executed query
+- **ctrl + .** - load next executed query
+- **ctrl + z** - undo typing
+- **ctrl + y** - redo typing
 
 ### <p align="center"> PLOT </p>
 Interactive plot containing query results. Hover mouse over the offer bar to see short offer description. Plot's overall height is declared in settings.py.
 
 On the plot's right side you can see **toggleable tools**:
-- move - moves plot view
-- zoom - scroll with cursor on a plot axis to zoom just a single dimension. Scroll on the plot area to zoom both axes.
-- tap - highlight a single plot bar
-- hover - separate hover tools for offers with salary specified and unspecified
+- **move** - moves plot view
+- **zoom** - scroll with cursor on a plot axis to zoom just a single dimension. Scroll on the plot area to zoom both axes.
+- **tap** - highlight a single plot bar
+- **hover** - separate hover tools for offers with salary specified and unspecified
 <p align="center">
   <img src="https://github.com/user-attachments/assets/8bb2866b-a16c-4215-8cd7-bab1933d42fa" width=70%>
 </p>

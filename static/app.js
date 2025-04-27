@@ -1,15 +1,32 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+// GENERAL CONSTS
 const buttonMessageStart = 'START'
 const buttonMessagePause = 'PAUSE'
 const checkAllText = '✓'
 const uncheckAllText = '✗'
 const sliceMessageToThisAmountOfCharacters = 350
 
-fetchProcesses() // FETCH EXISTING PROCESSES FIRST
+// QUERY EDITOR FUNCTIONALITY
+const queryHistoryRecordsLimit = 100 // list of last executed queries
+const queryUndoMaxHistoryLength = 200 // ctrl + z list
+const queryUndoStack = [] // ctrl + z
+const queryRedoStack = [] // ctrl + y
+const queryAutoBatchTimeout = 500 // time in ms to group changes together
+let queryLastSaveTime = 0
+let queryEditorHistory = JSON.parse(localStorage.getItem('queryEditorHistory') || '[]')
+let historyIndex = Math.max(0, queryEditorHistory.length - 1)
+// console.log(historyIndex)
 
-// HIGHLIGHT SQL SYNTAX IN QUERY EDITOR
-const editor = document.getElementById('queryEditor')
+fetchProcesses() // FETCH EXISTING PROCESSES
+
+
+// ================================================================================ HIGHLIGHT SQL SYNTAX IN QUERY EDITOR
+
+
+const queryEditor = document.getElementById('queryEditor')
+const executeQueryOutput = document.getElementById('executeQueryOutput')
+const executeQueryButton = document.getElementById('executeQueryButton')
 
 const SQL_CORE_KEYWORDS = ['SELECT', 'FROM', 'WHERE', 'LIKE', 'INSERT', 'INTO', 'VALUES', 'UPDATE', 'SET', 'DELETE', 'CREATE', 'DROP', 'TABLE', 
     'VIEW', 'INDEX', 'IF', 'EXISTS', 'DISTINCT', 'ALL', 'IN', 'IS', 'NOT', 'NULL', 'AS', 'AND', 'OR', 'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 
@@ -20,9 +37,7 @@ const SQL_FUNCTIONS_KEYWORDS = ['JULIANDAY', 'DATE', 'TIME', 'DATETIME', 'STRFTI
     'RANDOM', 'RANDOMBLOB', 'TOTAL', 'SUM', 'AVG', 'MIN', 'MAX', 'COUNT']
     
 // const SQL_SPECIAL_CHARACTERS = ['[', ']', '(', ')', '+', '-', '/', '*']
-// const SQL_SPECIAL_CHARACTERS = ['[', ']', '(', ')']
 const SQL_SPECIAL_CHARACTERS = ['(', ')']
-
 
 function highlightQuerySyntax(text) {
     // console.log(text)
@@ -76,7 +91,7 @@ function preserveCaret(callback) { // because highlighting moves caret back to b
     const selection = window.getSelection()
     const range = selection.getRangeAt(0)
     const preCaretRange = range.cloneRange()
-    preCaretRange.selectNodeContents(editor)
+    preCaretRange.selectNodeContents(queryEditor)
     preCaretRange.setEnd(range.endContainer, range.endOffset)
     const caretOffset = preCaretRange.toString().length
 
@@ -112,36 +127,194 @@ function preserveCaret(callback) { // because highlighting moves caret back to b
             sel.addRange(newRange)
         }
     }
-    callback() // highlightQuerySyntax() - modifying editor.innerHTML resets caret position
-    setCaret(editor, caretOffset)
+    callback() // highlightQuerySyntax() - modifying queryEditor.innerHTML resets caret position
+    setCaret(queryEditor, caretOffset)
 }
 
-// Highlight as you type
-editor.addEventListener('input', () => {
+// Highlight and save undo/redo content as you type
+queryEditor.addEventListener('input', () => {
+    saveQuerySnapshot()
     preserveCaret(() => {
-    const text = editor.innerText
-    editor.innerHTML = highlightQuerySyntax(text)
+    const text = queryEditor.innerText
+    queryEditor.innerHTML = highlightQuerySyntax(text)
     })
 })
 
 // Paste: force plain text
-editor.addEventListener('paste', e => {
+queryEditor.addEventListener('paste', e => {
     e.preventDefault();
     const text = e.clipboardData.getData('text/plain');
     document.execCommand('insertText', false, text);
 })
 
-// Initial query editor state
-editor.innerHTML = "-- EXISTING TABLES LIST<br>SELECT name FROM sqlite_master WHERE type='table'<br>ORDER BY name; -- GL&HF"
-editor.innerHTML = highlightQuerySyntax(editor.innerText)
+// Initial query queryEditor state
+queryEditor.innerHTML = "-- EXISTING TABLES LIST<br>SELECT name FROM sqlite_master WHERE type='table'<br>ORDER BY name;"
+queryEditor.innerHTML = highlightQuerySyntax(queryEditor.innerText)
 
 
-// SEND (EXECUTE) QUERY AND FETCH BOKEH
+// ================================================================================ QUERY EDITOR HISTORY (LOCAL BROWSER STORAGE) WITH HOTKEYS
+
+
+function appendToQueryEditorHistory(newItem) {
+    queryEditorHistory = JSON.parse(localStorage.getItem('queryEditorHistory')) || [] // empty list when null
+    queryEditorHistory.push(newItem)
+    queryEditorHistory = queryEditorHistory.slice(-queryHistoryRecordsLimit) // keep n newest queries
+    localStorage.setItem('queryEditorHistory', JSON.stringify(queryEditorHistory))
+    queryEditorHistory = queryEditorHistory
+    queryEditorHistory = JSON.parse(localStorage.getItem('queryEditorHistory') || '[]')
+    historyIndex = Math.max(0, queryEditorHistory.length - 1)
+}
+
+executeQueryButton.addEventListener('click', () => {
+    if (queryEditor.innerHTML != queryEditorHistory.at(-1)) { 
+        appendToQueryEditorHistory(queryEditor.innerHTML) // append if not the same as the last one
+    }
+})
+
+// 1, 2, 3 to 1st, 2nd, 3rd etc.
+function getOrdinal(n) { 
+    const s = ["th", "st", "nd", "rd"]
+    const v = n % 100
+    return n + (s[(v - 20) % 10] || s[v] || s[0])
+}
+
+//  QUERY EDITOR KEY BINDINGS (HOTKEYS)
+queryEditor.addEventListener("keydown", (e) => {
+    // shift + enter
+    if (e.shiftKey && e.key === "Enter") {
+        e.preventDefault() // disable newline
+        executeQueryButton.click()
+        // console.log('shift + enter')
+    }
+    // ctrl + z
+    else if (e.ctrlKey && e.key === 'z') {
+        e.preventDefault()
+        undoQueryChanges()
+        // console.log('ctrl + z')
+    }
+    // ctrl + y
+    else if (e.ctrlKey && e.key === 'y') {
+        e.preventDefault()
+        redoQueryChanges()
+        // console.log('ctrl + y')
+    }
+    // ctrl + < (,)
+    else if (e.ctrlKey && e.key === ",") {
+        e.preventDefault() // some extensions may use ctrl+< or ctrl+>
+        if (queryEditorHistory.length === 0) {
+            executeQueryOutput.innerHTML = 'hotkey pressed, but query history is empty'
+            return
+        }
+        if (historyIndex > 0) {historyIndex -= 1}
+        queryEditor.innerHTML = queryEditorHistory[historyIndex]
+        executeQueryOutput.style = 'color: var(--color-text-primary);' // normal color
+        executeQueryOutput.innerHTML = `loaded ${getOrdinal(historyIndex+1)} out of ${queryEditorHistory.length} last executed queries`
+    }
+    // ctrl + > (.)
+    else if (e.ctrlKey && e.key === ".") {
+        e.preventDefault()
+        if (queryEditorHistory.length === 0) {
+            executeQueryOutput.innerHTML = 'hotkey pressed, but query history is empty'
+            return
+        }
+        if (historyIndex < queryEditorHistory.length - 1) {historyIndex += 1}
+        queryEditor.innerHTML = queryEditorHistory[historyIndex]
+        executeQueryOutput.style = 'color: var(--color-text-primary);' // normal color
+        executeQueryOutput.innerHTML = `loaded ${getOrdinal(historyIndex+1)} out of ${queryEditorHistory.length} last executed queries`
+    }
+})
+
+function saveQuerySnapshot() {
+    const currentTime = Date.now()
+    // Save a snapshot only if enough time has passed to avoid batching too quickly
+    if (currentTime - queryLastSaveTime > queryAutoBatchTimeout) {
+        const snapshot = {
+            html: queryEditor.innerHTML,
+            caretPosition: saveCaretPosition(queryEditor)
+        }
+
+        if (queryUndoStack.length === queryUndoMaxHistoryLength) queryUndoStack.shift() // Limit history length - shift() removes first element
+        queryUndoStack.push(snapshot)
+        queryRedoStack.length = 0 // Clear redo stack when new change happens
+        queryLastSaveTime = currentTime
+    }
+}
+
+function restoreQuerySnapshot(snapshot) {
+    queryEditor.innerHTML = snapshot.html
+    restoreCaretPosition(queryEditor, snapshot.caretPosition)
+}
+
+function saveCaretPosition(containerEl) {
+    const selection = window.getSelection()
+    if (!selection.rangeCount) return null
+
+    const range = selection.getRangeAt(0)
+    const preCaretRange = range.cloneRange()
+    preCaretRange.selectNodeContents(containerEl)
+    preCaretRange.setEnd(range.startContainer, range.startOffset)
+
+    return preCaretRange.toString().length
+}
+
+function restoreCaretPosition(containerEl, caretPosition) {
+    if (caretPosition == null) return
+
+    let charIndex = 0
+    const range = document.createRange()
+    range.setStart(containerEl, 0)
+    range.collapse(true)
+
+    const nodeStack = [containerEl]
+    let node, stop = false
+
+    while (!stop && (node = nodeStack.pop())) {
+        if (node.nodeType === 3) {
+            const nextCharIndex = charIndex + node.length
+            if (caretPosition >= charIndex && caretPosition <= nextCharIndex) {
+                range.setStart(node, caretPosition - charIndex)
+                range.setEnd(node, caretPosition - charIndex)
+                stop = true
+            }
+            charIndex = nextCharIndex
+        } 
+        else {
+            let i = node.childNodes.length
+            while (i--) nodeStack.push(node.childNodes[i])
+        }
+    }
+
+    const sel = window.getSelection()
+    sel.removeAllRanges()
+    sel.addRange(range)
+}
+
+function undoQueryChanges() {
+    if (queryUndoStack.length > 1) {
+        const snapshot = queryUndoStack.pop() // pop() removes last item
+        queryRedoStack.push(snapshot)
+        restoreQuerySnapshot(queryUndoStack[queryUndoStack.length - 1])
+    }
+}
+
+function redoQueryChanges() {
+    if (queryRedoStack.length > 0) {
+        const snapshot = queryRedoStack.pop()
+        restoreQuerySnapshot(snapshot)
+        queryUndoStack.push(snapshot)
+    }
+}
+
+saveQuerySnapshot()
+
+
+// ================================================================================ SEND (EXECUTE) QUERY AND FETCH BOKEH
+
+
 document.getElementById("executeQueryButton").addEventListener("click", sendQueryAndFetchBokeh)
 
 function sendQueryAndFetchBokeh() {
     // const queryEditor = document.getElementById('queryEditor')
-    const executeQueryOutput = document.getElementById('executeQueryOutput')
     executeQueryOutput.style = 'color: var(--color-text-primary);' // normal color
     executeQueryOutput.innerHTML ='loading...'
 
@@ -159,15 +332,16 @@ function sendQueryAndFetchBokeh() {
         .map(line => line.replace(/\s+/g, ' ')) // Step 2: replace every whitespace character with a regular space 
         .join('\n'); // Step 3: rejoin lines
         queryEditorClone = queryCleaned
-        console.log(queryEditorClone)
+        // console.log(queryEditorClone)
         return queryEditorClone
     }
-    let queryText = JSON.stringify(getCleanTextFromContentEditable())
-    
+    const queryText = getCleanTextFromContentEditable()
+    const queryJson = JSON.stringify(queryText)
+
     fetch(window.origin.toString() + '/executeQuery', {
         method: "POST",
         credentials: "include", // cookies etc
-        body: queryText, // form results
+        body: queryJson, // form results
         cache: "no-cache",
         headers: new Headers({"content-type": "application/json"})
     }) // FETCH RETURNS ASYNC PROMISE AND AWAITS RESPONSE
@@ -182,6 +356,7 @@ function sendQueryAndFetchBokeh() {
         })
         .then(function (items) { // when response 200 and JSON items list received
             // console.log(items)
+            console.log('======QUERY EXECUTION DONE======\n'+items.message+'\n\n' + queryText.toString())
             executeQueryOutput.innerHTML = items.message
             if (items.error === true){
                 executeQueryOutput.style = 'color: var(--color-text-warning);'
@@ -221,6 +396,10 @@ function sendQueryAndFetchBokeh() {
         })
 }
 
+
+// ================================================================================ FETCH PROCESSES
+
+
 function fetchProcesses() {
     // const output = document.getElementById(outputDiv)
     try {
@@ -253,6 +432,10 @@ function fetchProcesses() {
     }
 }
 
+
+// ================================================================================ TEST BROWSER STUFF
+
+
 document.getElementById("openBrowserButton").addEventListener("click", () => { fetchEndpointAndAwaitResponse('openBrowser', 'openBrowserOutput') })
 document.getElementById("saveCookiesToJsonButton").addEventListener("click", () => { fetchEndpointAndAwaitResponse('saveCookiesToJson', 'saveCookiesToJsonOutput') })
 
@@ -280,6 +463,10 @@ function fetchEndpointAndAwaitResponse (endpoint, outputDiv) {
     }
 }
 
+
+// ================================================================================ CREATE NEW FULL SCRAPING DIV
+
+
 function createNewFullScrapingDiv (url, index, lastMessage) {
     const fullScrapingDivsContainer = document.getElementById('fullScrapingDivsContainer')
     const existingFullScrapingDivs = document.querySelectorAll('.fullScrapingDiv div')
@@ -288,14 +475,18 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
     if (url === undefined) { // IF URL ARGUMENT NOT PROVIDED
         // url = "https://justjoin.it/job-offers/bialystok?experience-level=mid&remote=yes&orderBy=DESC&sortBy=published"
         // url = "https://theprotocol.it/filtry/python;t/junior;p/zdalna;rw"
-        urlsList = [
+        let urlsList = [
             "https://theprotocol.it/praca", 
-            "https://theprotocol.it/filtry/python;t/zdalna;rw", 
-            "https://theprotocol.it/filtry/python;t/trainee,assistant,junior,mid;p/hybrydowa,zdalna;rw", 
+            //"https://theprotocol.it/filtry/python;t/zdalna;rw",
+            //"https://theprotocol.it/filtry/trainee,assistant,junior,mid;p",
+            // "https://theprotocol.it/filtry/trainee,assistant,junior,mid;p/hybrydowa,zdalna;rw",
+            "https://theprotocol.it/filtry/trainee,assistant,junior,mid;p/",
             "https://justjoin.it",
-            "https://justjoin.it/job-offers/all-locations/python",
-            "https://justjoin.it/job-offers/all-locations/javascript"
+            //"https://justjoin.it/job-offers/all-locations/python",
+            //"https://justjoin.it/job-offers/all-locations/javascript",
+            "https://justjoin.it/job-offers/all-locations?experience-level=junior,mid"
         ]
+        // urlsList = ["https://theprotocol.it/filtry/python;t/trainee,assistant;p",] 
         url = urlsList[Math.floor(Math.random() * urlsList.length)] // random choice from the list
     }
 
@@ -378,7 +569,10 @@ function createNewFullScrapingDiv (url, index, lastMessage) {
 addNewProcessButton = document.getElementById('addNewProcessButton')
 addNewProcessButton.addEventListener("click", () => { createNewFullScrapingDiv()})
 
-// CHECK BUTTON STATE AND FETCH FULL SCRAPING ENDPOINT RECURSIVELY
+
+// ================================================================================ CHECK BUTTON STATE AND FETCH FULL SCRAPING ENDPOINT RECURSIVELY
+
+
 function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, outputDiv, inputUrl) {
     // console.log('<<< BUTTON CLICKED >>> ')
     const output = document.getElementById(outputDiv)
@@ -471,12 +665,16 @@ function checkButtonStateAndFetchFullScrapingEndpointRecursively (button, output
     }
 }
 
-// SEND FORM AND FETCH BOKEH
+
+// ================================================================================ SEND FORM AND FETCH BOKEH
+
+
 document.getElementById("sendFormAndFetchBokehButton").addEventListener("click", sendFormAndFetchBokeh)
 
 function sendFormAndFetchBokeh(e) {
     const sendFormAndFetchBokehOutput =  document.getElementById('sendFormAndFetchBokehOutput')
     sendFormAndFetchBokehOutput.innerHTML = 'loading...' //reset output
+    saveFormValuesOnSearchClick()
     e.preventDefault() //prevent sending form default request
 
     if (atLeastOneCheckboxChecked() === false) {
@@ -514,8 +712,8 @@ function sendFormAndFetchBokeh(e) {
             }
         })
         .then(function (items) { // when response 200 and JSON items list received
-            const queryEditor = document.getElementById('queryEditor')
-            const executeQueryOutput = document.getElementById('executeQueryOutput')
+            // const queryEditor = document.getElementById('queryEditor')
+            // const executeQueryOutput = document.getElementById('executeQueryOutput')
             executeQueryOutput.style = 'color: var(--color-text-primary);' // normal color
             queryEditor.innerHTML = items.query.replace(/\n/g, "<br>") // replace python newline with html <br>
             queryEditor.innerHTML = highlightQuerySyntax(queryEditor.innerText)
@@ -596,7 +794,7 @@ function atLeastOneCheckboxChecked () {
     else {return false} //if not checked
 }
 
-// CHANGING CHECKBOXES STATE - CHECK/UNCHECK
+// ================================================================================ CHANGING CHECKBOXES STATE - CHECK/UNCHECK
 document.getElementById('checkUncheckAll').addEventListener('click', () => {
     const checkUncheckAll = document.getElementById('checkUncheckAll')
     // The HTML entity &check; is converted into the Unicode character ✓ by the browser when the page is rendered
@@ -612,13 +810,49 @@ document.getElementById('checkUncheckAll').addEventListener('click', () => {
     }
 })
 
-// MAKE WHOLE DOWNLOAD CSV CONTAINER CLICKABLE
-document.getElementById('downloadCsvContainer').addEventListener('click', function() {
-    let url = window.origin.toString() + "/downloadCsv"
-    window.location.href = url
+// ================================================================================ SAVE FORM INPUTS STATE IN BROWSER MEMORY AND LOAD IT ON REFRESH
+
+// save form values on 'SEARCH' click
+function saveFormValuesOnSearchClick(){
+    document.querySelectorAll('input').forEach(input => {
+        if (!input.name) {
+            return // save only named ones
+        }
+        const key = input.name
+        // console.log(key)
+        if (input.type === 'text') {
+            localStorage.setItem(key, input.value)
+        }
+        if (input.type === 'checkbox') {
+            localStorage.setItem(key, input.checked)
+        }
+    })
+}
+
+// load form values on refresh (uncomment to save on input)
+document.querySelectorAll('input').forEach(input => {
+    const key = input.name
+    if (input.type === 'text') {
+        // Load saved text input
+        const saved = localStorage.getItem(key)
+        if (saved !== null) input.value = saved
+        // // Save on input
+        // input.addEventListener('input', () => {
+        //     localStorage.setItem(key, input.value)
+        // })
+    }
+    if (input.type === 'checkbox') {
+        // Load saved checkbox state
+        const saved = localStorage.getItem(key)
+        if (saved !== null) input.checked = saved === 'true'
+        // // Save on change
+        // input.addEventListener('change', () => {
+        //     localStorage.setItem(key, input.checked)
+        // })
+    }
 })
 
-// HIDE / SHOW CATEGORIES
+// ================================================================================ HIDE / SHOW CATEGORIES
 document.querySelectorAll('.categoryShowHideDiv').forEach(hideShowDiv => {
     hideShowDiv.addEventListener('click', () => {
         // Find the associated categoryContent sibling
@@ -637,7 +871,13 @@ document.querySelectorAll('.categoryShowHideDiv').forEach(hideShowDiv => {
     })
 })
 
-// CHANGE HEADER TEXT CONTENT ON MOUSEOVER
+// MAKE WHOLE DOWNLOAD CSV CONTAINER CLICKABLE
+document.getElementById('downloadCsvContainer').addEventListener('click', function() {
+    let url = window.origin.toString() + "/downloadCsv"
+    window.location.href = url
+})
+
+// ================================================================================ CHANGE HEADER TEXT CONTENT ON MOUSEOVER
 headerContainer = document.getElementById("headerContainer")
 
 headerContainer.addEventListener("mouseover", function() {
@@ -649,7 +889,7 @@ headerContainer.addEventListener("mouseout", function() {
     headerText2.style = 'color: var(--color-tertiary);'
 })
 
-// CHANGE CALENDAR TOOL FOR FLATPICKR - styling in CSS file
+// ================================================================================ CALENDAR TOOL FLATPICKR - styling in CSS file
 flatpickr("input[type='datetime-local']", {
     enableTime: true, // show hh:mm options
     enableSeconds: true,
@@ -664,6 +904,11 @@ flatpickr("input[type='datetime-local']", {
         }
     }
 })
+
+
+
+
+
 
 
 // function printAllRootVariables() {

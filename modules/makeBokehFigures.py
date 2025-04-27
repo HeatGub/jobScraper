@@ -72,7 +72,8 @@ def makeBokehPlot(dataframe): #Only offers with specified salary?
     plot.yaxis.major_tick_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
     plot.yaxis.minor_tick_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
 
-    plot.yaxis.formatter = NumeralTickFormatter(format="0a") # '1.000e+4' to '10k'
+    # plot.yaxis.formatter = NumeralTickFormatter(format="0a") # '1.000e+4' to '10k'
+    plot.yaxis.formatter = NumeralTickFormatter(format="0.0a") # '1.000e+4' to '10.0k'
 
     plot.xgrid.grid_line_color = settings.CSS_VARIABLES['color-plot-grid-line']
     plot.ygrid.grid_line_color = settings.CSS_VARIABLES['color-plot-grid-line']

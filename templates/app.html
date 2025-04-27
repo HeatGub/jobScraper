@@ -18,7 +18,8 @@
   <link href='https://fonts.googleapis.com/css?family=Anta' rel='stylesheet'>
   <!-- Include Flatpickr CSS & JS for calendar tool styling-->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr">// calendar tool</script>
+  <script type="text/javascript">Bokeh.set_log_level("error"); // Set BokehJS log level to adjust console spam</script>
 </head>
 
 <body class="flexCentered flexDirectionColumn">
@@ -86,7 +87,7 @@
               {% endfor %}
             </table>
             <!-- <div class="fetchDiv"> -->
-              <input type="submit" value="SEARCH" id="sendFormAndFetchBokehButton" class="disabledTextSelection">
+              <input type="submit" value="SEARCH" id="sendFormAndFetchBokehButton" class="disabledTextSelection" title="search and save form values">
               <div id="sendFormAndFetchBokehOutput">search to display offers (if already scraped)</div>
             <!-- </div> -->
           </form>
@@ -101,7 +102,15 @@
           <!-- <span contenteditable="true" id="queryEditor" spellcheck="false" style="display: none;"></span> -->
           <span contenteditable="true" id="queryEditor" spellcheck="false"></span>
           <button id="executeQueryButton" class="disabledTextSelection">EXECUTE</button>
-          <div id="executeQueryOutput">query output</div>
+          <div id="executeQueryOutput">
+            <strong>HOTKEYS</strong> (active while typing):<br>
+            <br>
+            <strong>shift + enter</strong> &nbsp;-&nbsp; execute query (saves query in browser memory)<br>
+            <strong>ctrl + ,</strong> &nbsp;-&nbsp; load previous executed query<br>
+            <strong>ctrl + .</strong> &nbsp;-&nbsp; load next executed query<br>
+            <strong>ctrl + z</strong> &nbsp;-&nbsp; undo typing<br>
+            <strong>ctrl + y</strong> &nbsp;-&nbsp; redo typing<br>
+          </div>
         </div>
     </div>
 

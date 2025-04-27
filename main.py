@@ -70,15 +70,17 @@ def root():
                     likePart = ' NOT LIKE '
                 splittedResults = re.split(r" OR | AND ", input) # split on logic operator
                 phrases = []
+                # print('\n\n==============================================================================')
                 for res in splittedResults:
                     res = re.sub(r'\(|\)', '', res) # remove brackets
                     res = re.sub(r'^ +| +$', '', res) # remove spaces at both ends
                     # print(res)
                     # print()
                     phrases.append(res)
+                # print(phrases)
                 # BY NOW ALL PHRASES ARE IN THE LIST SO IT CAN PUT THE PHRASES INTO THE BRACKETS
                 for phrase in phrases: # MAKE PLACEHOLDERS ONE BY ONE
-                    input = re.sub(phrase, '<<<>>>', input, count=1) # count=1 to only replace the first match. This is needed because phrases content can overlap
+                    input = re.sub(re.escape(phrase), '<<<>>>', input, count=1) # count=1 to only replace the first match. This is needed because phrases content can overlap
                     # print(input)
                     # print()
                 for phrase in phrases: # FILL PLACEHOLDERS ONE BY ONE
@@ -398,18 +400,13 @@ if __name__ == "__main__":
     Database.createTableIfNotExists()
 
     threading.Thread(target=reloadSettingsOnChange, daemon=True).start() # start a thread to detect settings.py changes
+    port=5000
 
     if settings.DOCKERIZE_MODE_ACTIVE == True:
         host = '0.0.0.0' # host = 0.0.0.0 allows docker app to accept connections from outside the container, like via localhost:5000
     else:
         host = 'localhost'
-    port=5000
+        print(f"\n\tStarting job scraper. Visit http://{host}:{port} and begin.\n")
 
-    print(f"\n\tStarting job scraper. Visit http://{host}:{port} and begin.\n")
     app.run(host=host, port=port, debug=False) # if debug=True it auto-reloads after detecting code change, but runs additional process
     print("\n\tJob scraper closed.\n")
-
-
-###########################################  TODO
-# terminate test browser instance at some point (check ifBrowserOpen on any add/delete process click?)
-# always natural scale on plot y-axis?
