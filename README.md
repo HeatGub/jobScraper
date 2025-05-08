@@ -134,7 +134,7 @@ settings:
 ## <p align="center"> INSTALLATION ON WINDOWS </p>
 #### Requirements
 - **browser:** I ve'been using chrome (check browser version at *chrome://settings/help*) but any browser with its selenium driver should do the job
-- **matching browser driver:** Check if chromedriver.exe from the main project's directory works (it's version 134.0). If not, download matching version from https://googlechromelabs.github.io/chrome-for-testing/ and replace **chromedriver.exe (that filename is required**)
+- **matching browser driver:** Check if chromedriver.exe from the main project's directory is working (it's version 136.0.7103.92). If not, download matching version from https://googlechromelabs.github.io/chrome-for-testing/ and replace **chromedriver.exe (that filename is required**)
 - **packages:** run `pip install -r requirements.txt` in the folder where requirements.txt file is. *I suggest installing in a virtual environment as there are quite a lot of them*
 
 #### Once you have a browser, a driver and the packages installed:

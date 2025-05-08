@@ -28,8 +28,9 @@ def scrapCurrentlyVisibleOffersUrls(SeleniumBrowser): # just the ones currently 
         for offer in offers: # ever-loading div among them
             try:
                 index = offer.get_attribute('data-index')
-                # href = offer.find_element(By.XPATH, ".//div/div/a").get_property("href") # changed ~2025.04.20
-                href = offer.find_element(By.XPATH, "./div/a").get_property("href")
+                # href = offer.find_element(By.XPATH, ".//div/div/a").get_property("href") # changed ~2025.04.20 
+                # href = offer.find_element(By.XPATH, "./div/a").get_property("href") # changed on 30.04.2025
+                href = offer.find_element(By.XPATH, ".//div/div/a").get_property("href") # changed back to .//div/div/a again on 30.04.2025
 
                 def foundAmongSavedIndexes():
                     if len(SeleniumBrowser.OFFERS_URLS) == 0:
@@ -251,7 +252,7 @@ def getOfferDetails(SeleniumBrowser):
         if techstackExpected != None:
             techstackExpected = re.sub(r"^\n", '', techstackExpected)
     except Exception as exception:
-        print(exception)
+        # print(exception)
         pass # leave empty strs
     # print(techstackExpected + '\n\n' + techstackOptional)
 
@@ -268,7 +269,8 @@ def getOfferDetails(SeleniumBrowser):
     try:
         # descriptionDiv = offerContent.find_elements(By.CSS_SELECTOR, '.MuiBox-root.css-qal8sw')[1] # changed 31.03.20205 (not sure when on jj.it)
         # descriptionDiv = descriptionDiv.find_elements(By.XPATH, "./div")[1] # second child div
-        descriptionDiv = offerContent.find_element(By.CSS_SELECTOR, '.MuiBox-root.css-rcazos')
+        # descriptionDiv = offerContent.find_element(By.CSS_SELECTOR, '.MuiBox-root.css-rcazos') # changed 30.04.2025
+        descriptionDiv = offerContent.find_element(By.CLASS_NAME, 'MuiBox-root.css-1vqiku9')
         
         # Remove empty lines (including those with spaces)
         fullDescription = re.sub(r'^\s*\n', '', descriptionDiv.text, flags=re.MULTILINE)
